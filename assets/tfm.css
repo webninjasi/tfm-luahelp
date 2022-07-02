@@ -1,0 +1,126 @@
+
+body{
+  color: #C2C2DA; /* .N */
+  font-family: Verdana;
+  font-size: 12px;
+}
+
+a {
+  color: #C2C2DA; /* .N */
+}
+
+a:hover {
+  color: #2ECF73;
+}
+
+a:active {
+  color: #E9E654;
+}
+
+.BL {
+  color: #6C77C1;
+}
+
+.BV {
+  color: #2F7FCC;
+}
+
+.CE {
+  color: #E88F4F;
+}
+
+.CEP {
+  color: #F0A78E;
+}
+
+.CH {
+  color: #98E2EB;
+}
+
+.CS {
+  color: #EFCE8F;
+}
+
+.G {
+  color: #60608F;
+}
+
+.J {
+  color: #BABD2F;
+}
+
+.N {
+  color: #C2C2DA;
+}
+
+.N2 {
+  color: #9292AA;
+}
+
+.PT {
+  color: #2EBA7E;
+}
+
+.PS {
+  color: #F1C4F6;
+}
+
+.R {
+  color: #CB546B;
+}
+
+.ROSE {
+  color: #ED67EA;
+}
+
+.S {
+  color: #CAA4CF;
+}
+
+.T {
+  color: #A4CF9E;
+}
+
+.TD {
+  text-align: right;
+}
+
+.TG {
+  text-align: left;
+}
+
+.TI {
+  font-size: 14px;
+}
+
+.V {
+  color: #009D9D;
+}
+
+.VP {
+  color: #2ECF73;
+}
+
+.VI {
+  color: #C53DFF;
+}
+
+.D {
+  color: #FFD991;
+}
+
+.O {
+  color: #F79337;
+}
+
+.CH2 {
+  color: #FEB1FC;
+}
+
+.FC {
+  color: #FF8547;
+}
+
+.CL {
+  font-size: 11px;
+}

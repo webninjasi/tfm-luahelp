@@ -1,0 +1,24 @@
+
+body {
+  margin: 0;
+  padding: 1%;
+  background-color: #1E3D42;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding-bottom: 1%;
+}
+
+#error {
+  color: red;
+}
+
+#content {
+  flex-grow: 1;
+  white-space: pre;
+}
