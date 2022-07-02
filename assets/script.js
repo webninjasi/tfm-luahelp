@@ -1,5 +1,6 @@
-
 const id = selector => document.getElementById(selector);
+const defaultContent = id('content').innerHTML;
+
 const replaceTags = html => {
   let treeParent = [];
   let treeLevel = 0;
@@ -87,19 +88,32 @@ const replaceTags = html => {
       }
     );
 };
+
+const parseSections = html => html.split('<span class="O">').map(
+  (section, idx) => (idx ? '<span class="O">' : '') + section.trim()
+);
+
 const errorSet = err => {
-  id('content').innerHTML = "";
-  id('error').innerHTML = err;
+  id('content').innerHTML = defaultContent;
+  id('error').innerHTML = err.stack;
 };
+
 const loadVersion = (version, gotoAnchor) => {
-  id('content').innerHTML = "Loading...";
+  id('current_version').innerHTML = "...";
+  id('section_functions').innerHTML = "Loading...";
+  id('section_events').innerHTML = "Loading...";
+  id('section_lua_tree').innerHTML = "Loading...";
 
   fetch('raw/' + version)
     .then(data => data.text())
     .then(data => {
       const content = replaceTags(data);
+      const sections = parseSections(content);
 
-      id('content').innerHTML = content;
+      id('current_version').innerHTML = sections[0] || version;
+      id('section_lua_tree').innerHTML = sections[1] || "";
+      id('section_events').innerHTML = sections[2] || "";
+      id('section_functions').innerHTML = sections[3] || "";
       id('error').innerHTML = "";
 
       if (gotoAnchor && window.location.hash) {
