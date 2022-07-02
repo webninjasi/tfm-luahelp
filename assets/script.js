@@ -91,7 +91,7 @@ const errorSet = err => {
   id('content').innerHTML = "";
   id('error').innerHTML = err;
 };
-const loadVersion = (version) => {
+const loadVersion = (version, gotoAnchor) => {
   id('content').innerHTML = "Loading...";
 
   fetch('raw/' + version)
@@ -101,6 +101,10 @@ const loadVersion = (version) => {
 
       id('content').innerHTML = content;
       id('error').innerHTML = "";
+
+      if (gotoAnchor) {
+        window.location = window.location;
+      }
     })
     .catch(err => errorSet(err));
 }
@@ -121,6 +125,6 @@ fetch('versions')
       loadVersion(currentVersion);
     });
 
-    loadVersion(currentVersion);
+    loadVersion(currentVersion, true);
   })
   .catch(err => errorSet(err));
