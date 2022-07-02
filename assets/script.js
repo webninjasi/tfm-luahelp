@@ -102,7 +102,7 @@ const loadVersion = (version, gotoAnchor) => {
       id('content').innerHTML = content;
       id('error').innerHTML = "";
 
-      if (gotoAnchor) {
+      if (gotoAnchor && window.location.hash) {
         window.location = window.location;
       }
     })
