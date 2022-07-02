@@ -47,7 +47,7 @@ const replaceTags = html => {
 
         if (tagName == 'D') {
           const id = (params.match(/id="(.+?)"/)?.[1] || "").replace(/\./g, "_");
-          return `<a id="${id}" class="D">`;
+          return `<a id="${id}" href="#${id}" class="D">`;
         }
 
         if (tagName == 'A') {

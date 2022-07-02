@@ -5,6 +5,10 @@ body {
   background-color: #1E3D42;
 }
 
+a {
+  text-decoration: none;
+}
+
 .wrapper {
   display: flex;
   flex-direction: column;
