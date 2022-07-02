@@ -94,7 +94,7 @@ const errorSet = err => {
 const loadVersion = (version) => {
   id('content').innerHTML = "Loading...";
 
-  fetch('/raw/' + version)
+  fetch('raw/' + version)
     .then(data => data.text())
     .then(data => {
       const content = replaceTags(data);
@@ -105,7 +105,7 @@ const loadVersion = (version) => {
     .catch(err => errorSet(err));
 }
 
-fetch('/versions')
+fetch('versions')
   .then(data => data.text())
   .then(data => {
     const versions = data.split('\n');
