@@ -198,6 +198,6 @@ id('input_filter').addEventListener('keyup', () => {
     return;
   }
 
-  id('section_events').innerHTML = filterContent(id('section_events').innerHTML, value);
-  id('section_functions').innerHTML = filterContent(id('section_functions').innerHTML, value);
+  id('section_events').innerHTML = filterContent(id('section_events').dataset.original, value);
+  id('section_functions').innerHTML = filterContent(id('section_functions').dataset.original, value);
 });
