@@ -159,7 +159,7 @@ const updateLuaTreeState = (state) => {
   id('section_lua_tree').style.display = state ? null : 'none';
 
   if (window.localStorage) {
-    localStorage.setItem('hide_lua_tree', JSON.stringify(!state));
+    localStorage.setItem('show_lua_tree', JSON.stringify(state));
   }
 }
 
@@ -169,10 +169,10 @@ id('btn_toggle_tree').addEventListener('click', () => {
 });
 
 if (window.localStorage) {
-  const hide = localStorage.getItem('hide_lua_tree') == 'true';
+  const show = localStorage.getItem('show_lua_tree') == 'true';
 
-  if (hide) {
-    updateLuaTreeState(false);
+  if (show) {
+    updateLuaTreeState(true);
   }
 }
 
