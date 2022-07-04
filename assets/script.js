@@ -32,7 +32,7 @@ const replaceTags = html => {
           treeParent = [...treeParent.slice(0, level), name];
         }
 
-        const id = treeParent.join('_');
+        const id = treeParent.join('.');
         treeLevel = level;
 
         return `${tabs || ""}<a href="#${id}">${name}</a>`;
@@ -47,7 +47,7 @@ const replaceTags = html => {
         }
 
         if (tagName == 'D') {
-          const id = (params.match(/id="(.+?)"/)?.[1] || "").replace(/\./g, "_");
+          const id = (params.match(/id="(.+?)"/)?.[1] || "");
           return `<a id="${id}" href="#${id}" class="D">`;
         }
 
@@ -113,23 +113,33 @@ const loadVersion = (version, gotoAnchor) => {
       id('current_version').innerHTML = sections[0] || version;
       id('section_lua_tree').innerHTML = sections[1] || "";
       id('section_events').innerHTML = sections[2] || "";
+      id('section_events').dataset.original = id('section_events').innerHTML;
       id('section_functions').innerHTML = sections[3] || "";
+      id('section_functions').dataset.original = id('section_functions').innerHTML;
       id('error').innerHTML = "";
+      id('input_filter').value = "";
 
       if (gotoAnchor && window.location.hash) {
         window.location = window.location;
+      }
+
+      if (window.localStorage) {
+        localStorage.setItem('last_version', version);
       }
     })
     .catch(err => errorSet(err));
 }
 
+// Load latest version initially
 fetch('versions')
   .then(data => data.text())
   .then(data => {
     const versions = data.split('\n');
-    let currentVersion = versions[0];
+    let currentVersion = window.localStorage?.getItem('last_version') || versions[0];
 
-    id('versions').innerHTML = versions.map(ver => `<option value="${ver}">${ver}</option>`).join('');
+    id('versions').innerHTML = versions.map(
+      ver => `<option value="${ver}"${ver == currentVersion ? "selected" : ""}>${ver}</option>`
+    ).join('');
     id('versions').addEventListener('change', () => {
       if (id('versions').value == currentVersion) {
         return;
@@ -143,6 +153,7 @@ fetch('versions')
   })
   .catch(err => errorSet(err));
 
+// Lua Tree Toggle
 const updateLuaTreeState = (state) => {
   id('btn_toggle_tree').innerHTML = state ? "Hide Lua Tree" : "Show Lua Tree";
   id('section_lua_tree').style.display = state ? null : 'none';
@@ -164,3 +175,29 @@ if (window.localStorage) {
     updateLuaTreeState(false);
   }
 }
+
+// Filter functions/events
+const filterContent = (content, value) => {
+  const headers = [
+    ...content.matchAll(/<a id="([^"]+)" href="[^"]+" class="D">/g)
+  ];
+  const parts = content.split(/<a id="[^"]+" href="[^"]+" class="D">/);
+  const reg = new RegExp(value);
+
+  return parts[0] + headers.map((head, index) => 
+    head[1].toLowerCase().match(reg) ? (head[0] + parts[index + 1]) : null
+  ).filter(Boolean).join('');
+};
+
+id('input_filter').addEventListener('keyup', () => {
+  const value = id('input_filter').value.toLowerCase().match(/[a-z]+/g)?.join('') || '';
+
+  if (!value) {
+    id('section_events').innerHTML = id('section_events').dataset.original;
+    id('section_functions').innerHTML = id('section_functions').dataset.original;
+    return;
+  }
+
+  id('section_events').innerHTML = filterContent(id('section_events').innerHTML, value);
+  id('section_functions').innerHTML = filterContent(id('section_functions').innerHTML, value);
+});
