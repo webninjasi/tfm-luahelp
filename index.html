@@ -13,14 +13,15 @@
         <select id="versions">
           <option value="latest">Latest</option>
         </select>
-        <button id="btn_toggle_tree">Show Lua Tree</button>
         <input type="text" id="input_filter" placeholder="Search functions/events" />
+        <button id="btn_toggle_tree">Show Lua Tree</button>
+        <button id="btn_toggle_rowcol">Rows</button>
         <span id="error"></span>
       </div>
 
       <div id="content">
         <span id="current_version">...</span>
-        <div class="sections-wrapper">
+        <div class="sections-wrapper" id="sections">
           <div id="section_functions" class="section"></div>
           <div id="section_events" class="section"></div>
           <div id="section_lua_tree" class="section" style="display: none;"></div>

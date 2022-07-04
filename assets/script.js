@@ -201,3 +201,26 @@ id('input_filter').addEventListener('keyup', () => {
   id('section_events').innerHTML = filterContent(id('section_events').dataset.original, value);
   id('section_functions').innerHTML = filterContent(id('section_functions').dataset.original, value);
 });
+
+// Toggle between row/column mode
+const updateRowcol = (state) => {
+  id('btn_toggle_rowcol').innerHTML = state ? "Columns" : "Rows";
+  id('sections').style.flexDirection = state ? "column" : null;
+
+  if (window.localStorage) {
+    localStorage.setItem('row_mode', JSON.stringify(state));
+  }
+}
+
+id('btn_toggle_rowcol').addEventListener('click', () => {
+  const state = id('sections').style.flexDirection == 'column';
+  updateRowcol(!state);
+});
+
+if (window.localStorage) {
+  const state = localStorage.getItem('row_mode') == 'true';
+
+  if (state) {
+    updateRowcol(true);
+  }
+}
