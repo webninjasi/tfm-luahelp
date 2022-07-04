@@ -142,3 +142,25 @@ fetch('versions')
     loadVersion(currentVersion, true);
   })
   .catch(err => errorSet(err));
+
+const updateLuaTreeState = (state) => {
+  id('btn_toggle_tree').innerHTML = state ? "Hide Lua Tree" : "Show Lua Tree";
+  id('section_lua_tree').style.display = state ? null : 'none';
+
+  if (window.localStorage) {
+    localStorage.setItem('hide_lua_tree', JSON.stringify(!state));
+  }
+}
+
+id('btn_toggle_tree').addEventListener('click', () => {
+  const state = id('section_lua_tree').style.display != 'none';
+  updateLuaTreeState(!state);
+});
+
+if (window.localStorage) {
+  const hide = localStorage.getItem('hide_lua_tree') == 'true';
+
+  if (hide) {
+    updateLuaTreeState(false);
+  }
+}

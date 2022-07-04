@@ -8,19 +8,23 @@
     <link type="text/css" rel="stylesheet" href="assets/tfm.css">
   </head>
   <body>
-    <div class="wrapper">
+    <div class="header-wrapper">
       <div class="header">
         <select id="versions">
           <option value="latest">Latest</option>
         </select>
+        <button id="btn_toggle_tree">Hide Lua Tree</button>
         <span id="error"></span>
       </div>
+    </div>
+
+    <div class="wrapper">
       <div id="content">
         <span id="current_version">...</span>
         <div class="sections-wrapper">
+          <div id="section_functions" class="section"></div>
           <div id="section_lua_tree" class="section"></div>
           <div id="section_events" class="section"></div>
-          <div id="section_functions" class="section"></div>
         </div>
       </div>
     </div>

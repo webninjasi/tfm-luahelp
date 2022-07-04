@@ -9,13 +9,23 @@ a {
   text-decoration: none;
 }
 
-.wrapper {
-  display: flex;
-  flex-direction: column;
+.header-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #1E3D42;
+  opacity: 0.85;
+  width: 100%;
 }
 
 .header {
-  padding-bottom: 1%;
+  margin: 0.5em;
+}
+
+.wrapper {
+  margin-top: 2em;
+  display: flex;
+  flex-direction: column;
 }
 
 #error {
