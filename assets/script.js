@@ -98,13 +98,19 @@ const errorSet = err => {
   id('error').innerHTML = err.stack;
 };
 
-const loadVersion = (version, gotoAnchor) => {
+const loadVersion = (version, gotoAnchor, errorCallback) => {
   id('current_version').innerHTML = "...";
   id('section_functions').innerHTML = "Loading...";
   id('section_events').innerHTML = "Loading...";
   id('section_lua_tree').innerHTML = "Loading...";
 
   fetch('raw/' + version)
+    .then(resp => {
+      if (resp.status != 200) {
+        throw new Error('Something went wrong try again!')
+      }
+      return resp;
+    })
     .then(data => data.text())
     .then(data => {
       const content = replaceTags(data);
@@ -127,11 +133,17 @@ const loadVersion = (version, gotoAnchor) => {
         localStorage.setItem('last_version', version);
       }
     })
-    .catch(err => errorSet(err));
+    .catch(errorCallback);
 }
 
 // Load latest version initially
 fetch('versions')
+  .then(resp => {
+    if (resp.status != 200) {
+      throw new Error('Something went wrong try again!')
+    }
+    return resp;
+  })
   .then(data => data.text())
   .then(data => {
     const versions = data.split('\n');
@@ -146,10 +158,14 @@ fetch('versions')
       }
 
       currentVersion = id('versions').value;
-      loadVersion(currentVersion);
+      loadVersion(currentVersion, false, (err) => errorSet(err));
     });
 
-    loadVersion(currentVersion, true);
+    loadVersion(
+      currentVersion,
+      true,
+      () => loadVersion(versions[0], true, (err) => errorSet(err))
+    );
   })
   .catch(err => errorSet(err));
 
