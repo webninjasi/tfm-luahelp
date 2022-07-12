@@ -1,11 +1,13 @@
 const fs = require("fs");
 
 const latest = fs.readFileSync('raw/latest', 'utf8');
-const latestVer = latest.match(/<V><font size='14'>Version (.+?)<\/font><\/V>/)?.[1];
+const latestVer = latest.match(/apiVersion<font color='#60608F'> : (.+?)<\/font>/)?.[1]
+                  || latest.match(/<V><font size='14'>Version (.+?)<\/font><\/V>/)?.[1];
+const tfmVer = latest.match(/transformiceVersion<font color='#60608F'> : (.+?)<\/font>/)?.[1];
 
 let changeNum = 0;
 
-const getLatestVer = () => latestVer + (changeNum ? ("-" + changeNum) : "");
+const getLatestVer = () => latestVer + "-" + tfmVer + (changeNum ? ("-" + changeNum) : "");
 const openSafe = (name) => {
   try {
     return fs.readFileSync(name, 'utf8');
@@ -20,12 +22,22 @@ const openSafe = (name) => {
 }
 
 if (!latestVer) {
-  console.error("Latest version not found");
+  console.error("API version not found");
   process.exit(1);
 }
 
 if (isNaN(parseFloat(latestVer))) {
-  console.error("Version number is invalid:", latestVer);
+  console.error("API version number is invalid:", latestVer);
+  process.exit(1);
+}
+
+if (!tfmVer) {
+  console.error("Transformice version not found");
+  process.exit(1);
+}
+
+if (isNaN(parseFloat(tfmVer))) {
+  console.error("Transformice version number is invalid:", tfmVer);
   process.exit(1);
 }
 
