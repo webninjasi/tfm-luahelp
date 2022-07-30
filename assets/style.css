@@ -40,3 +40,19 @@ a {
   white-space: pre;
   margin-bottom: 1%;
 }
+
+.audio {
+  padding: 1em;
+  word-wrap: break-word;
+  display: inline-block;
+}
+
+.audio .audio-tags {
+  display: flex;
+  padding: 1em 0 1em 0;
+}
+
+.audio .audio-tags div {
+  flex-grow: 1;
+  width: 0;
+}
