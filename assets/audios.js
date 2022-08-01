@@ -42,23 +42,15 @@
     fetch(url)
       .then(resp => resp.text())
       .then(html => {
-        fetch("./audios.json")
-          .then(resp => resp.json())
-          .then(audios => {
-            audioList = parseAudioList(html, audios);
-            updateContent();
-            save(audioList);
-            refreshing = false;
-          })
-          .catch(err => {
-            errorSet(err);
-            refreshing = false;
-          });
-    })
-    .catch(err => {
-      errorSet(err);
-      refreshing = false;
-    });
+        audioList = parseAudioList(html, customAudioTags);
+        updateContent();
+        save(audioList);
+        refreshing = false;
+      })
+      .catch(err => {
+        errorSet(err);
+        refreshing = false;
+      });
   }
 
   function filterContent() {
