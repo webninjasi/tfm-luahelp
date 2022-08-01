@@ -9,6 +9,23 @@ a {
   text-decoration: none;
 }
 
+::placeholder {
+  color: #777777;
+}
+
+button, input, select, textarea {
+  background-color: #111111;
+  color: #6C77C1;
+  opacity: 0.8;
+  border: 1px solid #444444;
+  padding: 0.3em;
+}
+
+button {
+  cursor: pointer;
+  font-weight: bold;
+}
+
 .wrapper {
   display: flex;
   flex-direction: column;
@@ -36,9 +53,28 @@ a {
 }
 
 .section {
-  flex: 1;
-  white-space: pre;
-  margin-bottom: 1%;
+  flex-grow: 1;
+  margin: 0 1% 1% 0;
+}
+
+.functions-elm, .events-elm {
+  margin-bottom: 2em;
+}
+
+.parameter-table {
+  margin-top: 1em;
+  border-collapse: collapse;
+}
+
+.parameter-table th {
+  border-bottom: 0.1em solid #000000;
+  padding: 0 0.3em 1em 0.3em;
+  text-align: left;
+}
+
+.parameter-table td {
+  padding: 0.3em;
+  vertical-align: top;
 }
 
 .audio {

@@ -1,97 +1,332 @@
 const id = selector => document.getElementById(selector);
+const byClass = selector => [...document.getElementsByClassName(selector)];
 const defaultContent = id('content').innerHTML;
+const toggle = elmId => id(elmId).style.display = id(elmId).style.display == "none" ? null : "none";
+const copyText = elm => {
+  elm.select();
+  document.execCommand('copy');
+};
 
-const replaceTags = html => {
+const parseFunctionHelp = html => {
+  const lines = html.trim().split('\n');
+  const [_, name, paramshtml] = lines[0].match(/<D>(.+?)<\/D>\((?:<V>)?(.*?)(?:<\/V>)?\)/);
+  const params = paramshtml.split('</V>, <V>');
+
+  let cond = true;
+  let lastIdx = 1;
+
+  const description = lines.slice(1).filter((line, idx) => {
+    if (!cond) {
+      return;
+    }
+
+    cond = line.trim().indexOf('<') !== 0;
+
+    if (cond) {
+      lastIdx = idx + 1;
+    }
+
+    return cond;
+  });
+
+  const details = lines.slice(lastIdx + 1).reduce((ret, line) => {
+    line = line.trim()
+
+    const tag = line.trim().match(/^<(.+?)>/m)?.[1];
+
+    if (name == "tfm.exec.newGame") {
+      console.log(tag);
+    }
+
+    if (tag == "V") {
+      const [_, name, type, desc, def, other] = line.match(
+        /<V>(.+?)<\/V><G> \((.+?)\)<\/G><BL>\s*(.+?)\s*<\/BL>(?: <G>\(default (.+?)(?:\s+(.+?))?\)<\/G>)?/
+      );
+
+      ret.params.push({
+        name,
+        type,
+        desc,
+        def,
+        subparams: other ? [other] : [],
+      });
+    }
+    else if (tag == "BL") {
+      const [_, text] = line.match(
+        /<BL>\s*\-?(.+?)<\/BL>/
+      );
+      const desc = text.trim();
+
+      if (ret.params[ret.params.length - 1]) {
+
+        ret.params[ret.params.length - 1].subparams.push(desc);
+      } else {
+        ret.others.push(desc);
+      }
+    }
+    else if (tag == "R") {
+      const [_, type, desc] = line.match(
+        /<R>Returns<\/R> <G>\((.+?)\)<\/G> <BL>\s*(.+?)\s*<\/BL>/
+      );
+
+      ret.return = {
+        type,
+        desc,
+      };
+    }
+    else {
+      ret.others.push(line);
+    }
+
+    return ret;
+  }, { "params": [], "others": [] });
+
+  return {
+    name,
+    params,
+    description,
+    details,
+  };
+}
+
+const parseLuaTree = html => {
   let treeParent = [];
   let treeLevel = 0;
 
-  return html.replace(/<br\s*\/>/g, "\n")
-    .replace("<a href='http://www.lua.org/manual/5.2/manual.html#pdf-debug'>debug</a>", "debug")
-    .replace(
-      /<D>(.+?)<\/D>/g,
-      (_, content) => {
-        const id = content.indexOf(' ') == -1 && content;
-        return `<D id="${id}">${content}</D>`;
+  return html.trim().split('<br />').reduce(
+    (ret, line, idx) => {
+      const href = line.match(/href='(.+?)'/)?.[1];
+      const text = line.replace(/<.+?>/g, '');
+      const match = text.match(/^(\s*)(.+?)(?: \: (.+?))?$/);
+
+      if (!match) {
+        return ret;
       }
-    ).replace(
-      /^(\s*)([a-zA-Z]+)$/gm,
-      (_, tabs, name) => {
-        const level = tabs ? (tabs.length / 2) : 0;
-        
-        if (level == treeLevel) {
-          if (!treeParent.length) {
-            treeParent = [name];
-          } else {
-            treeParent[treeParent.length - 1] = name;
-          }
-        }
-        else if (level > treeLevel) {
-          treeParent = [...treeParent, name];
-        }
-        else {
-          treeParent = [...treeParent.slice(0, level), name];
-        }
 
-        const id = treeParent.join('.');
-        treeLevel = level;
+      const [_, indent, key, val] = match;
+      const level = indent ? (indent.length / 2) : 0;
 
-        return `${tabs || ""}<a href="#${id}">${name}</a>`;
+      if (level == treeLevel) {
+        if (!treeParent.length) {
+          treeParent = [key];
+        } else {
+          treeParent[treeParent.length - 1] = key;
+        }
       }
-    ).replace(
-      /<([a-zA-Z]+)(\s*[^>]+?)?>/g,
-      (full, tagName, params) => {
-        tagName = tagName.toUpperCase();
-
-        if (tagName == 'BR') {
-          return full;
-        }
-
-        if (tagName == 'D') {
-          const id = (params.match(/id="(.+?)"/)?.[1] || "");
-          return `<a id="${id}" href="#${id}" class="D">`;
-        }
-
-        if (tagName == 'A') {
-          const href = params.match(/href=(".+?"|'.+?')/)?.[1] || '"#"';
-          return `<a href=${href}>`;
-        }
-
-        if (tagName == 'P') {
-          const align = (params.match(/align=('.+?'|".+?")/)?.[1] || '').replace(/['"]/g, "");
-          tagName = align.toLowerCase() == 'right' ? 'TD' : 'TG';
-          return `<span class="${tagName}">`;
-        }
-
-        if (tagName == 'FONT') {
-          const fontSize = parseInt((params.match(/size=('.+?'|".+?")/)?.[1] || "").replace(/['"]/g, "")) || "";
-          const color = (params.match(/color=('.+?'|".+?")/)?.[1] || "").replace(/['"]/g, "");
-          const css = color ? `color:${color}` : "";
-          return `<span class="${tagName}" style="font-size:${fontSize}px;${css}">`;
-        }
-
-        return `<span class="${tagName}">`;
+      else if (level > treeLevel) {
+        treeParent = [...treeParent, key];
       }
-    ).replace(
-      /<\/([a-zA-Z]+).*?>/g,
-      (full, tagName) => {
-        tagName = tagName.toUpperCase();
-
-        if (tagName == 'A') {
-          return full;
-        }
-
-        if (tagName == 'D') {
-          return '</a>';
-        }
-
-        return `</span>`;
+      else {
+        treeParent = [...treeParent.slice(0, level), key];
       }
-    );
-};
 
-const parseSections = html => html.split('<span class="O">').map(
-  (section, idx) => (idx ? '<span class="O">' : '') + section.trim()
-);
+      treeLevel = level;
+
+      return [
+        ...ret,
+        {
+          "keys": treeParent,
+          "name": treeParent.map(
+            (key, idx) => key.match(/^[a-z_][a-z0-9_]*$/i) ? (
+              idx ? `.${key}` : key
+            ) : (
+              idx ? `[${key}]` : `_G[${key}]`
+            )
+          ).join(''),
+          "value": val,
+          "href": href,
+          "params": [],
+        },
+      ];
+    },
+    []
+  );
+}
+
+const parseRaw = html => {
+  const sections = html.split(new RegExp("<O><font size='20'>.+?</font></O>"));
+  const version = sections[0].replace(/<.+?>/g, '').trim();
+  const luaTree = parseLuaTree(sections[1]);
+  const events = sections[2].trim().split('\n\n').map(parseFunctionHelp);
+  const functions = sections[3].trim().split('\n\n').map(parseFunctionHelp);
+
+  return {
+    version,
+    luaTree,
+    events,
+    functions,
+  }
+}
+
+const renderSections = sections => {
+  id('current_version').innerHTML = `<div class="V TI">${sections.version}</div>`;
+
+  id('section_lua_tree').section = sections.luaTree;
+  id('section_lua_tree').innerHTML = '<span class="O" style="font-size: 20px">Lua Tree</span><br /><br />' +
+  sections.luaTree.map(elm => `
+    <div class="luatree-elm" id="luatree_${elm.name}">
+      <a href="#${elm.name}">${elm.name}</a>${elm.value ? ": " : ""}
+      <span class="G">${elm.value || ""}</span>
+    </div>
+  `).join('');
+
+  id('section_events').section = sections.events;
+  id('section_events').innerHTML = '<span class="O" style="font-size: 20px">Events</span><br /><br />' +
+  sections.events.map(elm => `
+    <div class="events-elm" id="events_${elm.name}">
+      <a id="${elm.name}" href="#${elm.name}" class="D">${elm.name}</a>
+      <span class="N">
+        (<span class="V">${elm.params.join('</span>, <span class="V">')}</span>)
+      </span>
+      <br />
+      <span class="N">${elm.description.join('<br />')}</span>
+      <br />
+
+      <button onclick="toggle('code_${elm.name}')">Code</button>
+
+      ${(elm.details.others.length || customHelpData[elm.name]?.extra?.length) ? `
+      <button onclick="toggle('others_${elm.name}')">More</button>
+      ` : ''}
+
+      <div id="code_${elm.name}" style="display: none">
+        <textarea onclick="copyText(this)" readonly="readonly">function ${elm.name}(${elm.params.join(', ')})
+
+end</textarea>
+      </div>
+
+      ${elm.details.params.length ? `
+      <table class="parameter-table" id="table_param_${elm.name}">
+      <thead>
+        <tr>
+          <th class="J">#</th>
+          <th class="V">parameter</th>
+          <th class="BL">type</th>
+          <th>description</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${elm.details.params.map(
+          (det, idx) => `
+          <tr>
+            <td class="J">${idx + 1}</td>
+            <td class="V">${det.name}</td>
+            <td class="BL">${det.type}</td>
+            <td>
+              ${det.desc}
+              ${det.subparams.length ? `
+                <br />
+                <span class="BL">
+                ${det.subparams.join('<br />')}
+                </span>
+              ` : ''}
+            </td>
+          </tr>
+          `
+        ).join('')}
+      </tbody>
+      </table>
+      ` : ''}
+
+      ${(elm.details.others.length || customHelpData[elm.name]?.extra?.length) ? `
+      <p class="G" id="others_${elm.name}" style="display: none">
+        ${elm.details.others.join('<br />')}
+        <br />
+        ${customHelpData[elm.name]?.extra?.join('<br />')}
+      </p>
+      ` : ''}
+    </div>
+  `).join('');
+
+  id('section_functions').section = sections.functions;
+  id('section_functions').innerHTML = '<span class="O" style="font-size: 20px">Functions</span><br /><br />' +
+  sections.functions.map(elm => `
+    <div class="functions-elm" id="functions_${elm.name}">
+      <a id="${elm.name}" href="#${elm.name}" class="D">${elm.name}</a>
+      <span class="N">
+        (<span class="V">${elm.params.join('</span>, <span class="V">')}</span>)
+      </span>
+      <br />
+      <span class="N">${elm.description.join('<br />')}</span>
+      <br />
+      <br />
+
+      <button onclick="toggle('code_${elm.name}')">Code</button>
+
+      ${(elm.details.others.length || customHelpData[elm.name]?.extra?.length) ? `
+      <button onclick="toggle('others_${elm.name}')">More</button>
+      ` : ''}
+
+      <div id="code_${elm.name}" style="display: none">
+        <input type="text" value="${elm.name}(${elm.params.join(', ')})" onclick="copyText(this)" readonly="readonly" />
+        <br />
+
+        <label>Defaults</label>
+        <br />
+        <input type="text" value="${elm.name}(${
+          elm.params.map((param, i) => elm.details.params[i]?.def || param).join(', ')
+        })" onclick="copyText(this)" readonly="readonly" />
+
+        ${customHelpData[elm.name]?.examples?.length ? `
+        <br />
+
+        ${customHelpData[elm.name].examples.map((example, idx) => `
+        <label>Example ${idx + 1}</label>
+        <br />
+        <input type="text" value="${elm.name}(${
+          elm.params.map((param, i) => example[i] || elm.details.params[i]?.def || param).join(', ')
+        })" onclick="copyText(this)" readonly="readonly" />
+        `)}
+        ` : ''}
+      </div>
+
+      ${elm.details.params.length ? `
+      <table class="parameter-table" id="table_param_${elm.name}">
+      <thead>
+        <tr>
+          <th class="J">#</th>
+          <th class="V">parameter</th>
+          <th class="BL">type</th>
+          <th class="G">default</th>
+          <th>description</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${elm.details.params.map(
+          (det, idx) => `
+          <tr>
+            <td class="J">${idx + 1}</td>
+            <td class="V">${det.name}</td>
+            <td class="BL">${det.type}</td>
+            <td class="G">${det.def || '-'}</td>
+            <td>
+              ${det.desc}
+              ${det.subparams.length ? `
+                <br />
+                <span class="BL">
+                ${det.subparams.join('<br />')}
+                </span>
+              ` : ''}
+            </td>
+          </tr>
+          `
+        ).join('')}
+      </tbody>
+      </table>
+      ` : ''}
+
+      ${(elm.details.others.length || customHelpData[elm.name]?.extra?.length) ? `
+      <p class="G" id="others_${elm.name}" style="display: none">
+        ${elm.details.others.join('<br />')}
+        <br />
+        ${customHelpData[elm.name]?.extra?.join('<br />')}
+      </p>
+      ` : ''}
+    </div>
+  `).join('');
+
+  id('error').innerHTML = "";
+  id('input_filter').value = "";
+}
 
 const errorSet = err => {
   id('content').innerHTML = defaultContent;
@@ -113,17 +348,12 @@ const loadVersion = (version, gotoAnchor, errorCallback) => {
     })
     .then(data => data.text())
     .then(data => {
-      const content = replaceTags(data);
-      const sections = parseSections(content);
+      const sections = parseRaw(data);
 
-      id('current_version').innerHTML = sections[0] || version;
-      id('section_lua_tree').innerHTML = sections[1] || "";
-      id('section_events').innerHTML = sections[2] || "";
-      id('section_events').dataset.original = id('section_events').innerHTML;
-      id('section_functions').innerHTML = sections[3] || "";
-      id('section_functions').dataset.original = id('section_functions').innerHTML;
-      id('error').innerHTML = "";
-      id('input_filter').value = "";
+      sections.version = sections.version || version;
+
+      console.log(sections);
+      renderSections(sections);
 
       if (gotoAnchor && window.location.hash) {
         window.location = window.location;
@@ -193,29 +423,34 @@ if (window.localStorage) {
 }
 
 // Filter functions/events
-const filterContent = (content, value) => {
-  const headers = [
-    ...content.matchAll(/<a id="([^"]+)" href="[^"]+" class="D">/g)
-  ];
-  const parts = content.split(/<a id="[^"]+" href="[^"]+" class="D">/);
-  const reg = new RegExp(value);
-
-  return parts[0] + headers.map((head, index) => 
-    head[1].toLowerCase().match(reg) ? (head[0] + parts[index + 1]) : null
-  ).filter(Boolean).join('');
-};
-
-id('input_filter').addEventListener('keyup', () => {
-  const value = id('input_filter').value.toLowerCase().match(/[a-z]+/g)?.join('') || '';
-
+const filterContent = (className, elmId, value, reg) => {
   if (!value) {
-    id('section_events').innerHTML = id('section_events').dataset.original;
-    id('section_functions').innerHTML = id('section_functions').dataset.original;
+    byClass(className).map(elm => elm.style.display = null);
     return;
   }
 
-  id('section_events').innerHTML = filterContent(id('section_events').dataset.original, value);
-  id('section_functions').innerHTML = filterContent(id('section_functions').dataset.original, value);
+  const section = id(elmId).section;
+
+  if (!section) {
+    return;
+  }
+
+  byClass(className)
+    .map((elm, idx) => {
+      const cond = !!section[idx].name.match(reg) || section[idx].params && section[idx].params.some(
+        param => !!param.match(reg)
+      );
+      elm.style.display = cond ? null : "none";
+    });
+};
+
+id('input_filter').addEventListener('keyup', () => {
+  const value = id('input_filter').value.trim();
+  const reg = new RegExp(value, 'i');
+
+  filterContent('luatree-elm', 'section_lua_tree', value, reg);
+  filterContent('events-elm', 'section_events', value, reg);
+  filterContent('functions-elm', 'section_functions', value, reg);
 });
 
 // Toggle between row/column mode
