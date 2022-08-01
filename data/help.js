@@ -11,5 +11,10 @@ var customHelpData = {
     "extra": [
       "You can request to host an image on <a href=\"https://atelier801.com/topic?f=6&t=893819&p=1\">Module Image Upload Center</a>"
     ]
+  },
+  "tfm.exec.playSound": {
+    "examples": [
+      ["'cite18/voix/en/marion-bonjour-4'", "100"]
+    ]
   }
 };
