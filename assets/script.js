@@ -34,10 +34,6 @@ const parseFunctionHelp = html => {
 
     const tag = line.trim().match(/^<(.+?)>/m)?.[1];
 
-    if (name == "tfm.exec.newGame") {
-      console.log(tag);
-    }
-
     if (tag == "V") {
       const [_, name, type, desc, def, other] = line.match(
         /<V>(.+?)<\/V><G> \((.+?)\)<\/G><BL>\s*(.+?)\s*<\/BL>(?: <G>\(default (.+?)(?:\s+(.+?))?\)<\/G>)?/
@@ -81,6 +77,29 @@ const parseFunctionHelp = html => {
     return ret;
   }, { "params": [], "others": [] });
 
+  const custom = customHelpData[name];
+
+  if (custom) {
+    if (custom.extra?.length) {
+      details.others = [
+        ...details.others,
+        ...custom.extra
+      ];
+    }
+
+    const customParams = custom.params;
+
+    if (customParams) {
+      details.params = details.params.map(param => customParams[param.name]?.subparams?.length ? ({
+        ...param,
+        "subparams": [
+          ...param.subparams,
+          ...customParams[param.name]?.subparams
+        ],
+      }) : param);
+    }
+  }
+
   return {
     name,
     params,
@@ -93,54 +112,80 @@ const parseLuaTree = html => {
   let treeParent = [];
   let treeLevel = 0;
 
-  return html.trim().split('<br />').reduce(
-    (ret, line, idx) => {
-      const href = line.match(/href='(.+?)'/)?.[1];
-      const text = line.replace(/<.+?>/g, '');
-      const match = text.match(/^(\s*)(.+?)(?: \: (.+?))?$/);
+  return Object.keys(customHelpData)
+    .filter(key => customHelpData[key].luatree)
+    .map(key => {
+      const obj = customHelpData[key].luatree;
 
-      if (!match) {
-        return ret;
+      obj.name = obj.name || key;
+      obj.keys = obj.keys || obj.name.split('.');
+      obj.params = obj.params || [];
+
+      return obj;
+    })
+    .reduce((list, obj) => {
+      const item = list.filter(it => it.name == obj.name)[0];
+
+      if (item) {
+        item.name = obj.name || item.name;
+        item.keys = obj.keys || item.keys;
+        item.value = obj.value || item.value;
+        item.href = obj.href || item.href;
+        item.params = item.params.length ? (obj.params ? [...item.params, ...obj.params] : item.params) : obj.params;
+      } else {
+        list.push(obj);
       }
 
-      const [_, indent, key, val] = match;
-      const level = indent ? (indent.length / 2) : 0;
-
-      if (level == treeLevel) {
-        if (!treeParent.length) {
-          treeParent = [key];
-        } else {
-          treeParent[treeParent.length - 1] = key;
-        }
-      }
-      else if (level > treeLevel) {
-        treeParent = [...treeParent, key];
-      }
-      else {
-        treeParent = [...treeParent.slice(0, level), key];
-      }
-
-      treeLevel = level;
-
-      return [
-        ...ret,
-        {
-          "keys": treeParent,
-          "name": treeParent.map(
-            (key, idx) => key.match(/^[a-z_][a-z0-9_]*$/i) ? (
-              idx ? `.${key}` : key
-            ) : (
-              idx ? `[${key}]` : `_G[${key}]`
-            )
-          ).join(''),
-          "value": val,
-          "href": href,
-          "params": [],
-        },
-      ];
+      return list;
     },
-    []
-  );
+    html.trim().split('<br />').reduce(
+      (ret, line, idx) => {
+        const href = line.match(/href='(.+?)'/)?.[1];
+        const text = line.replace(/<.+?>/g, '');
+        const match = text.match(/^(\s*)(.+?)(?: \: (.+?))?$/);
+
+        if (!match) {
+          return ret;
+        }
+
+        const [_, indent, key, val] = match;
+        const level = indent ? (indent.length / 2) : 0;
+
+        if (level == treeLevel) {
+          if (!treeParent.length) {
+            treeParent = [key];
+          } else {
+            treeParent[treeParent.length - 1] = key;
+          }
+        }
+        else if (level > treeLevel) {
+          treeParent = [...treeParent, key];
+        }
+        else {
+          treeParent = [...treeParent.slice(0, level), key];
+        }
+
+        treeLevel = level;
+
+        return [
+          ...ret,
+          {
+            "keys": treeParent,
+            "name": treeParent.map(
+              (key, idx) => key.match(/^[a-z_][a-z0-9_]*$/i) ? (
+                idx ? `.${key}` : key
+              ) : (
+                idx ? `[${key}]` : `_G[${key}]`
+              )
+            ).join(''),
+            "value": val,
+            "href": href,
+            "params": [],
+          },
+        ];
+      },
+      []
+    )).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 const parseRaw = html => {
@@ -158,171 +203,135 @@ const parseRaw = html => {
   }
 }
 
+const renderLuaTreeItem = elm => `
+  <div class="luatree-elm" id="luatree_${elm.name}">
+    <a href="#${elm.name}">${elm.name}</a>${elm.value ? ": " : ""}
+    <span class="G">${elm.value || ""}</span>
+  </div>
+`;
+
+const renderLuaTree = tree => `<span class="O section-head">Lua Tree</span>
+<br />
+<br />
+${tree.map(renderLuaTreeItem).join('')}
+`;
+
+const renderEventExamples = elm => `
+<textarea onclick="copyText(this)" readonly="readonly">function ${elm.name}(${elm.params.join(', ')})
+
+end</textarea>
+`;
+
+const renderFunctionExamples = elm => `
+  <input type="text" value="${elm.name}(${elm.params.join(', ')})" onclick="copyText(this)" readonly="readonly" />
+  <br />
+
+  <label>Defaults</label>
+  <br />
+  <input type="text" value="${elm.name}(${
+    elm.params.map((param, i) => elm.details.params[i]?.def || param).join(', ')
+  })" onclick="copyText(this)" readonly="readonly" />
+
+  ${customHelpData[elm.name]?.examples?.length ? `
+  <br />
+
+  ${customHelpData[elm.name].examples.map((example, idx) => `
+  <label>Example ${idx + 1}</label>
+  <br />
+  <input type="text" value="${elm.name}(${
+    elm.params.map((param, i) => example[i] || elm.details.params[i]?.def || param).join(', ')
+  })" onclick="copyText(this)" readonly="readonly" />
+  `)}
+  ` : ''}
+`;
+
+const renderParameter = type => (param, idx) => `
+<tr>
+  <td class="J">${idx + 1}</td>
+  <td class="V">${param.name}</td>
+  <td class="BL">${param.type}</td>
+  ${type == "functions" ? `<td class="G">${param.def || '-'}</td>` : ''}
+  <td>
+    ${param.desc}
+    ${param.subparams.length ? `
+      <br />
+      <span class="BL">
+      ${param.subparams.join('<br />')}
+      </span>
+    ` : ''}
+  </td>
+</tr>
+`
+
+const renderFunction = type => elm => `
+<div class="${type}-elm" id="${type}_${elm.name}">
+  <a id="${elm.name}" href="#${elm.name}" class="D">${elm.name}</a>
+  <span class="N">
+    (<span class="V">${elm.params.join('</span>, <span class="V">')}</span>)
+  </span>
+  <br />
+  <span class="N">${elm.description.join('<br />')}</span>
+  <br />
+  <br />
+
+  <button onclick="toggle('code_${elm.name}')">Code</button>
+
+  ${elm.details.others.length ? `
+  <button onclick="toggle('others_${elm.name}')">More</button>
+  ` : ''}
+
+  <div id="code_${elm.name}" style="display: none">
+    ${type == 'functions' ? renderFunctionExamples(elm) : renderEventExamples(elm)}
+  </div>
+
+  ${elm.details.params.length ? `
+  <table class="parameter-table" id="table_param_${elm.name}">
+  <thead>
+    <tr>
+      <th class="J">#</th>
+      <th class="V">parameter</th>
+      <th class="BL">type</th>
+      ${type == "functions" ? '<th class="G">default</th>' : ''}
+      <th>description</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${elm.details.params.map(renderParameter(type)).join('')}
+  </tbody>
+  </table>
+  ` : ''}
+
+  ${elm.details.others.length ? `
+  <p class="G" id="others_${elm.name}" style="display: none">
+    ${elm.details.others.join('<br />')}
+  </p>
+  ` : ''}
+</div>
+`;
+
+const renderFunctions = functions => `<span class="O section-head">Functions</span>
+<br />
+<br />
+${functions.map(renderFunction('functions')).join('')}
+`;
+
+const renderEvents = events => `<span class="O section-head">Events</span>
+<br />
+<br />
+${events.map(renderFunction('events')).join('')}
+`;
+
 const renderSections = sections => {
   id('current_version').innerHTML = `<div class="V TI">${sections.version}</div>`;
 
   id('section_lua_tree').section = sections.luaTree;
-  id('section_lua_tree').innerHTML = '<span class="O" style="font-size: 20px">Lua Tree</span><br /><br />' +
-  sections.luaTree.map(elm => `
-    <div class="luatree-elm" id="luatree_${elm.name}">
-      <a href="#${elm.name}">${elm.name}</a>${elm.value ? ": " : ""}
-      <span class="G">${elm.value || ""}</span>
-    </div>
-  `).join('');
+  id('section_lua_tree').innerHTML = renderLuaTree(sections.luaTree);
 
   id('section_events').section = sections.events;
-  id('section_events').innerHTML = '<span class="O" style="font-size: 20px">Events</span><br /><br />' +
-  sections.events.map(elm => `
-    <div class="events-elm" id="events_${elm.name}">
-      <a id="${elm.name}" href="#${elm.name}" class="D">${elm.name}</a>
-      <span class="N">
-        (<span class="V">${elm.params.join('</span>, <span class="V">')}</span>)
-      </span>
-      <br />
-      <span class="N">${elm.description.join('<br />')}</span>
-      <br />
-
-      <button onclick="toggle('code_${elm.name}')">Code</button>
-
-      ${(elm.details.others.length || customHelpData[elm.name]?.extra?.length) ? `
-      <button onclick="toggle('others_${elm.name}')">More</button>
-      ` : ''}
-
-      <div id="code_${elm.name}" style="display: none">
-        <textarea onclick="copyText(this)" readonly="readonly">function ${elm.name}(${elm.params.join(', ')})
-
-end</textarea>
-      </div>
-
-      ${elm.details.params.length ? `
-      <table class="parameter-table" id="table_param_${elm.name}">
-      <thead>
-        <tr>
-          <th class="J">#</th>
-          <th class="V">parameter</th>
-          <th class="BL">type</th>
-          <th>description</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${elm.details.params.map(
-          (det, idx) => `
-          <tr>
-            <td class="J">${idx + 1}</td>
-            <td class="V">${det.name}</td>
-            <td class="BL">${det.type}</td>
-            <td>
-              ${det.desc}
-              ${det.subparams.length ? `
-                <br />
-                <span class="BL">
-                ${det.subparams.join('<br />')}
-                </span>
-              ` : ''}
-            </td>
-          </tr>
-          `
-        ).join('')}
-      </tbody>
-      </table>
-      ` : ''}
-
-      ${(elm.details.others.length || customHelpData[elm.name]?.extra?.length) ? `
-      <p class="G" id="others_${elm.name}" style="display: none">
-        ${elm.details.others.join('<br />')}
-        <br />
-        ${customHelpData[elm.name]?.extra?.join('<br />')}
-      </p>
-      ` : ''}
-    </div>
-  `).join('');
+  id('section_events').innerHTML = renderEvents(sections.events);
 
   id('section_functions').section = sections.functions;
-  id('section_functions').innerHTML = '<span class="O" style="font-size: 20px">Functions</span><br /><br />' +
-  sections.functions.map(elm => `
-    <div class="functions-elm" id="functions_${elm.name}">
-      <a id="${elm.name}" href="#${elm.name}" class="D">${elm.name}</a>
-      <span class="N">
-        (<span class="V">${elm.params.join('</span>, <span class="V">')}</span>)
-      </span>
-      <br />
-      <span class="N">${elm.description.join('<br />')}</span>
-      <br />
-      <br />
-
-      <button onclick="toggle('code_${elm.name}')">Code</button>
-
-      ${(elm.details.others.length || customHelpData[elm.name]?.extra?.length) ? `
-      <button onclick="toggle('others_${elm.name}')">More</button>
-      ` : ''}
-
-      <div id="code_${elm.name}" style="display: none">
-        <input type="text" value="${elm.name}(${elm.params.join(', ')})" onclick="copyText(this)" readonly="readonly" />
-        <br />
-
-        <label>Defaults</label>
-        <br />
-        <input type="text" value="${elm.name}(${
-          elm.params.map((param, i) => elm.details.params[i]?.def || param).join(', ')
-        })" onclick="copyText(this)" readonly="readonly" />
-
-        ${customHelpData[elm.name]?.examples?.length ? `
-        <br />
-
-        ${customHelpData[elm.name].examples.map((example, idx) => `
-        <label>Example ${idx + 1}</label>
-        <br />
-        <input type="text" value="${elm.name}(${
-          elm.params.map((param, i) => example[i] || elm.details.params[i]?.def || param).join(', ')
-        })" onclick="copyText(this)" readonly="readonly" />
-        `)}
-        ` : ''}
-      </div>
-
-      ${elm.details.params.length ? `
-      <table class="parameter-table" id="table_param_${elm.name}">
-      <thead>
-        <tr>
-          <th class="J">#</th>
-          <th class="V">parameter</th>
-          <th class="BL">type</th>
-          <th class="G">default</th>
-          <th>description</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${elm.details.params.map(
-          (det, idx) => `
-          <tr>
-            <td class="J">${idx + 1}</td>
-            <td class="V">${det.name}</td>
-            <td class="BL">${det.type}</td>
-            <td class="G">${det.def || '-'}</td>
-            <td>
-              ${det.desc}
-              ${det.subparams.length ? `
-                <br />
-                <span class="BL">
-                ${det.subparams.join('<br />')}
-                </span>
-              ` : ''}
-            </td>
-          </tr>
-          `
-        ).join('')}
-      </tbody>
-      </table>
-      ` : ''}
-
-      ${(elm.details.others.length || customHelpData[elm.name]?.extra?.length) ? `
-      <p class="G" id="others_${elm.name}" style="display: none">
-        ${elm.details.others.join('<br />')}
-        <br />
-        ${customHelpData[elm.name]?.extra?.join('<br />')}
-      </p>
-      ` : ''}
-    </div>
-  `).join('');
+  id('section_functions').innerHTML = renderFunctions(sections.functions);
 
   id('error').innerHTML = "";
   id('input_filter').value = "";

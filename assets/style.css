@@ -92,3 +92,7 @@ button {
   flex-grow: 1;
   width: 0;
 }
+
+.section-head {
+  font-size: 20px;
+}
