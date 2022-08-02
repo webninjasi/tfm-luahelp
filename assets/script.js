@@ -1,3 +1,8 @@
+const luatreeReplacements = {
+  "Tigrounette": "Tigrounette#0001",
+  "Pikashu": "Pikashu#0095",
+};
+
 const id = selector => document.getElementById(selector);
 const byClass = selector => [...document.getElementsByClassName(selector)];
 const defaultContent = id('content').innerHTML;
@@ -148,8 +153,11 @@ const parseLuaTree = html => {
           return ret;
         }
 
-        const [_, indent, key, val] = match;
+        let [_, indent, key, val] = match;
         const level = indent ? (indent.length / 2) : 0;
+
+        key = luatreeReplacements[key] || key;
+        val = luatreeReplacements[val] || val;
 
         if (level == treeLevel) {
           if (!treeParent.length) {
@@ -175,7 +183,7 @@ const parseLuaTree = html => {
               (key, idx) => key.match(/^[a-z_][a-z0-9_]*$/i) ? (
                 idx ? `.${key}` : key
               ) : (
-                idx ? `[${key}]` : `_G[${key}]`
+                `${idx ? '' : '_G'}[${isNaN(parseInt(key)) ? `"${key}"` : key}]`
               )
             ).join(''),
             "value": val,
