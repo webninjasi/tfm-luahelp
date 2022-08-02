@@ -16,5 +16,72 @@ var customHelpData = {
     "examples": [
       ["'cite18/voix/en/marion-bonjour-4'", "100"]
     ]
+  },
+  "tfm.get.room.uniquePlayers": {
+    "luatree": {
+      "value": "1"
+    },
+  },
+  "tfm.get.room.xmlMapInfo": {
+    "luatree": {
+
+    },
+  },
+  "tfm.get.room.xmlMapInfo.permCode": {
+    "luatree": {
+      "value": "22"
+    },
+  },
+  "tfm.get.room.xmlMapInfo.author": {
+    "luatree": {
+      "value": "\"Lays#1146\""
+    },
+  },
+  "tfm.get.room.xmlMapInfo.mapCode": {
+    "luatree": {
+      "value": "7785550"
+    },
+  },
+  "tfm.get.room.xmlMapInfo.xml": {
+    "luatree": {
+      "value": escapeHTML('[[<C><P F="0" /><Z><S><S L="800" X="400" H="50" Y="400" T="6" P="0,0,0.3,0.2,0,0,0,0" /></S><D><T Y="375" X="100" /><F Y="210" X="700" /></D><O /></Z></C>]]')
+    },
+  },
+  "tfm.get.room.currentMap": {
+    "luatree": {
+      "value": "\"@7785550\""
+    }
+  },
+  "eventContactListener": {
+    "params": {
+      "contactInfos": {
+        "subparams": [
+          "speedX (Float)",
+          "speedY (Float)",
+          "playerX (Float)",
+          "playerY (Float)",
+          "contactX (Float)",
+          "contactY (Float)"
+        ]
+      }
+    }
+  },
+  "eventSummoningEnd": {
+    "params": {
+      "objectDescription": {
+        "subparams": [
+          "id (Int)",
+          "type (Int)",
+          "baseType (Int)",
+          "x (Int)",
+          "y (Int)",
+          "vx (Int)",
+          "vy (Int)",
+          "angle (Int)",
+          "ghost (Boolean)",
+          "colors (Table)",
+        ]
+      }
+    }
   }
 };
