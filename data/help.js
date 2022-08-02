@@ -34,7 +34,7 @@ var customHelpData = {
   },
   "tfm.get.room.xmlMapInfo.author": {
     "luatree": {
-      "value": "\"Lays#1146\""
+      "value": "Lays#1146"
     },
   },
   "tfm.get.room.xmlMapInfo.mapCode": {
@@ -44,12 +44,12 @@ var customHelpData = {
   },
   "tfm.get.room.xmlMapInfo.xml": {
     "luatree": {
-      "value": escapeHTML('[[<C><P F="0" /><Z><S><S L="800" X="400" H="50" Y="400" T="6" P="0,0,0.3,0.2,0,0,0,0" /></S><D><T Y="375" X="100" /><F Y="210" X="700" /></D><O /></Z></C>]]')
+      "value": escapeHTML('<C><P F="0" /><Z><S><S L="800" X="400" H="50" Y="400" T="6" P="0,0,0.3,0.2,0,0,0,0" /></S><D><T Y="375" X="100" /><F Y="210" X="700" /></D><O /></Z></C>')
     },
   },
   "tfm.get.room.currentMap": {
     "luatree": {
-      "value": "\"@7785550\""
+      "value": "@7785550"
     }
   },
   "eventContactListener": {
