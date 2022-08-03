@@ -416,29 +416,6 @@ fetch('versions')
   })
   .catch(err => errorSet(err));
 
-// Lua Tree Toggle
-const updateLuaTreeState = (state) => {
-  id('btn_toggle_tree').innerHTML = state ? "Hide Lua Tree" : "Show Lua Tree";
-  id('section_lua_tree').style.display = state ? null : 'none';
-
-  if (window.localStorage) {
-    localStorage.setItem('show_lua_tree', JSON.stringify(state));
-  }
-}
-
-id('btn_toggle_tree').addEventListener('click', () => {
-  const state = id('section_lua_tree').style.display != 'none';
-  updateLuaTreeState(!state);
-});
-
-if (window.localStorage) {
-  const show = localStorage.getItem('show_lua_tree') == 'true';
-
-  if (show) {
-    updateLuaTreeState(true);
-  }
-}
-
 // Filter functions/events
 const filterContent = (className, elmId, value, reg) => {
   if (!value) {
