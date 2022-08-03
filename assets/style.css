@@ -26,6 +26,10 @@ button {
   font-weight: bold;
 }
 
+.btn-small {
+  font-size: 0.8em;
+}
+
 .wrapper {
   display: flex;
   flex-direction: column;
@@ -62,8 +66,7 @@ button {
 }
 
 .parameter-table {
-  margin-top: 1em;
-  border-collapse: collapse;
+  border-left: 2px solid #000000;
 }
 
 .parameter-table th {
@@ -75,6 +78,11 @@ button {
 .parameter-table td {
   padding: 0.3em;
   vertical-align: top;
+}
+
+#audio-wrapper {
+  overflow: auto;
+  flex-grow: 1;
 }
 
 .audio {

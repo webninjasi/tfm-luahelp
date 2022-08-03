@@ -6,8 +6,16 @@ const luatreeReplacements = {
 const id = selector => document.getElementById(selector);
 const byClass = selector => [...document.getElementsByClassName(selector)];
 const defaultContent = id('content').innerHTML;
-const toggle = elmId => id(elmId).style.display = id(elmId).style.display == "none" ? null : "none";
-const copyText = elm => {
+const toggle = (elmId, value) => id(elmId).style.display = (value == null && id(elmId).style.display == "none" || value) ? null : "none";
+const copyText = (elm, value) => {
+  if (typeof(elm) == "string") {
+    elm = id(elm);
+  }
+
+  if (value) {
+    elm.value = value;
+  }
+
   elm.select();
   document.execCommand('copy');
 };
@@ -114,29 +122,36 @@ const parseFunctionHelp = html => {
 }
 
 const parseLuaTree = html => {
+  let tree = {};
   let treeParent = [];
   let treeLevel = 0;
 
   return Object.keys(customHelpData)
     .filter(key => customHelpData[key].luatree)
     .map(key => {
+      // Fill empty fields in custom tree items
       const obj = customHelpData[key].luatree;
 
       obj.name = obj.name || key;
       obj.keys = obj.keys || obj.name.split('.');
-      obj.params = obj.params || [];
+      obj.id = obj.keys.join('.');
+      obj.parent = obj.keys.slice(0, -1).join('.');
+      obj.children = [];
 
       return obj;
     })
     .reduce((list, obj) => {
+      // Merge custom and parsed tree
       const item = list.filter(it => it.name == obj.name)[0];
 
       if (item) {
+        item.id = obj.id || item.id;
+        item.parent = obj.parent || item.parent;
         item.name = obj.name || item.name;
         item.keys = obj.keys || item.keys;
         item.value = obj.value || item.value;
         item.href = obj.href || item.href;
-        item.params = item.params.length ? (obj.params ? [...item.params, ...obj.params] : item.params) : obj.params;
+        item.children = [];
       } else {
         list.push(obj);
       }
@@ -144,7 +159,7 @@ const parseLuaTree = html => {
       return list;
     },
     html.trim().split('<br />').reduce(
-      (ret, line, idx) => {
+      (ret, line) => {
         const href = line.match(/href='(.+?)'/)?.[1];
         const text = line.replace(/<.+?>/g, '');
         const match = text.match(/^(\s*)(.+?)(?: \: (.+?))?$/);
@@ -159,11 +174,12 @@ const parseLuaTree = html => {
         key = luatreeReplacements[key] || key;
         val = luatreeReplacements[val] || val;
 
+        // Find parent child table relation using indentation level
         if (level == treeLevel) {
           if (!treeParent.length) {
             treeParent = [key];
           } else {
-            treeParent[treeParent.length - 1] = key;
+            treeParent = [...treeParent.slice(0, -1), key];
           }
         }
         else if (level > treeLevel) {
@@ -179,6 +195,8 @@ const parseLuaTree = html => {
           ...ret,
           {
             "keys": treeParent,
+            "parent": treeParent.slice(0, -1).join('.'),
+            "id": treeParent.join('.'),
             "name": treeParent.map(
               (key, idx) => key.match(/^[a-z_][a-z0-9_]*$/i) ? (
                 idx ? `.${key}` : key
@@ -188,12 +206,27 @@ const parseLuaTree = html => {
             ).join(''),
             "value": val,
             "href": href,
-            "params": [],
+            "children": [],
           },
         ];
       },
       []
-    )).sort((a, b) => a.name.localeCompare(b.name));
+    )).sort((a, b) => a.name.localeCompare(b.name))
+    .map((item, idx) => {
+      tree[item.id] = item;
+      item.index = idx;
+
+      if (tree[item.parent]) {
+        tree[item.parent].children.push(item);
+        item.parentIndexes = [
+          ...(item.parentIndexes || []),
+          ...(tree[item.parent].parentIndexes || []),
+          tree[item.parent].index,
+        ];
+      }
+
+      return item;
+    });
 }
 
 const parseRaw = html => {
@@ -212,16 +245,35 @@ const parseRaw = html => {
 }
 
 const renderLuaTreeItem = elm => `
-  <div class="luatree-elm" id="luatree_${elm.name}">
-    <a href="#${elm.name}">${elm.name}</a>${elm.value ? ": " : ""}
-    <span class="G">${elm.value || ""}</span>
-  </div>
+  <tr class="luatree-elm" ${(elm.children.length || elm.value) ? `id="${elm.id}"` : ''}>
+    <td>
+      <button class="btn-small" onclick="copyText('luatree_input', '${elm.name}')">Copy</button>
+    </td>
+    <td>
+      <a href="${elm.href ? elm.href : `#${elm.id}`}">${elm.keys[elm.keys.length - 1]}</a>
+    </td>
+    <td class="G">
+      ${
+        elm.children.length ? renderLuaTreeTable(elm.children, elm.id) : (elm.value || "")
+      }
+    </td>
+  </tr>
+`;
+
+const renderLuaTreeTable = (tree, parent) => `<table class="parameter-table">
+<tbody>
+  ${tree.filter(elm => elm.parent == parent).map(renderLuaTreeItem).join('')}
+</tbody>
+</table>
 `;
 
 const renderLuaTree = tree => `<span class="O section-head">Lua Tree</span>
 <br />
 <br />
-${tree.map(renderLuaTreeItem).join('')}
+<input id="luatree_input" type="text" readonly="readonly" />
+<br />
+<br />
+${renderLuaTreeTable(tree, '')}
 `;
 
 const renderEventExamples = elm => `
@@ -233,6 +285,7 @@ end</textarea>
 const renderFunctionExamples = elm => `
   <input type="text" value="${elm.name}(${elm.params.join(', ')})" onclick="copyText(this)" readonly="readonly" />
   <br />
+  <br />
 
   <label>Defaults</label>
   <br />
@@ -241,6 +294,7 @@ const renderFunctionExamples = elm => `
   })" onclick="copyText(this)" readonly="readonly" />
 
   ${customHelpData[elm.name]?.examples?.length ? `
+  <br />
   <br />
 
   ${customHelpData[elm.name].examples.map((example, idx) => `
@@ -289,10 +343,13 @@ const renderFunction = type => elm => `
   ` : ''}
 
   <div id="code_${elm.name}" style="display: none">
+    <br />
     ${type == 'functions' ? renderFunctionExamples(elm) : renderEventExamples(elm)}
   </div>
 
   ${elm.details.params.length ? `
+  <br />
+  <br />
   <table class="parameter-table" id="table_param_${elm.name}">
   <thead>
     <tr>
@@ -429,12 +486,21 @@ const filterContent = (className, elmId, value, reg) => {
     return;
   }
 
-  byClass(className)
+  const elements = byClass(className);
+
+  elements
     .map((elm, idx) => {
       const cond = !!section[idx].name.match(reg) || section[idx].params && section[idx].params.some(
         param => !!param.match(reg)
       );
+
       elm.style.display = cond ? null : "none";
+
+      if (cond && section[idx].parentIndexes) {
+        for (let index of section[idx].parentIndexes) {
+          elements[index].style.display = null;
+        }
+      }
     });
 };
 
@@ -457,15 +523,56 @@ const updateRowcol = (state) => {
   }
 }
 
-id('btn_toggle_rowcol').addEventListener('click', () => {
-  const state = id('sections').style.flexDirection == 'column';
-  updateRowcol(!state);
-});
+// Toggle save/load
+const getToggles = () => {
+  if (window.localStorage) {
+    return JSON.parse(localStorage.getItem('toggles') || "{}");
+  }
 
+  return {};
+}
+
+const saveToggle = (elmId, value) => {
+  toggle(elmId, value);
+
+  if (window.localStorage) {
+    localStorage.setItem('toggles', JSON.stringify({
+      ...getToggles(),
+      [elmId]: value
+    }));
+  }
+}
+
+
+// Init
 if (window.localStorage) {
   const state = localStorage.getItem('row_mode') == 'true';
 
   if (state) {
     updateRowcol(true);
   }
+
+  // Load toggles
+  const toggles = getToggles();
+  Object.keys(toggles).map(elmId => {
+    id("toggle_" + elmId.split('_')[1]).checked = toggles[elmId];
+    id(elmId).style.display = toggles[elmId] ? null : "none";
+  });
 }
+
+id('btn_toggle_rowcol').addEventListener('click', function() {
+  const state = id('sections').style.flexDirection == 'column';
+  updateRowcol(!state);
+});
+
+id('toggle_functions').addEventListener('change', function() {
+  saveToggle('section_functions', this.checked);
+});
+
+id('toggle_events').addEventListener('change', function() {
+  saveToggle('section_events', this.checked);
+});
+
+id('toggle_lua_tree').addEventListener('change', function() {
+  saveToggle('section_lua_tree', this.checked);
+});
