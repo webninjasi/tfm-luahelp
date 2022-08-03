@@ -52,6 +52,21 @@ var customHelpData = {
       "value": "@7785550"
     }
   },
+  "tfm.get.room.name": {
+    "luatree": {
+      "value": "*#test"
+    }
+  },
+  "tfm.get.room.community": {
+    "luatree": {
+      "value": "xx"
+    }
+  },
+  "tfm.get.room.language": {
+    "luatree": {
+      "value": "int"
+    }
+  },
   "eventContactListener": {
     "params": {
       "contactInfos": {
