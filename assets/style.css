@@ -45,9 +45,7 @@ button {
 }
 
 #content {
-  flex-grow: 1;
   margin-left: 1em;
-  overflow: auto;
 }
 
 .sections-wrapper {
@@ -80,25 +78,63 @@ button {
   vertical-align: top;
 }
 
-#audio-wrapper {
+#content, #audio-wrapper, #image-wrapper {
   overflow: auto;
   flex-grow: 1;
 }
 
-.audio {
+.audio, .image {
   padding: 1em;
   word-wrap: break-word;
   display: inline-block;
 }
 
-.audio .audio-tags {
+.audio .audio-tags, .image .image-tags {
   display: flex;
   padding: 1em 0 1em 0;
 }
 
-.audio .audio-tags div {
+.audio .audio-tags div, .image .image-tags div {
   flex-grow: 1;
   width: 0;
+}
+
+.image {
+  text-align: center;
+}
+
+.image img {
+  max-width: 30%;
+  cursor: pointer;
+}
+
+.image-dimensions {
+  padding: 0.3em;
+  font-size: 0.9em;
+}
+
+#image_overlay, #add_image_overlay {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  background-color: #1E3D42;
+}
+
+#image_overlay > div, #add_image_overlay > div {
+  margin: 1em;
+}
+
+#add_image_overlay textarea {
+  width: 100%;
+  height: 10em;
+}
+
+#image_overlay img {
+  border: 2px dashed #111111;
 }
 
 .section-head {
