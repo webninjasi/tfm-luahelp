@@ -31,9 +31,10 @@ function refresh() {
     '<div style="line-height:0.6;">&lt;textformat leading="-8"&gt;' + sample.substr(0, sample.length / 2)
     + '\\n<br />' + sample.substr(sample.length / 2) + '&lt;/textformat&gt;</div>',
     
-    '<div style="min-width:250px;display:inline-block;">&lt;textformat tabstops="[250]"&gt;' + sample.substr(0, sample.length / 2)
-    + '\\t</div><span>' + sample.substr(sample.length / 2) + '&lt;/textformat&gt;</span>',
-
+    '<div style="min-width:500px;display:inline-block;"><div style="min-width:250px;display:inline-block;">' +
+    '&lt;textformat tabstops="[250,500]"&gt;<br />' + sample.substr(0, sample.length / 2)
+    + '\\t</div>' + sample.substring(sample.length / 2, sample.length * 3 / 4) + '\\t</div>' + sample.substr(sample.length * 3 / 4) +
+    '&lt;/textformat&gt;',
     ''
   ]);
 
