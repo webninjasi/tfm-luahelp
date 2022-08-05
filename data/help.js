@@ -1,7 +1,28 @@
+var tagsMessage = "See various html tags you can use <a href=\"tags.html\">here</a>";
 var customHelpData = {
   "system.bindKeyboard": {
     "examples": [
       [null, "32", "'true'", "'true'"]
+    ]
+  },
+  "ui.addTextArea": {
+    "extra": [
+      tagsMessage,
+    ]
+  },
+  "ui.updateTextArea": {
+    "extra": [
+      tagsMessage,
+    ]
+  },
+  "tfm.exec.chatMessage": {
+    "extra": [
+      tagsMessage,
+    ]
+  },
+  "print": {
+    "extra": [
+      tagsMessage,
     ]
   },
   "tfm.exec.addImage": {
