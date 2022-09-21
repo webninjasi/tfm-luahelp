@@ -197,10 +197,8 @@ const renderLuaTreeItem = (tree, elm) => `
       <button class="btn-small" onclick="copyText('luatree_input', '${convertLuaPath(elm.name)}')">Copy</button>
     </td>
     <td>
-      ${
-        elm.added ? '<span class="item-added">+</span>' :
-        (elm.removed ? '<span class="item-removed">-</span>' : '')
-      }
+      ${elm.diff == 'added' ? '<span class="item-added">+</span>' : ''}
+      ${elm.diff == 'removed' ? '<span class="item-removed">-</span>' : ''}
       <a href="${elm.href ? elm.href : `#${elm.name}`}">${getPathLast(elm.name)}</a>
     </td>
     <td class="G">
