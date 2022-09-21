@@ -20,249 +20,202 @@ const copyText = (elm, value) => {
   document.execCommand('copy');
 };
 
-const parseFunctionHelp = html => {
-  const lines = html.trim().split('\n');
-  const [_, name, paramshtml] = lines[0].match(/<D>(.+?)<\/D>\((?:<V>)?(.*?)(?:<\/V>)?\)/);
-  const params = paramshtml.split('</V>, <V>');
+const getPathParent = (name) => name.split('.').slice(0, -1).join('.')
+const getPathLast = (name) => name.split('.').slice(-1)[0]
+const convertLuaPath = (name) => name.split('.').map(
+  (key, idx) => key.match(/^[a-z_][a-z0-9_]*$/i) ? (
+    idx ? `.${key}` : key
+  ) : (
+    `${idx ? '' : '_G'}[${isNaN(parseInt(key)) ? `"${key}"` : key}]`
+  )
+).join('')
 
-  let cond = true;
-  let lastIdx = 1;
-
-  const description = lines.slice(1).filter((line, idx) => {
-    if (!cond) {
-      return;
-    }
-
-    cond = line.trim().indexOf('<') !== 0;
-
-    if (cond) {
-      lastIdx = idx + 1;
-    }
-
-    return cond;
-  });
-
-  const details = lines.slice(lastIdx + 1).reduce((ret, line) => {
-    line = line.trim()
-
-    const tag = line.trim().match(/^<(.+?)>/m)?.[1];
-
-    if (tag == "V") {
-      const [_, name, type, desc, def, other] = line.match(
-        /<V>(.+?)<\/V><G> \((.+?)\)<\/G><BL>\s*(.+?)\s*<\/BL>(?: <G>\(default (.+?)(?:\s+(.+?))?\)<\/G>)?/
-      );
-
-      ret.params.push({
-        name,
-        type,
-        desc,
-        def,
-        subparams: other ? [other] : [],
-      });
-    }
-    else if (tag == "BL") {
-      const [_, text] = line.match(
-        /<BL>\s*\-?(.+?)<\/BL>/
-      );
-      const desc = text.trim();
-
-      if (ret.params[ret.params.length - 1]) {
-
-        ret.params[ret.params.length - 1].subparams.push(desc);
-      } else {
-        ret.others.push(desc);
+// obj1: raw data
+// obj2: help data
+const mergeObjects = (obj1, obj2) => {
+  if (typeof(obj1) == 'object' && typeof(obj2) == 'object') {
+    if (Array.isArray(obj1)) {
+      if (typeof(obj1[0]) != 'object') {
+        if (obj2.replace) {
+          return obj2.list;
+        } else {
+          return [
+            ...obj1,
+            ...obj2,
+          ];
+        }
       }
-    }
-    else if (tag == "R") {
-      const [_, type, desc] = line.match(
-        /<R>Returns<\/R> <G>\((.+?)\)<\/G> <BL>\s*(.+?)\s*<\/BL>/
-      );
 
-      ret.return = {
-        type,
-        desc,
-      };
-    }
-    else {
-      ret.others.push(line);
-    }
+      const nameMap1 = obj1.reduce((ret, x) => ({ ...ret, [x.name]: x }), {});
+      const nameMap2 = obj2.reduce((ret, x) => ({ ...ret, [x.name]: x }), {});
 
-    return ret;
-  }, { "params": [], "others": [] });
-
-  const custom = customHelpData[name];
-
-  if (custom) {
-    if (custom.extra?.length) {
-      details.others = [
-        ...details.others,
-        ...custom.extra
+      return [
+        ...obj1.filter(x => !nameMap2[x.name]),
+        ...obj2.filter(x => !nameMap1[x.name]),
+        ...obj1.filter(x => nameMap2[x.name]).map(
+          x => mergeObjects(x, nameMap2[x.name])
+        ),
       ];
     }
 
-    const customParams = custom.params;
+    return {
+      ...Object.keys(obj1).reduce(
+        (ret, key) => ({ ...ret, [key]: mergeObjects(obj1[key], obj2[key]) }),
+        {}
+      ),
+      ...Object.keys(obj2).reduce(
+        (ret, key) => ({ ...ret, [key]: mergeObjects(obj1[key], obj2[key]) }),
+        {}
+      ),
+    };
+  }
 
-    if (customParams) {
-      details.params = details.params.map(param => customParams[param.name]?.subparams?.length ? ({
-        ...param,
-        "subparams": [
-          ...param.subparams,
-          ...customParams[param.name]?.subparams
-        ],
-      }) : param);
+  return obj2 || obj1;
+}
+
+const compareObjects = (obj1, obj2, filter) => {
+  if (obj1 == obj2) {
+    return obj1;
+  }
+
+  if (typeof(obj1) == 'object' && typeof(obj2) == 'object') {
+    if (!obj1 || !obj2) {
+      return {
+        "added": obj1,
+        "removed": obj2,
+        "diff": true,
+      };
     }
+
+    if (Array.isArray(obj1)) {
+      if (typeof(obj1[0]) != 'object') {
+        // Hopefully they don't change order of parameters
+        const ret = [
+          ...obj1.slice(0, Math.min(obj2.length, obj1.length)).map((x, i) => compareObjects(x, obj2[i])),
+          ...obj2.slice(obj1.length).map(x => compareObjects(null, x)),
+          ...obj1.slice(obj2.length).map(x => compareObjects(x, null)),
+        ];
+
+        if (ret.filter((x, i) => obj1[i] != x).length == 0) {
+          return obj1;
+        }
+
+        return ret;
+      }
+
+      const nameMap1 = obj1.reduce((ret, x) => ({ ...ret, [x.name]: x }), {});
+      const nameMap2 = obj2.reduce((ret, x) => ({ ...ret, [x.name]: x }), {});
+
+      if (filter) {
+        return [
+          ...obj1.filter(x => !nameMap2[x.name]).map(
+            x => ({ ...x, diff: "added" })
+          ),
+          ...obj2.filter(x => !nameMap1[x.name]).map(
+            x => ({ ...x, diff: "removed" })
+          ),
+          ...obj1.filter(x => nameMap2[x.name]).map(
+            x => compareObjects(x, nameMap2[x.name])
+          ).filter(x => x != nameMap1[x.name]),
+        ];
+      }
+
+      let ret = [
+        ...obj1.filter(x => !nameMap2[x.name]).map(
+          x => compareObjects(x, null)
+        ),
+        ...obj2.filter(x => !nameMap1[x.name]).map(
+          x => compareObjects(null, x)
+        ),
+        ...obj1.filter(x => nameMap2[x.name]).map(
+          x => compareObjects(x, nameMap2[x.name])
+        ),
+      ];
+
+      if (ret.filter(x => x != nameMap1[x.name]).length == 0) {
+        return obj1;
+      }
+
+      return ret;
+    }
+
+    const keys = [
+      ...Object.keys(obj1),
+      ...Object.keys(obj2),
+    ];
+    let ret = keys.reduce(
+      (ret, key) => ({ ...ret, [key]: compareObjects(obj1[key], obj2[key]) }),
+      {}
+    );
+
+    if (keys.filter(key => ret[key] != obj1[key]).length == 0) {
+      return obj1;
+    }
+
+    return ret;
   }
 
   return {
-    name,
-    params,
-    description,
-    details,
+    "added": obj1,
+    "removed": obj2,
+    "diff": true,
   };
 }
 
-const parseLuaTree = html => {
-  let tree = {};
-  let treeParent = [];
-  let treeLevel = 0;
-
-  return Object.keys(customHelpData)
-    .filter(key => customHelpData[key].luatree)
-    .map(key => {
-      // Fill empty fields in custom tree items
-      const obj = customHelpData[key].luatree;
-
-      obj.name = obj.name || key;
-      obj.keys = obj.keys || obj.name.split('.');
-      obj.id = obj.keys.join('.');
-      obj.parent = obj.keys.slice(0, -1).join('.');
-      obj.children = [];
-
-      return obj;
-    })
-    .reduce((list, obj) => {
-      // Merge custom and parsed tree
-      const item = list.filter(it => it.name == obj.name)[0];
-
-      if (item) {
-        item.id = obj.id || item.id;
-        item.parent = obj.parent || item.parent;
-        item.name = obj.name || item.name;
-        item.keys = obj.keys || item.keys;
-        item.value = obj.value || item.value;
-        item.href = obj.href || item.href;
-        item.children = [];
-      } else {
-        list.push(obj);
-      }
-
-      return list;
-    },
-    html.trim().split('<br />').reduce(
-      (ret, line) => {
-        const href = line.match(/href='(.+?)'/)?.[1];
-        const text = line.replace(/<.+?>/g, '');
-        const match = text.match(/^(\s*)(.+?)(?: \: (.+?))?$/);
-
-        if (!match) {
-          return ret;
-        }
-
-        let [_, indent, key, val] = match;
-        const level = indent ? (indent.length / 2) : 0;
-
-        key = luatreeReplacements[key] || key;
-        val = luatreeReplacements[val] || val;
-
-        // Find parent child table relation using indentation level
-        if (level == treeLevel) {
-          if (!treeParent.length) {
-            treeParent = [key];
-          } else {
-            treeParent = [...treeParent.slice(0, -1), key];
-          }
-        }
-        else if (level > treeLevel) {
-          treeParent = [...treeParent, key];
-        }
-        else {
-          treeParent = [...treeParent.slice(0, level), key];
-        }
-
-        treeLevel = level;
-
-        return [
-          ...ret,
-          {
-            "keys": treeParent,
-            "parent": treeParent.slice(0, -1).join('.'),
-            "id": treeParent.join('.'),
-            "name": treeParent.map(
-              (key, idx) => key.match(/^[a-z_][a-z0-9_]*$/i) ? (
-                idx ? `.${key}` : key
-              ) : (
-                `${idx ? '' : '_G'}[${isNaN(parseInt(key)) ? `"${key}"` : key}]`
-              )
-            ).join(''),
-            "value": val,
-            "href": href,
-            "children": [],
-          },
-        ];
-      },
-      []
-    )).sort((a, b) => a.name.localeCompare(b.name))
-    .map((item, idx) => {
-      tree[item.id] = item;
-      item.index = idx;
-
-      if (tree[item.parent]) {
-        tree[item.parent].children.push(item);
-        item.parentIndexes = [
-          ...(item.parentIndexes || []),
-          ...(tree[item.parent].parentIndexes || []),
-          tree[item.parent].index,
-        ];
-      }
-
-      return item;
-    });
-}
-
-const parseRaw = html => {
-  const sections = html.split(new RegExp("<O><font size='20'>.+?</font></O>"));
-  const version = sections[0].replace(/<.+?>/g, '').trim();
-  const luaTree = parseLuaTree(sections[1]);
-  const events = sections[2].trim().split('\n\n').map(parseFunctionHelp);
-  const functions = sections[3].trim().split('\n\n').map(parseFunctionHelp);
+// v1 is latest version
+const compareVersions = (v1, v2) => {
+  const version = v2.version;
+  const tree = compareObjects(v1.tree, v2.tree, true);
+  const events = compareObjects(v1.events, v2.events, true);
+  const functions = compareObjects(v1.functions, v2.functions, true);
 
   return {
     version,
-    luaTree,
+    tree,
     events,
     functions,
   }
 }
 
-const renderLuaTreeItem = elm => `
-  <tr class="luatree-elm" ${(elm.children.length || elm.value) ? `id="${elm.id}"` : ''}>
+const cmpPathParent = (pathParent, cmpParent, tree) => {
+  if (cmpParent) {
+    return pathParent == cmpParent;
+  }
+
+  return tree.filter(x => x.name == pathParent).length == 0;
+}
+
+const renderDiff = x => `
+${x.added ? ('<span class="item-added">' + x.added + '</span> ') : ''}
+${x.removed ? ('<span class="item-removed">' + x.removed + '</span>') : ''}
+${!x.added && !x.removed ? x : ''}
+`.trim();
+
+const renderLuaTreeItem = (tree, elm) => `
+  <tr class="luatree-elm" id="${elm.name}">
     <td>
-      <button class="btn-small" onclick="copyText('luatree_input', '${elm.name}')">Copy</button>
+      <button class="btn-small" onclick="copyText('luatree_input', '${convertLuaPath(elm.name)}')">Copy</button>
     </td>
     <td>
-      <a href="${elm.href ? elm.href : `#${elm.id}`}">${elm.keys[elm.keys.length - 1]}</a>
+      ${
+        elm.added ? '<span class="item-added">+</span>' :
+        (elm.removed ? '<span class="item-removed">-</span>' : '')
+      }
+      <a href="${elm.href ? elm.href : `#${elm.name}`}">${getPathLast(elm.name)}</a>
     </td>
     <td class="G">
-      ${
-        elm.children.length ? renderLuaTreeTable(elm.children, elm.id) : (elm.value || "")
-      }
+      ${elm.value ? renderDiff(elm.value) : renderLuaTreeTable(tree, elm.name)}
     </td>
   </tr>
 `;
 
 const renderLuaTreeTable = (tree, parent) => `<table class="parameter-table">
 <tbody>
-  ${tree.filter(elm => elm.parent == parent).map(renderLuaTreeItem).join('')}
+${
+  tree.filter(
+    x => getPathParent(x.name) == parent
+  ).map(x => renderLuaTreeItem(tree, x)).join('')
+}
 </tbody>
 </table>
 `;
@@ -276,32 +229,37 @@ const renderLuaTree = tree => `<span class="O section-head">Lua Tree</span>
 ${renderLuaTreeTable(tree, '')}
 `;
 
+// Examples doesn't handle diffs since it doesn't apply extras on diff view
 const renderEventExamples = elm => `
-<textarea onclick="copyText(this)" readonly="readonly">function ${elm.name}(${elm.params.join(', ')})
+<textarea onclick="copyText(this)" readonly="readonly">function ${elm.name}(${elm.parameters.list.join(', ')})
 
 end</textarea>
 `;
 
 const renderFunctionExamples = elm => `
-  <input type="text" value="${elm.name}(${elm.params.join(', ')})" onclick="copyText(this)" readonly="readonly" />
+  <input type="text" value="${elm.name}(${elm.parameters ? elm.parameters.list.join(', ') : ''})" onclick="copyText(this)" readonly="readonly" />
   <br />
   <br />
 
   <label>Defaults</label>
   <br />
   <input type="text" value="${elm.name}(${
-    elm.params.map((param, i) => elm.details.params[i]?.def || param).join(', ')
+    elm.parameters ? elm.parameters.list.map(
+      (param, i) => elm.parameters.details[i]?.default_value || param
+    ).join(', ') : ''
   })" onclick="copyText(this)" readonly="readonly" />
 
-  ${customHelpData[elm.name]?.examples?.length ? `
+  ${elm.examples?.length ? `
   <br />
   <br />
 
-  ${customHelpData[elm.name].examples.map((example, idx) => `
+  ${elm.examples.map((example, idx) => `
   <label>Example ${idx + 1}</label>
   <br />
   <input type="text" value="${elm.name}(${
-    elm.params.map((param, i) => example[i] || elm.details.params[i]?.def || param).join(', ')
+    elm.parameters ? elm.parameters.list.map(
+      (param, i) => example[i] || elm.parameters.details[i]?.default_value || param
+    ).join(', ') : ''
   })" onclick="copyText(this)" readonly="readonly" />
   `)}
   ` : ''}
@@ -311,43 +269,59 @@ const renderParameter = type => (param, idx) => `
 <tr>
   <td class="J">${idx + 1}</td>
   <td class="V">${param.name}</td>
-  <td class="BL">${param.type}</td>
-  ${type == "functions" ? `<td class="G">${param.def || '-'}</td>` : ''}
+  <td class="BL">${renderDiff(param.type)}</td>
+  ${type == "functions" ? `<td class="G">${renderDiff(param.default_value || '-')}</td>` : ''}
   <td>
-    ${param.desc}
-    ${param.subparams.length ? `
+    ${param.descriptions.slice(0, 1).map(renderDiff).join('')}
+    ${param.descriptions.length > 1 ? `
       <br />
       <span class="BL">
-      ${param.subparams.join('<br />')}
+      ${param.descriptions.slice(1).map(renderDiff).join('<br />')}
       </span>
     ` : ''}
   </td>
 </tr>
 `
 
+const renderReturn = (param, idx) => `
+<tr>
+  <td class="R">${idx + 1}</td>
+  <td class="R">Returns</td>
+  <td class="BL">${param.type || "-"}</td>
+  <td class="G">-</td>
+  <td>${renderDiff(param.description || "")}</td>
+</tr>
+`
+
 const renderFunction = type => elm => `
 <div class="${type}-elm" id="${type}_${elm.name}">
+  ${elm.diff == "added" ? '<span class="item-added">+</span>' : ''}
+  ${elm.diff == "removed" ? '<span class="item-removed">-</span>' : ''}
   <a id="${elm.name}" href="#${elm.name}" class="D">${elm.name}</a>
   <span class="N">
-    (<span class="V">${elm.params.join('</span>, <span class="V">')}</span>)
+    (<span class="V">
+    ${
+      elm.parameters ? elm.parameters.list.map(renderDiff).join('</span>, <span class="V">') : ''
+    }
+    </span>)
   </span>
   <br />
-  <span class="N">${elm.description.join('<br />')}</span>
+  <span class="N">
+  ${
+    elm.descriptions ? elm.descriptions.map(renderDiff).join('<br />') : ''
+  }
+  </span>
   <br />
   <br />
 
   <button onclick="toggle('code_${elm.name}')">Code</button>
-
-  ${elm.details.others.length ? `
-  <button onclick="toggle('others_${elm.name}')">More</button>
-  ` : ''}
 
   <div id="code_${elm.name}" style="display: none">
     <br />
     ${type == 'functions' ? renderFunctionExamples(elm) : renderEventExamples(elm)}
   </div>
 
-  ${elm.details.params.length ? `
+  ${elm.parameters?.details?.length ? `
   <br />
   <br />
   <table class="parameter-table" id="table_param_${elm.name}">
@@ -361,15 +335,10 @@ const renderFunction = type => elm => `
     </tr>
   </thead>
   <tbody>
-    ${elm.details.params.map(renderParameter(type)).join('')}
+    ${elm.parameters?.details?.map(renderParameter(type)).join('')}
+    ${elm.returns ? renderReturn(elm.returns, elm.parameters?.details?.length || 0) : ''}
   </tbody>
   </table>
-  ` : ''}
-
-  ${elm.details.others.length ? `
-  <p class="G" id="others_${elm.name}" style="display: none">
-    ${elm.details.others.join('<br />')}
-  </p>
   ` : ''}
 </div>
 `;
@@ -389,8 +358,8 @@ ${events.map(renderFunction('events')).join('')}
 const renderSections = sections => {
   id('current_version').innerHTML = `<div class="V TI">${sections.version}</div>`;
 
-  id('section_lua_tree').section = sections.luaTree;
-  id('section_lua_tree').innerHTML = renderLuaTree(sections.luaTree);
+  id('section_luatree').section = sections.tree;
+  id('section_luatree').innerHTML = renderLuaTree(sections.tree);
 
   id('section_events').section = sections.events;
   id('section_events').innerHTML = renderEvents(sections.events);
@@ -405,37 +374,73 @@ const renderSections = sections => {
 const errorSet = err => {
   id('content').innerHTML = defaultContent;
   id('error').innerHTML = err.stack;
+  console.error(err.stack);
 };
 
-const loadVersion = (version, gotoAnchor, errorCallback) => {
+let latestVersion;
+let loadedVersions = {};
+
+const scanTree = tree => tree.map(item => {
+  item.children = tree.filter(x => getPathParent(x.name) == item.name);
+  return item;
+});
+
+const loadVersion = (version, initial, errorCallback) => {
   id('current_version').innerHTML = "...";
   id('section_functions').innerHTML = "Loading...";
   id('section_events').innerHTML = "Loading...";
-  id('section_lua_tree').innerHTML = "Loading...";
+  id('section_luatree').innerHTML = "Loading...";
 
-  fetch('raw/' + version)
+  const isExtra = version == 'latest+';
+  const versionPath = (isExtra || version == latestVersion) ? 'latest' : version;
+
+  function render(sections) {
+    if (versionPath == 'latest') {
+      if (isExtra) {
+        sections = mergeObjects(sections, customHelpData);
+        console.log("merged", sections);
+      }
+    } else {
+      sections = compareVersions(loadedVersions["latest"], sections);
+      console.log("diff", version, sections);
+    }
+
+    renderSections(sections);
+
+    if (initial) {
+      loadToggles();
+
+      if (window.location.hash) {
+        window.location = window.location;
+      }
+    }
+  }
+
+  if (loadedVersions[versionPath]) {
+    try {
+      render(loadedVersions[versionPath]);
+    }
+    catch (err) {
+      errorCallback(err);
+    }
+
+    return;
+  }
+
+  fetch('parsed/' + versionPath)
     .then(resp => {
       if (resp.status != 200) {
         throw new Error('Something went wrong try again!')
       }
       return resp;
     })
-    .then(data => data.text())
-    .then(data => {
-      const sections = parseRaw(data);
-
-      sections.version = sections.version || version;
-
-      console.log(sections);
-      renderSections(sections);
-
-      if (gotoAnchor && window.location.hash) {
-        window.location = window.location;
-      }
-
-      if (window.localStorage) {
-        localStorage.setItem('last_version', version);
-      }
+    .then(data => data.json())
+    .then(sections => {
+      sections.version = sections.version || versionPath;
+      scanTree(sections.tree);
+      console.log("loaded", versionPath, sections);
+      loadedVersions[versionPath] = sections;
+      render(sections);
     })
     .catch(errorCallback);
 }
@@ -451,10 +456,18 @@ fetch('versions')
   .then(data => data.text())
   .then(data => {
     const versions = data.split('\n');
-    let currentVersion = window.localStorage?.getItem('last_version') || versions[0];
+    const defaultVersion = 'latest+';
+    let currentVersion = defaultVersion;
+    latestVersion = versions[0];
 
-    id('versions').innerHTML = versions.map(
-      ver => `<option value="${ver}"${ver == currentVersion ? "selected" : ""}>${ver}</option>`
+    id('versions').innerHTML = ['latest+', ...versions].map(
+      (ver, idx) => `
+        <option value="${ver}"${ver == currentVersion ? "selected" : ""}>
+          ${idx == 0 ? ver : ''}
+          ${idx == 1 ? `latest (${ver})` : ''}
+          ${idx >= 2 ? `latest vs ${ver}` : ''}
+        </option>
+      `.trim()
     ).join('');
     id('versions').addEventListener('change', () => {
       if (id('versions').value == currentVersion) {
@@ -468,7 +481,7 @@ fetch('versions')
     loadVersion(
       currentVersion,
       true,
-      () => loadVersion(versions[0], true, (err) => errorSet(err))
+      () => loadVersion(defaultVersion, true, (err) => errorSet(err))
     );
   })
   .catch(err => errorSet(err));
@@ -496,9 +509,19 @@ const filterContent = (className, elmId, value, reg) => {
 
       elm.style.display = cond ? null : "none";
 
-      if (cond && section[idx].parentIndexes) {
-        for (let index of section[idx].parentIndexes) {
-          elements[index].style.display = null;
+      if (cond) {
+        const nameIndexMapping = section.reduce(
+          (ret, item, index) => ({
+            ...ret,
+            [item.name]: index,
+          }),
+          {}
+        );
+        let parentName = getPathParent(section[idx].name);
+
+        while (parentName && nameIndexMapping[parentName]) {
+          elements[nameIndexMapping[parentName]].style.display = null;
+          parentName = getPathParent(parentName);
         }
       }
     });
@@ -508,7 +531,7 @@ id('input_filter').addEventListener('keyup', () => {
   const value = id('input_filter').value.trim();
   const reg = new RegExp(value, 'i');
 
-  filterContent('luatree-elm', 'section_lua_tree', value, reg);
+  filterContent('luatree-elm', 'section_luatree', value, reg);
   filterContent('events-elm', 'section_events', value, reg);
   filterContent('functions-elm', 'section_functions', value, reg);
 });
@@ -543,22 +566,27 @@ const saveToggle = (elmId, value) => {
   }
 }
 
+function loadToggles() {
+  if (window.localStorage) {
+    const state = localStorage.getItem('row_mode') == 'true';
+  
+    if (state) {
+      updateRowcol(true);
+    }
+  
+    // Load toggles
+    const toggles = getToggles();
+    Object.keys(toggles).map(elmId => {
+      const elm = id("toggle_" + elmId.split('_', 2)[1]);
 
-// Init
-if (window.localStorage) {
-  const state = localStorage.getItem('row_mode') == 'true';
-
-  if (state) {
-    updateRowcol(true);
+      if (elm) {
+        elm.checked = toggles[elmId];
+        id(elmId).style.display = toggles[elmId] ? null : "none";
+      }
+    });
   }
-
-  // Load toggles
-  const toggles = getToggles();
-  Object.keys(toggles).map(elmId => {
-    id("toggle_" + elmId.split('_')[1]).checked = toggles[elmId];
-    id(elmId).style.display = toggles[elmId] ? null : "none";
-  });
 }
+
 
 id('btn_toggle_rowcol').addEventListener('click', function() {
   const state = id('sections').style.flexDirection == 'column';
@@ -573,6 +601,6 @@ id('toggle_events').addEventListener('change', function() {
   saveToggle('section_events', this.checked);
 });
 
-id('toggle_lua_tree').addEventListener('change', function() {
-  saveToggle('section_lua_tree', this.checked);
+id('toggle_luatree').addEventListener('change', function() {
+  saveToggle('section_luatree', this.checked);
 });

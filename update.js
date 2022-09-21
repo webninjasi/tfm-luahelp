@@ -1,4 +1,5 @@
 const fs = require("fs");
+const parser = require("./parser.js");
 
 const latest = fs.readFileSync('raw/latest', 'utf8');
 const latestVer = latest.match(/apiVersion<font color='#60608F'> : (.+?)<\/font>/)?.[1]
@@ -56,6 +57,10 @@ while (versions.indexOf(newVersion) != -1) {
   changeNum ++;
 }
 
+const parsed = parser.parseHelp(latest);
+
 fs.writeFileSync('raw/' + newVersion, latest);
-fs.writeFileSync('versions', ([ 'latest', newVersion, ...versions ]).join('\n'));
+fs.writeFileSync('parsed/latest', JSON.stringify(parsed));
+fs.writeFileSync('parsed/' + newVersion, JSON.stringify(parsed));
+fs.writeFileSync('versions', ([ newVersion, ...versions ]).join('\n'));
 console.log("New version is created:", newVersion);

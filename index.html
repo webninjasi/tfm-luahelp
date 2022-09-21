@@ -10,9 +10,7 @@
   <body>
     <div class="wrapper">
       <div class="header">
-        <select id="versions">
-          <option value="latest">Latest</option>
-        </select>
+        <select id="versions"></select>
         <input type="text" id="input_filter" placeholder="Search by name/parameter" />
 
         <input id="toggle_functions" type="checkbox" checked />
@@ -21,8 +19,8 @@
         <input id="toggle_events" type="checkbox" checked />
         <label for="toggle_events">Events</label>
 
-        <input id="toggle_lua_tree" type="checkbox" checked />
-        <label for="toggle_lua_tree">Lua Tree</label>
+        <input id="toggle_luatree" type="checkbox" checked />
+        <label for="toggle_luatree">Lua Tree</label>
 
         <button id="btn_toggle_rowcol">Rows</button>
         <a href="./audio.html"><button>Audio Browser</button></a>
@@ -46,7 +44,7 @@
         <div class="sections-wrapper" id="sections">
           <div id="section_functions" class="section"></div>
           <div id="section_events" class="section"></div>
-          <div id="section_lua_tree" class="section"></div>
+          <div id="section_luatree" class="section"></div>
         </div>
       </div>
     </div>

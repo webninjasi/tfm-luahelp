@@ -140,3 +140,11 @@ button {
 .section-head {
   font-size: 20px;
 }
+
+.item-added {
+  color: green;
+}
+
+.item-removed {
+  color: red;
+}
