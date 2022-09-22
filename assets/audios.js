@@ -10,19 +10,11 @@
   let refreshing = false;
   let filterText = '';
 
-  if (audioList) {
-    updateContent();
-  } else {
-    refreshCache();
-  }
+  refreshCache();
 
   id('input_filter').addEventListener('keyup', () => {
     filterText = id('input_filter').value.trim();
     filterContent();
-  });
-
-  id('btn_refresh').addEventListener('click', () => {
-    refreshCache();
   });
 
   window.copyText = function(elm) {
@@ -50,6 +42,7 @@
       .catch(err => {
         errorSet(err);
         refreshing = false;
+        updateContent();
       });
   }
 
