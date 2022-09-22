@@ -22,6 +22,12 @@
     document.execCommand('copy');
   }
 
+  window.copyCode = function(audioid) {
+    const elm = id('lua_code');
+    elm.value = `tfm.exec.playSound('${audioid}', 100, nil, nil, nil)`;
+    copyText(elm);
+  }
+
   // Functions
   function refreshCache() {
     if (refreshing) {
@@ -80,6 +86,7 @@
     id('audio-wrapper').innerHTML = audioList.map((audio, idx) => `
 <div class="audio" id="audio-${idx}">
   <input onclick="copyText(this)" value="${audio.id}" readonly="readonly" />
+  <button class="btn-small" onclick="copyCode('${audio.id}')">Copy Code</button>
   <div class="audio-tags"><div><i>${audio.tags}</i></div></div>
   <audio controls preload="none">
     <source src="https://audio.atelier801.com/${audio.url}" type="audio/mp3">
