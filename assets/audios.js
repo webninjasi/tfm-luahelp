@@ -116,9 +116,10 @@
       ...audio,
       "url": audio.id + '.mp3',
       "tags": [
-        ...audio.id.split('/'),
-        ...(audios[audio.id] || [])
-      ].join(', ')
+        audio.id.split('/'),
+        audio.id.split('/').map(tag => expandedAudioTags[tag]),
+        audios[audio.id],
+      ].flat(Infinity).filter(Boolean).join(', ')
     }));
   }
 
