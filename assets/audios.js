@@ -93,6 +93,16 @@
   </audio>
 </div>
     `).join('');
+
+    const audioElements = [ ...document.getElementsByTagName('audio') ];
+
+    function pauseOtherAudios(event) {
+      audioElements.filter(
+        elm => elm != event.target
+      ).map(elm => elm.pause());
+    }
+
+    audioElements.map(elm => elm.addEventListener('play', pauseOtherAudios));
   }
 
   function parseAudioList(html, audios) {
