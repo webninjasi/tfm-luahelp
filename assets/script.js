@@ -185,6 +185,11 @@ const cmpPathParent = (pathParent, cmpParent, tree) => {
   return tree.filter(x => x.name == pathParent).length == 0;
 }
 
+const copyPath = (elm, path) => {
+  const value = convertLuaPath(path);
+  return copyText(elm, value);
+}
+
 const renderDiff = x => `
 ${x.added ? ('<span class="item-added">' + x.added + '</span> ') : ''}
 ${x.removed ? ('<span class="item-removed">' + x.removed + '</span>') : ''}
@@ -194,7 +199,7 @@ ${!x.added && !x.removed ? x : ''}
 const renderLuaTreeItem = (tree, elm) => `
   <tr class="luatree-elm" id="${elm.name}">
     <td>
-      <button class="btn-small" onclick="copyText('luatree_input', '${convertLuaPath(elm.name)}')">Copy</button>
+      <button class="btn-small" onclick="copyPath('luatree_input', '${elm.name}')">Copy</button>
     </td>
     <td>
       ${elm.diff == 'added' ? '<span class="item-added">+</span>' : ''}
@@ -379,6 +384,14 @@ const errorSet = err => {
 let latestVersion;
 let loadedVersions = {};
 
+const applyReplacements = tree => tree.map(item => ({
+  ...item,
+  "name": item.name.split('.').map(
+    part => luatreeReplacements[part] || part
+  ).join('.'),
+  "value": item.value && luatreeReplacements[item.value] || item.value,
+}));
+
 // This is required to make diff keep parents in lua tree
 const scanTree = tree => tree.map(item => {
   item.children = tree.filter(x => getPathParent(x.name) == item.name);
@@ -410,6 +423,7 @@ const loadVersion = (version, initial, errorCallback) => {
     if (versionPath == 'latest') {
       if (isExtra) {
         sections = mergeObjects(sections, customHelpData);
+        sections.tree = applyReplacements(sections.tree);
         console.log("merged", sections);
       }
     } else {
@@ -517,8 +531,12 @@ const filterContent = (className, elmId, value, reg) => {
 
   elements
     .map((elm, idx) => {
-      const cond = !!section[idx].name.match(reg) || section[idx].parameters?.list && section[idx].parameters.list.some(
-        param => !!param.match(reg)
+      const cond = (
+        !!section[idx].name.match(reg) ||
+        section[idx].parameters?.list && section[idx].parameters.list.some(
+          param => !!param.match(reg)
+        ) ||
+        section[idx].value && section[idx].value.match(reg)
       );
 
       elm.style.display = cond ? null : "none";
