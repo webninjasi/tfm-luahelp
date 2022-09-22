@@ -357,6 +357,7 @@ const renderSections = sections => {
   id('current_version').innerHTML = `<div class="V TI">${sections.version}</div>`;
 
   id('section_luatree').section = sections.tree;
+  id('section_luatree').parentIndex = sections.parentIndex;
   id('section_luatree').innerHTML = renderLuaTree(sections.tree);
 
   id('section_events').section = sections.events;
@@ -378,10 +379,23 @@ const errorSet = err => {
 let latestVersion;
 let loadedVersions = {};
 
+// This is required to make diff keep parents in lua tree
 const scanTree = tree => tree.map(item => {
   item.children = tree.filter(x => getPathParent(x.name) == item.name);
   return item;
 });
+
+const createParentIndex = (sections) => {
+  sections.parentIndex = {};
+  sections.tree.map((item, index) => {
+    sections.tree.filter(
+      x => getPathParent(x.name) == item.name
+    ).map(
+      x => sections.parentIndex[x.name] = index
+    );
+  });
+  console.log("parentIndex", sections.parentIndex);
+}
 
 const loadVersion = (version, initial, errorCallback) => {
   id('current_version').innerHTML = "...";
@@ -403,6 +417,7 @@ const loadVersion = (version, initial, errorCallback) => {
       console.log("diff", version, sections);
     }
 
+    createParentIndex(sections);
     renderSections(sections);
 
     if (initial) {
@@ -492,6 +507,7 @@ const filterContent = (className, elmId, value, reg) => {
   }
 
   const section = id(elmId).section;
+  const parentIndex = id(elmId).parentIndex;
 
   if (!section) {
     return;
@@ -501,25 +517,18 @@ const filterContent = (className, elmId, value, reg) => {
 
   elements
     .map((elm, idx) => {
-      const cond = !!section[idx].name.match(reg) || section[idx].params && section[idx].params.some(
+      const cond = !!section[idx].name.match(reg) || section[idx].parameters?.list && section[idx].parameters.list.some(
         param => !!param.match(reg)
       );
 
       elm.style.display = cond ? null : "none";
 
-      if (cond) {
-        const nameIndexMapping = section.reduce(
-          (ret, item, index) => ({
-            ...ret,
-            [item.name]: index,
-          }),
-          {}
-        );
-        let parentName = getPathParent(section[idx].name);
+      if (cond && parentIndex) {
+        let index = parentIndex[section[idx].name];
 
-        while (parentName && nameIndexMapping[parentName]) {
-          elements[nameIndexMapping[parentName]].style.display = null;
-          parentName = getPathParent(parentName);
+        while (index != null) {
+          elements[index].style.display = null;
+          index = parentIndex[section[index].name];
         }
       }
     });
