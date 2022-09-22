@@ -364,12 +364,33 @@ const renderSections = sections => {
   id('section_luatree').section = sections.tree;
   id('section_luatree').parentIndex = sections.parentIndex;
   id('section_luatree').innerHTML = renderLuaTree(sections.tree);
+  id('section_luatree').sectionElements = sections.tree.reduce(
+    (ret, item) => ({
+      ...ret,
+      [item.name]: byClass('luatree-elm').filter(x => x.id == item.name)[0]
+    }),
+    {}
+  );
 
   id('section_events').section = sections.events;
   id('section_events').innerHTML = renderEvents(sections.events);
+  id('section_events').sectionElements = sections.events.reduce(
+    (ret, item) => ({
+      ...ret,
+      [item.name]: id('events_' + item.name)
+    }),
+    {}
+  );
 
   id('section_functions').section = sections.functions;
   id('section_functions').innerHTML = renderFunctions(sections.functions);
+  id('section_functions').sectionElements = sections.functions.reduce(
+    (ret, item) => ({
+      ...ret,
+      [item.name]: id('functions_' + item.name)
+    }),
+    {}
+  );
 
   id('error').innerHTML = "";
   id('input_filter').value = "";
@@ -522,34 +543,32 @@ const filterContent = (className, elmId, value, reg) => {
 
   const section = id(elmId).section;
   const parentIndex = id(elmId).parentIndex;
+  const sectionElements = id(elmId).sectionElements;
 
   if (!section) {
     return;
   }
 
-  const elements = byClass(className);
+  section.map(item => {
+    const cond = (
+      !!item.name.match(reg) || // alternatively getPathLast can be applied
+      item.parameters?.list && item.parameters.list.some(
+        param => !!param.match(reg)
+      ) ||
+      item.value && !!item.value.match(reg)
+    );
 
-  elements
-    .map((elm, idx) => {
-      const cond = (
-        !!section[idx].name.match(reg) ||
-        section[idx].parameters?.list && section[idx].parameters.list.some(
-          param => !!param.match(reg)
-        ) ||
-        section[idx].value && section[idx].value.match(reg)
-      );
+    sectionElements[item.name].style.display = cond ? null : "none";
 
-      elm.style.display = cond ? null : "none";
+    if (cond && parentIndex) {
+      let index = parentIndex[item.name];
 
-      if (cond && parentIndex) {
-        let index = parentIndex[section[idx].name];
-
-        while (index != null) {
-          elements[index].style.display = null;
-          index = parentIndex[section[index].name];
-        }
+      while (index != null) {
+        sectionElements[section[index].name].style.display = null;
+        index = parentIndex[section[index].name];
       }
-    });
+    }
+  });
 };
 
 id('input_filter').addEventListener('keyup', () => {
