@@ -744,6 +744,7 @@
         valueElement.focus();
         valueElement.select();
       } else {
+        callbackFunc = null;
         nameElement.innerHTML = '<i>Property:</i>';
         valueElement.value = '';
       }
@@ -771,6 +772,7 @@
         document.querySelector('.ui-editor-text').style.display = "flex";
         valueElement.focus();
       } else {
+        callbackFunc = null;
         document.querySelector('.ui-editor-text').style.display = null;
       }
     }
