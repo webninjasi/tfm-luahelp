@@ -10,8 +10,6 @@
     container: 'scene',
     width: sceneWidth,
     height: sceneHeight,
-
-    draggable: true,
   });
 
   // Create default layers
