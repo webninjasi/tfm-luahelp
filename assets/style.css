@@ -155,6 +155,22 @@ button {
   color: red;
 }
 
+/* Tags Page */
+
+#tags-content {
+  margin-left: 1em;
+}
+
+#tags-content thead {
+  font-weight: bold;
+  font-size: 1.5em;
+}
+
+#tags-content td {
+  border-top: 1px solid #6A7495;
+  padding: 0.5em;
+}
+
 /* UI Editor */
 
 #ui-wrapper {
