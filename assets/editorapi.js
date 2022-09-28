@@ -744,6 +744,7 @@
         valueElement.step = step;
         valueElement.value = value != null ? value : '';
         valueElement.focus();
+        valueElement.select();
       } else {
         nameElement.innerHTML = '<i>Property:</i>';
         valueElement.value = '';
