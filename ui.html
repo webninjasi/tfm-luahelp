@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>TFM Lua Help - UI Editor</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans" crossorigin="anonymous">
+    <link type="text/css" rel="stylesheet" href="assets/style.css">
+    <link type="text/css" rel="stylesheet" href="assets/tfm.css">
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <a href="./index.html"><button>Homepage</button></a>
+        <button onclick="toggleGameUI()">Toggle Game UI</button>
+        <button onclick="toggleCode()">Toggle Code</button>
+        <label for="property_value" id="property_name"><i>Property:</i></label>
+        <input type="text" id="property_value" />
+        <span id="error"></span>
+      </div>
+
+      <div id="ui-wrapper" class="TFMBG">
+        <div id="scene"></div>
+
+        <div class="ui-editor-text">
+          <textarea id="input" maxlength="2000"></textarea>
+        </div>
+
+        <div class="ui-editor-code">
+          <textarea id="output" onclick="copyText(this)" readonly="readonly"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/konva.min.js"></script>
+    <script src="assets/renderhtml.js"></script>
+
+    <script src="assets/editorapi.js"></script>
+    <script src="assets/editor.js"></script>
+  </body>
+</html>
