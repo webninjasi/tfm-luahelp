@@ -429,6 +429,7 @@
           fill: bg == 0 ? '#324650' : decimalToHexString(bg),
         });
         border.setAttrs({
+          opacity: (bg || br) ? alpha : 0,
           stroke: br == 0 ? '#000000' : decimalToHexString(br),
         });
 
@@ -825,6 +826,6 @@
       number = 0xFFFFFFFF + number + 1;
     }
 
-    return '#' + number.toString(16).toUpperCase();
+    return '#' + number.toString(16).padStart(6, '0').toUpperCase();
   }
 })();
