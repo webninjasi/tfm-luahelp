@@ -632,7 +632,7 @@
       sortLuaLayer();
 
       const emitter = EventEmitter();
-      const imageObj = new Image();
+      let imageObj = new Image();
       let skipLoad;
 
       controls.add('image_' + _id, [ image, emitter ]);
@@ -683,6 +683,13 @@
 
       imageObj.onerror = function() {
         emitter.emit('loadfail', _id, imageObj.src);
+
+        if (skipLoad) {
+          skipLoad = false;
+          imageObj.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADEAAAAJCAIAAAAU11OLAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPzZRRCsAgDEPdzuXt3b22sJQSM5R99n1IkioEBY8xRqsGOt0CLVbCkKj9al2TDEmGqYFpcLLZ9UJt2EitamWVA+S999S5jZqj6FSK6ISCWd/Yj0LN+id2HPDaprcDtMoqB5qv9myw44AtC7+dwZsMM6Mj1YrlaiHyejRX6v1PrT273tlK9q+v2gAAAABJRU5ErkJggg==';
+          return;
+        }
+
         skipLoad = true;
         imageObj.src = imageObj.prevSrc;
       }

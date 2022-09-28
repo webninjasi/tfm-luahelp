@@ -309,14 +309,14 @@
     const obj = updateImage(img);
 
     obj.on('click', onSelectImage)
-       .on('move', onMoveImage)
-       .on('update', onUpdateImage)
-       .on('load', (_id, url) => {
-         errorSet('');
-       })
-       .on('loadfail', (_id, url) => {
-         errorSet(`Failed to load image for ${_id}: ${url.escape()}`);
-       });
+      .on('move', onMoveImage)
+      .on('update', onUpdateImage)
+      .on('load', (_id, url) => {
+        errorSet('');
+      })
+      .on('loadfail', (_id, url) => {
+        errorSet(`Failed to load image for ${_id}: ${url.escape()}`);
+      });
 
     onSelectImage(img._id);
   }
