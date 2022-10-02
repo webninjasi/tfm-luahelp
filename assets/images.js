@@ -43,6 +43,7 @@
         id('image_overlay').style.display = 'block';
         id('image_overlay_id').value = this.dataset.code;
         id('image_overlay_code').value = `tfm.exec.addImage("${this.dataset.code}", "!1", 0, 30, nil, 1, 1, 0, 1, 0, 0, false)`;
+        id('image_overlay_code2').value = `{"${this.dataset.code}", ${this.naturalWidth}, ${this.naturalHeight}},`;
       });
     }
   );
