@@ -82,6 +82,18 @@ var customHelpData = {
         ],
       },
     },
+    {
+      "name": "eventFileLoaded",
+      "restricted": "modules",
+    },
+    {
+      "name": "eventFileSaved",
+      "restricted": "modules",
+    },
+    {
+      "name": "eventPlayerDataLoaded",
+      "restricted": "modules",
+    },
   ],
   "functions": [
     {
@@ -128,6 +140,70 @@ var customHelpData = {
       "examples": [
         ["'cite18/voix/en/marion-bonjour-4'", "100"],
       ],
+    },
+    {
+      "name": "system.giveEventGift",
+      "restricted": "events",
+    },
+    {
+      "name": "system.loadFile",
+      "restricted": "modules",
+    },
+    {
+      "name": "system.loadPlayerData",
+      "restricted": "modules",
+    },
+    {
+      "name": "system.newTimer",
+      "restricted": "modules",
+    },
+    {
+      "name": "system.removeTimer",
+      "restricted": "modules",
+    },
+    {
+      "name": "system.saveFile",
+      "restricted": "modules",
+    },
+    {
+      "name": "system.savePlayerData",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.chatMessage",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.getPlayerSync",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.lowerSyncDelay",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.setPlayerSync",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.setRoomMaxPlayers",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.setRoomPassword",
+      "restricted": "modules",
+    },
+    {
+      "name": "system.luaEventLaunchInterval",
+      "restricted": "events",
+    },
+    {
+      "name": "system.setLuaEventBanner",
+      "restricted": "events",
+    },
+    {
+      "name": "system.openEventShop",
+      "restricted": "events",
     },
   ],
 };

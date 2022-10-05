@@ -296,6 +296,18 @@ const renderReturn = (param, idx) => `
 </tr>
 `
 
+const renderRestriction = restriction => {
+  if (restriction == "modules") {
+    return `<span class="ROSE">Only available for</span> <span class="FC">FunCorp</span>/<span class="MT">Module Team</span><br />`;
+  }
+
+  if (restriction == "events") {
+    return `<span class="ROSE">Only available for</span> <span class="ES">Event Modules</span><br />`;
+  }
+
+  return '';
+}
+
 const renderFunction = type => elm => `
 <div class="${type}-elm" id="${type}_${elm.name}">
   ${elm.diff == "added" ? '<span class="item-added">+</span>' : ''}
@@ -309,6 +321,7 @@ const renderFunction = type => elm => `
     </span>)
   </span>
   <br />
+  ${renderRestriction(elm.restricted)}
   <span class="N">
   ${
     elm.descriptions ? elm.descriptions.map(renderDiff).join('<br />') : ''

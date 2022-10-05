@@ -5,6 +5,8 @@ body{
   font-size: 12px;
 }
 
+/* Available Tags in Game */
+
 a {
   color: #C2C2DA; /* .N */
 }
@@ -125,10 +127,20 @@ a:active {
   font-size: 11px;
 }
 
+/* Other Colors */
+
 .TFMBG {
   background-color: #6A7495;
 }
 
 .BG {
   background-color: #1E3D42;
+}
+
+.MT {
+  color: #8FE2D1;
+}
+
+.ES {
+  color: #F0D3AD;
 }
