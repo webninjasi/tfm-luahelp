@@ -83,6 +83,18 @@ button {
   flex-grow: 1;
 }
 
+.header-down {
+  display: flex;
+}
+
+.sources {
+  flex-grow: 1;
+}
+
+.gh-buttons {
+  text-align: right;
+}
+
 /* Audio Browser */
 
 .audio, .image {
