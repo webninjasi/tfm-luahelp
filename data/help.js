@@ -188,6 +188,7 @@ var customHelpData = {
       "descriptions": [
         tagsMessage,
       ],
+      "restricted": "modules",
     },
     {
       "name": "print",
@@ -237,10 +238,6 @@ var customHelpData = {
     {
       "name": "system.savePlayerData",
       "restricted": "moduleteam",
-    },
-    {
-      "name": "tfm.exec.chatMessage",
-      "restricted": "modules",
     },
     {
       "name": "tfm.exec.getPlayerSync",
