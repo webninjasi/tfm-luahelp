@@ -3,6 +3,10 @@ const luatreeReplacements = {
   "Pikashu": "Pikashu#0095",
 };
 
+let latestVersion;
+let lastRendered;
+let loadedVersions = {};
+
 const id = selector => document.getElementById(selector);
 const byClass = selector => [...document.getElementsByClassName(selector)];
 const defaultContent = id('content').innerHTML;
@@ -190,6 +194,50 @@ const copyPath = (elm, path) => {
   return copyText(elm, value);
 }
 
+const copyCode = (path, type, codeType, index) => {
+  const elm = lastRendered?.[type]?.filter(x => x.name == path)[0];
+
+  if (!elm) {
+    return;
+  }
+
+  const luaPath = convertLuaPath(path);
+  let value = '';
+
+  if (codeType == 'name') {
+    value = luaPath;
+  }
+  else if (codeType == 'params') {
+    value = `${luaPath}(${elm.parameters?.list?.join(', ')})`;
+  }
+  else if (codeType == 'defaults') {
+    value = `${luaPath}(${elm.parameters?.list?.map(
+      (param, i) => (elm.parameters.details?.[i]?.default_value || param)
+    ).join(', ')})`;
+  }
+  else if (codeType == 'skeleton') {
+    value = `function ${luaPath}(${elm.parameters.list.join(', ')})
+
+end`;
+  }
+  else if (codeType == 'example') {
+    const example = elm.examples?.[index];
+
+    if (type == 'events') {
+
+    }
+    else if (type == 'functions') {
+      value = `${luaPath}(${elm.parameters?.list?.map(
+        (param, i) => example[i] ||
+                      elm.parameters?.details?.[i]?.default_value ||
+                      param
+      ).join(', ')})`;
+    }
+  }
+
+  return copyText('code_output', value);
+}
+
 const renderDiff = x => `
 ${x.added ? ('<span class="item-added">' + x.added + '</span> ') : ''}
 ${x.removed ? ('<span class="item-removed">' + x.removed + '</span>') : ''}
@@ -215,7 +263,7 @@ const renderLuaTreeRestriction = (restriction) => {
 const renderLuaTreeItem = (tree, elm) => `
   <tr class="luatree-elm" id="${elm.name}">
     <td>
-      <button class="btn-small" onclick="copyPath('luatree_input', '${elm.name}')">Copy</button>
+      <button class="btn-small" onclick="copyPath('code_output', '${elm.name}')">Copy</button>
     </td>
     <td>
       ${elm.diff == 'added' ? '<span class="item-added">+</span>' : ''}
@@ -242,46 +290,25 @@ ${
 const renderLuaTree = tree => `<span class="O section-head">Lua Tree</span>
 <br />
 <br />
-<input id="luatree_input" type="text" readonly="readonly" />
-<br />
-<br />
 ${renderLuaTreeTable(tree, '')}
 `;
 
 // Examples doesn't handle diffs since it doesn't apply extras on diff view
-const renderEventExamples = elm => `
-<textarea onclick="copyText(this)" readonly="readonly">function ${elm.name}(${elm.parameters.list.join(', ')})
+const renderExamples = (elm, type) => `
+  <button onclick="copyCode('${elm.name}', '${type}', 'name')">Copy</button>
+  <button onclick="copyCode('${elm.name}', '${type}', 'params')">Copy with params</button>
 
-end</textarea>
-`;
+  ${type == "functions" ? `
+  <button onclick="copyCode('${elm.name}', '${type}', 'defaults')">Copy with defaults</button>
+  ` : `
+  <button onclick="copyCode('${elm.name}', '${type}', 'skeleton')">Copy skeleton</button>
+  `}
 
-const renderFunctionExamples = elm => `
-  <input type="text" value="${elm.name}(${elm.parameters ? elm.parameters.list.join(', ') : ''})" onclick="copyText(this)" readonly="readonly" />
-  <br />
-  <br />
-
-  <label>Defaults</label>
-  <br />
-  <input type="text" value="${elm.name}(${
-    elm.parameters ? elm.parameters.list.map(
-      (param, i) => elm.parameters.details[i]?.default_value || param
-    ).join(', ') : ''
-  })" onclick="copyText(this)" readonly="readonly" />
-
-  ${elm.examples?.length ? `
-  <br />
-  <br />
-
-  ${elm.examples.map((example, idx) => `
-  <label>Example ${idx + 1}</label>
-  <br />
-  <input type="text" value="${elm.name}(${
-    elm.parameters ? elm.parameters.list.map(
-      (param, i) => example[i] || elm.parameters.details[i]?.default_value || param
-    ).join(', ') : ''
-  })" onclick="copyText(this)" readonly="readonly" />
+  ${(elm.examples || []).map((_, idx) => `
+    <button onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Copy Example ${idx+1}</button>
   `)}
-  ` : ''}
+
+  <br />
 `;
 
 const renderParameter = type => (param, idx) => `
@@ -349,16 +376,9 @@ const renderFunction = type => elm => `
   </span>
   <br />
   <br />
-
-  <button onclick="toggle('code_${elm.name}')">Code</button>
-
-  <div id="code_${elm.name}" style="display: none">
-    <br />
-    ${type == 'functions' ? renderFunctionExamples(elm) : renderEventExamples(elm)}
-  </div>
+  ${renderExamples(elm, type)}
 
   ${elm.parameters?.details?.length ? `
-  <br />
   <br />
   <table class="parameter-table" id="table_param_${elm.name}">
   <thead>
@@ -392,6 +412,8 @@ ${events.map(renderFunction('events')).join('')}
 `;
 
 const renderSections = sections => {
+  lastRendered = sections;
+
   id('current_version').innerHTML = `<div class="V TI">${sections.version}</div>`;
 
   id('section_luatree').section = sections.tree;
@@ -434,9 +456,6 @@ const errorSet = err => {
   id('error').innerHTML = err.stack;
   console.error(err.stack);
 };
-
-let latestVersion;
-let loadedVersions = {};
 
 const applyReplacements = tree => tree.map(item => ({
   ...item,

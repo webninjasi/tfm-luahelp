@@ -87,12 +87,18 @@ button {
   display: flex;
 }
 
-.sources {
+.header-down-left {
   flex-grow: 1;
 }
 
 .gh-buttons {
   text-align: right;
+}
+
+#code_output {
+  height: 1.5em;
+  max-width: 20em;
+  max-height: 5em;
 }
 
 /* Audio Browser */

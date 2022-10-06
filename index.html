@@ -26,25 +26,29 @@
         <a href="./audio.html"><button>Audio Browser</button></a>
         <a href="./image.html"><button>Image Browser</button></a>
         <a href="./tags.html"><button>HTML Tags</button></a>
-
-        <span id="error"></span>
         
         <div class="header-down">
-          <div class="sources">
-            <small>
-              <b>Sources:</b>
-              in-game /luahelp command,
-              <a href="https://atelier801.com/topic?f=5&t=451587">Lua documentation</a>,
-              <a href="https://atelier801.com/topic?f=6&t=781139">Module FAQ & Documentation</a>
-            </small>
+          <div class="header-down-left">
+            <textarea id="code_output" onclick="copyText(this)" readonly="readonly" placeholder="Copy Code Output"></textarea>
+
+            <span id="error"></span>
           </div>
           <div class="gh-buttons">
-            <a class="github-button" href="https://github.com/webninjasi/tfm-luahelp" data-color-scheme="no-preference: dark_dimmed; light: light; dark: dark_dimmed;" data-icon="octicon-star" data-size="large" aria-label="Star webninjasi/tfm-luahelp on GitHub">Star</a>
+            <a class="github-button" href="https://github.com/webninjasi/tfm-luahelp" data-color-scheme="no-preference: dark_dimmed; light: light; dark: dark_dimmed;" data-icon="octicon-star" data-size="large" aria-label="Star webninjasi/tfm-luahelp on GitHub">Github</a>
           </div>
         </div>
       </div>
 
       <div id="content">
+        <small>
+          <b>Sources:</b>
+          in-game /luahelp command,
+          <a href="https://atelier801.com/topic?f=5&t=451587">Lua documentation</a>,
+          <a href="https://atelier801.com/topic?f=6&t=781139">Module FAQ & Documentation</a>
+        </small>
+        <br />
+        <br />
+
         <span id="current_version">...</span>
         <div class="sections-wrapper" id="sections">
           <div id="section_functions" class="section"></div>
