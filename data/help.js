@@ -84,15 +84,15 @@ var customHelpData = {
     },
     {
       "name": "eventFileLoaded",
-      "restricted": "modules",
+      "restricted": "moduleteam",
     },
     {
       "name": "eventFileSaved",
-      "restricted": "modules",
+      "restricted": "moduleteam",
     },
     {
       "name": "eventPlayerDataLoaded",
-      "restricted": "modules",
+      "restricted": "moduleteam",
     },
   ],
   "functions": [
@@ -147,11 +147,11 @@ var customHelpData = {
     },
     {
       "name": "system.loadFile",
-      "restricted": "modules",
+      "restricted": "moduleteam",
     },
     {
       "name": "system.loadPlayerData",
-      "restricted": "modules",
+      "restricted": "moduleteam",
     },
     {
       "name": "system.newTimer",
@@ -163,11 +163,11 @@ var customHelpData = {
     },
     {
       "name": "system.saveFile",
-      "restricted": "modules",
+      "restricted": "moduleteam",
     },
     {
       "name": "system.savePlayerData",
-      "restricted": "modules",
+      "restricted": "moduleteam",
     },
     {
       "name": "tfm.exec.chatMessage",

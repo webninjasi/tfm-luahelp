@@ -301,6 +301,10 @@ const renderRestriction = restriction => {
     return `<span class="ROSE">Only available for</span> <span class="FC">FunCorp</span>/<span class="MT">Module Team</span><br />`;
   }
 
+  if (restriction == "moduleteam") {
+    return `<span class="ROSE">Only available for</span> <span class="MT">Module Team</span><br />`;
+  }
+
   if (restriction == "events") {
     return `<span class="ROSE">Only available for</span> <span class="ES">Event Modules</span><br />`;
   }
