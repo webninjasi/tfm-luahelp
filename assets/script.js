@@ -452,6 +452,20 @@ const scanTree = tree => tree.map(item => {
   return item;
 });
 
+const applyTags = tree => tree.map(item => {
+  if (item.restricted == "modules") {
+    item.tags = "funcorp fc moduleteam module team mt modules";
+  }
+  else if (item.restricted == "moduleteam") {
+    item.tags = "moduleteam module team mt";
+  }
+  else if (item.restricted == "events") {
+    item.tags = "events event modules eventmodules";
+  }
+
+  return item;
+});
+
 const createParentIndex = (sections) => {
   sections.parentIndex = {};
   sections.tree.map((item, index) => {
@@ -478,6 +492,9 @@ const loadVersion = (version, initial, errorCallback) => {
       if (isExtra) {
         sections = mergeObjects(sections, customHelpData);
         sections.tree = applyReplacements(sections.tree);
+        sections.tree = applyTags(sections.tree);
+        sections.events = applyTags(sections.events);
+        sections.functions = applyTags(sections.functions);
         console.log("merged", sections);
       }
     } else {
@@ -588,7 +605,8 @@ const filterContent = (className, elmId, value, reg) => {
       item.parameters?.list && item.parameters.list.some(
         param => !!param.match(reg)
       ) ||
-      item.value && !!item.value.match(reg)
+      item.value && !!item.value.match(reg) ||
+      item.tags && !!item.tags.match(reg)
     );
 
     sectionElements[item.name].style.display = cond ? null : "none";
