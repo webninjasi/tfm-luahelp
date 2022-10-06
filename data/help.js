@@ -105,6 +105,10 @@ var customHelpData = {
       "name": "system.openEventShop",
       "restricted": "events",
     },
+    {
+      "name": "tfm.exec.giveConsumables",
+      "restricted": "events",
+    },
   ],
   "events": [
     {
@@ -268,6 +272,10 @@ var customHelpData = {
     },
     {
       "name": "system.openEventShop",
+      "restricted": "events",
+    },
+    {
+      "name": "tfm.exec.giveConsumables",
       "restricted": "events",
     },
   ],
