@@ -168,7 +168,7 @@ var customHelpData = {
     {
       "name": "system.bindKeyboard",
       "examples": [
-        [null, "32", "'true'", "'true'"],
+        [null, "32", "true", "true"],
       ],
     },
     {
