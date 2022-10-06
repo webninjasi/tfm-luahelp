@@ -3,6 +3,7 @@ var customHelpData = {
   "tree": [
     {
       "name": "tfm.get.room.uniquePlayers",
+      "restricted": "moduleteam",
       "value": "1",
     },
     {
@@ -39,6 +40,70 @@ var customHelpData = {
     {
       "name": "tfm.get.room.language",
       "value": "int",
+    },
+    {
+      "name": "system.giveEventGift",
+      "restricted": "events",
+    },
+    {
+      "name": "system.loadFile",
+      "restricted": "moduleteam",
+    },
+    {
+      "name": "system.loadPlayerData",
+      "restricted": "moduleteam",
+    },
+    {
+      "name": "system.newTimer",
+      "restricted": "modules",
+    },
+    {
+      "name": "system.removeTimer",
+      "restricted": "modules",
+    },
+    {
+      "name": "system.saveFile",
+      "restricted": "moduleteam",
+    },
+    {
+      "name": "system.savePlayerData",
+      "restricted": "moduleteam",
+    },
+    {
+      "name": "tfm.exec.chatMessage",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.getPlayerSync",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.lowerSyncDelay",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.setPlayerSync",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.setRoomMaxPlayers",
+      "restricted": "modules",
+    },
+    {
+      "name": "tfm.exec.setRoomPassword",
+      "restricted": "modules",
+    },
+    {
+      "name": "system.luaEventLaunchInterval",
+      "restricted": "events",
+    },
+    {
+      "name": "system.setLuaEventBanner",
+      "restricted": "events",
+    },
+    {
+      "name": "system.openEventShop",
+      "restricted": "events",
     },
   ],
   "events": [

@@ -196,6 +196,22 @@ ${x.removed ? ('<span class="item-removed">' + x.removed + '</span>') : ''}
 ${!x.added && !x.removed ? x : ''}
 `.trim();
 
+const renderLuaTreeRestriction = (restriction) => {
+  if (restriction == "modules") {
+    return ` class="FC" title="Only available for FunCorp & Module Team"`;
+  }
+
+  if (restriction == "moduleteam") {
+    return ` class="MT" title="Only available for Module Team"`;
+  }
+
+  if (restriction == "events") {
+    return ` class="ES" title="Only available for Event Modules"`;
+  }
+
+  return '';
+}
+
 const renderLuaTreeItem = (tree, elm) => `
   <tr class="luatree-elm" id="${elm.name}">
     <td>
@@ -204,7 +220,7 @@ const renderLuaTreeItem = (tree, elm) => `
     <td>
       ${elm.diff == 'added' ? '<span class="item-added">+</span>' : ''}
       ${elm.diff == 'removed' ? '<span class="item-removed">-</span>' : ''}
-      <a href="${elm.href ? elm.href : `#${elm.name}`}">${getPathLast(elm.name)}</a>
+      <a href="${elm.href ? elm.href : `#${elm.name}`}"${renderLuaTreeRestriction(elm.restricted)}>${getPathLast(elm.name)}</a>
     </td>
     <td class="G">
       ${elm.value ? renderDiff(elm.value) : renderLuaTreeTable(tree, elm.name)}
@@ -298,7 +314,7 @@ const renderReturn = (param, idx) => `
 
 const renderRestriction = restriction => {
   if (restriction == "modules") {
-    return `<span class="ROSE">Only available for</span> <span class="FC">FunCorp</span>/<span class="MT">Module Team</span><br />`;
+    return `<span class="ROSE">Only available for</span> <span class="FC">FunCorp</span> & <span class="MT">Module Team</span><br />`;
   }
 
   if (restriction == "moduleteam") {
