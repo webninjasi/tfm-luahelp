@@ -163,6 +163,21 @@ var customHelpData = {
       "name": "eventPlayerDataLoaded",
       "restricted": "moduleteam",
     },
+    {
+      "name": "eventPlayerVampire",
+      "parameters": {
+        "list": ["vampire"],
+        "details": [
+          {
+            "name": "vampire",
+            "type": "String",
+            "descriptions": [
+              "the vampire who contamined the player (or nil if it hasn't been contamined by another player)",
+            ],
+          },
+        ],
+      },
+    }
   ],
   "functions": [
     {
@@ -262,6 +277,22 @@ var customHelpData = {
     {
       "name": "system.luaEventLaunchInterval",
       "restricted": "events",
+      "parameters": {
+        "details": [
+          {
+            "name":"interval",
+            "default_value": "40",
+          },
+          {
+            "name":"random",
+            "default_value": "20",
+          }
+        ]
+      },
+      "returns": {
+        "type": "Table",
+        "description": "current interval settings",
+      },
     },
     {
       "name": "system.setLuaEventBanner",
