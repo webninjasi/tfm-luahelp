@@ -22,10 +22,10 @@
       }
 
       localImages[id] = newImages[id];
-      allImages[id] = newImages[id];
     }
 
     save();
+    load();
     updateContent();
 
     id('add_image_result').innerHTML = `Added ${count} new images!`;
@@ -89,13 +89,13 @@
 
           if (line.tags) {
             if (ret.__tags) {
-              line.tags = ret.__tags + ', ' + line.tags
+              line.tags = ret.__tags + ', ' + line.tags;
             }
           } else {
-            line.tags = ret.__tags
+            line.tags = ret.__tags || '';
           }
 
-          ret.push(`"${line.image}": "${line.tags || ''}"`)
+          ret.push(`"${line.image}": "${line.tags}"`)
           
           return ret;
         },
@@ -194,8 +194,10 @@
       return;
     }
 
+    localImages = {};
+
     for (let id in privateCollection) {
-      allImages[id] = privateCollection[id];
+      allImages[id] = privateCollection[id] ? ('local, ' + privateCollection[id]) : 'local';
       localImages[id] = privateCollection[id];
     }
   }
