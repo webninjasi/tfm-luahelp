@@ -37,9 +37,11 @@
         <br />
         <textarea id="add_image_input">149a49e4b38.jpg sydoline</textarea>
         <br />
-        <textarea id="add_image_output" onclick="selectText(this)" readonly="readonly">"149a49e4b38.jpg": "sydoline",</textarea>
+        <textarea id="add_image_output" onclick="selectText(this)" readonly="readonly">"149a49e4b38.jpg": "sydoline"</textarea>
         <br />
-        <a href="https://github.com/webninjasi/tfm-luahelp/edit/master/data/images.js" target="_blank"><button>Suggest</button></a>
+        <button onclick="addPrivate()">Add Locally</button>
+        <br />
+        <span id="add_image_result"></span>
       </div>
     </div>
     <div id="image_overlay">
@@ -56,6 +58,8 @@
         <input id="image_overlay_code" onclick="copyText(this)" value="" readonly="readonly" />
         <br />
         <input id="image_overlay_code2" onclick="copyText(this)" value="" readonly="readonly" />
+        <br />
+        <button id="image_overlay_delete">Delete Locally</button>
       </div>
     </div>
     <script src="data/images.js"></script>
