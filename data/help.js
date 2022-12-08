@@ -241,6 +241,50 @@ var customHelpData = {
     {
       "name": "system.newTimer",
       "restricted": "modules",
+      "parameters": {
+        "details": [
+          {
+            "name": "time",
+            "descriptions": [
+              "minimum 500 milliseconds"
+            ],
+          },
+          {
+            "name": "arg1",
+            "descriptions": {
+              replace: true,
+              list: ["2nd argument of the callback function"],
+            },
+          },
+          {
+            "name": "arg2",
+            "descriptions": {
+              replace: true,
+              list: ["3rd argument of the callback function"],
+            },
+          },
+          {
+            "name": "arg3",
+            "descriptions": {
+              replace: true,
+              list: ["4th argument of the callback function"],
+            },
+          },
+          {
+            "name": "arg4",
+            "descriptions": {
+              replace: true,
+              list: ["5th argument of the callback function"],
+            },
+          },
+        ]
+      },
+      "returns": {
+        "description": "the new timer id (also 1st argument of the callback function)",
+      },
+      "examples": [
+        ["function(timerId, arg1, arg2, arg3, arg4)\n\tprint(timerId)\tprint(arg1+arg2+arg3+arg4)\nend", "false", "1", "2", "3", "4"],
+      ],
     },
     {
       "name": "system.removeTimer",
