@@ -113,6 +113,9 @@ var customHelpData = {
   "events": [
     {
       "name": "eventContactListener",
+      "descriptions": [
+        "contact=\"groundId\" attribute can be used in the map XML to trigger this event."
+      ],
       "parameters": {
         "details": [
           {
@@ -349,6 +352,18 @@ var customHelpData = {
     {
       "name": "tfm.exec.giveConsumables",
       "restricted": "events",
+    },
+    {
+      "name": "tfm.exec.removePhysicObject",
+      "descriptions": [
+        "lua=\"groundId\" attribute can be used in the map XML to be able remove the ground using this function."
+      ],
+    },
+    {
+      "name": "tfm.exec.movePhysicObject",
+      "descriptions": [
+        "lua=\"groundId\" attribute can be used in the map XML to be able move the ground using this function."
+      ],
     },
   ],
 };
