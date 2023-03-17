@@ -1,0 +1,706 @@
+<V><font size='14'>Version 0.28</font></V>
+
+<O><font size='20'>Lua tree</font></O>
+
+<a href='http://www.lua.org/manual/5.2/manual.html#pdf-_G'>_G</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-assert'>assert</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32'>bit32</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.arshift'>arshift</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.band'>band</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.bnot'>bnot</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.bor'>bor</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.btest'>btest</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.bxor'>bxor</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.extract'>extract</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.lrotate'>lrotate</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.lshift'>lshift</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.replace'>replace</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.rrotate'>rrotate</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-bit32.rshift'>rshift</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-coroutine'>coroutine</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-coroutine.create'>create</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-coroutine.resume'>resume</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-coroutine.running'>running</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-coroutine.status'>status</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-coroutine.wrap'>wrap</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-coroutine.yield'>yield</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-debug'>debug</a><br />  disableEventLog<br />  disableTimerLog<br />  getCurrentThreadName<br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-debug.traceback'>traceback</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-error'>error</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-getmetatable'>getmetatable</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-ipairs'>ipairs</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-math'>math</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.abs'>abs</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.acos'>acos</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.asin'>asin</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.atan'>atan</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.atan2'>atan2</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.ceil'>ceil</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.cos'>cos</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.cosh'>cosh</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.deg'>deg</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.exp'>exp</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.floor'>floor</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.fmod'>fmod</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.frexp'>frexp</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.huge'>huge</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.ldexp'>ldexp</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.log'>log</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.max'>max</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.min'>min</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.modf'>modf</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.pi'>pi</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.pow'>pow</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.rad'>rad</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.random'>random</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.randomseed'>randomseed</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.sin'>sin</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.sinh'>sinh</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.sqrt'>sqrt</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.tan'>tan</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-math.tanh'>tanh</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-next'>next</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-os'>os</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-os.date'>date</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-os.difftime'>difftime</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-os.time'>time</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-pairs'>pairs</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-pcall'>pcall</a><br />print<br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-rawequal'>rawequal</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-rawget'>rawget</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-rawlen'>rawlen</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-rawset'>rawset</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-select'>select</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-setmetatable'>setmetatable</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-string'>string</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.byte'>byte</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.char'>char</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.dump'>dump</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.find'>find</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.format'>format</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.gmatch'>gmatch</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.gsub'>gsub</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.len'>len</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.lower'>lower</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.match'>match</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.rep'>rep</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.reverse'>reverse</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.sub'>sub</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-string.upper'>upper</a><br />system<br />  bindKeyboard<br />  bindMouse<br />  disableChatCommandDisplay<br />  exit<br />  giveAdventurePoint<br />  giveEventGift<br />  loadFile<br />  loadPlayerData<br />  luaEventLaunchInterval<br />  newTimer<br />  openEventShop<br />  removeTimer<br />  saveFile<br />  savePlayerData<br />  setLuaEventBanner<br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-table'>table</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-table.concat'>concat</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-table.foreach'>foreach</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-table.foreachi'>foreachi</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-table.insert'>insert</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-table.pack'>pack</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-table.remove'>remove</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-table.sort'>sort</a><br />  <a href='http://www.lua.org/manual/5.2/manual.html#pdf-table.unpack'>unpack</a><br />tfm<br />  enum<br />    bonus<br />      point<font color='#60608F'> : 0</font><br />      speed<font color='#60608F'> : 1</font><br />      death<font color='#60608F'> : 2</font><br />      spring<font color='#60608F'> : 3</font><br />      booster<font color='#60608F'> : 5</font><br />      electricArc<font color='#60608F'> : 6</font><br />    emote<br />      dance<font color='#60608F'> : 0</font><br />      laugh<font color='#60608F'> : 1</font><br />      cry<font color='#60608F'> : 2</font><br />      kiss<font color='#60608F'> : 3</font><br />      angry<font color='#60608F'> : 4</font><br />      clap<font color='#60608F'> : 5</font><br />      sleep<font color='#60608F'> : 6</font><br />      facepaw<font color='#60608F'> : 7</font><br />      sit<font color='#60608F'> : 8</font><br />      confetti<font color='#60608F'> : 9</font><br />      flag<font color='#60608F'> : 10</font><br />      marshmallow<font color='#60608F'> : 11</font><br />      selfie<font color='#60608F'> : 12</font><br />      highfive<font color='#60608F'> : 13</font><br />      highfive_1<font color='#60608F'> : 14</font><br />      highfive_2<font color='#60608F'> : 15</font><br />      partyhorn<font color='#60608F'> : 16</font><br />      hug<font color='#60608F'> : 17</font><br />      hug_1<font color='#60608F'> : 18</font><br />      hug_2<font color='#60608F'> : 19</font><br />      jigglypuff<font color='#60608F'> : 20</font><br />      kissing<font color='#60608F'> : 21</font><br />      kissing_1<font color='#60608F'> : 22</font><br />      kissing_2<font color='#60608F'> : 23</font><br />      carnaval<font color='#60608F'> : 24</font><br />      rockpaperscissors<font color='#60608F'> : 25</font><br />      rockpaperscissors_1<font color='#60608F'> : 26</font><br />      rockpaperscissor_2<font color='#60608F'> : 27</font><br />    ground<br />      wood<font color='#60608F'> : 0</font><br />      ice<font color='#60608F'> : 1</font><br />      trampoline<font color='#60608F'> : 2</font><br />      lava<font color='#60608F'> : 3</font><br />      chocolate<font color='#60608F'> : 4</font><br />      earth<font color='#60608F'> : 5</font><br />      grass<font color='#60608F'> : 6</font><br />      sand<font color='#60608F'> : 7</font><br />      cloud<font color='#60608F'> : 8</font><br />      water<font color='#60608F'> : 9</font><br />      stone<font color='#60608F'> : 10</font><br />      snow<font color='#60608F'> : 11</font><br />      rectangle<font color='#60608F'> : 12</font><br />      circle<font color='#60608F'> : 13</font><br />      invisible<font color='#60608F'> : 14</font><br />      web<font color='#60608F'> : 15</font><br />      yellowGrass<font color='#60608F'> : 17</font><br />      pinkGrass<font color='#60608F'> : 18</font><br />      acid<font color='#60608F'> : 19</font><br />    particle<br />      whiteGlitter<font color='#60608F'> : 0</font><br />      blueGlitter<font color='#60608F'> : 1</font><br />      orangeGlitter<font color='#60608F'> : 2</font><br />      cloud<font color='#60608F'> : 3</font><br />      dullWhiteGlitter<font color='#60608F'> : 4</font><br />      heart<font color='#60608F'> : 5</font><br />      bubble<font color='#60608F'> : 6</font><br />      tealGlitter<font color='#60608F'> : 9</font><br />      spirit<font color='#60608F'> : 10</font><br />      yellowGlitter<font color='#60608F'> : 11</font><br />      ghostSpirit<font color='#60608F'> : 12</font><br />      redGlitter<font color='#60608F'> : 13</font><br />      waterBubble<font color='#60608F'> : 14</font><br />      plus1<font color='#60608F'> : 15</font><br />      plus10<font color='#60608F'> : 16</font><br />      plus12<font color='#60608F'> : 17</font><br />      plus14<font color='#60608F'> : 18</font><br />      plus16<font color='#60608F'> : 19</font><br />      meep<font color='#60608F'> : 20</font><br />      redConfetti<font color='#60608F'> : 21</font><br />      greenConfetti<font color='#60608F'> : 22</font><br />      blueConfetti<font color='#60608F'> : 23</font><br />      yellowConfetti<font color='#60608F'> : 24</font><br />      diagonalRain<font color='#60608F'> : 25</font><br />      curlyWind<font color='#60608F'> : 26</font><br />      wind<font color='#60608F'> : 27</font><br />      rain<font color='#60608F'> : 28</font><br />      star<font color='#60608F'> : 29</font><br />      littleRedHeart<font color='#60608F'> : 30</font><br />      littlePinkHeart<font color='#60608F'> : 31</font><br />      daisy<font color='#60608F'> : 32</font><br />      bell<font color='#60608F'> : 33</font><br />      egg<font color='#60608F'> : 34</font><br />      projection<font color='#60608F'> : 35</font><br />      mouseTeleportation<font color='#60608F'> : 36</font><br />      shamanTeleportation<font color='#60608F'> : 37</font><br />      lollipopConfetti<font color='#60608F'> : 38</font><br />      yellowCandyConfetti<font color='#60608F'> : 39</font><br />      pinkCandyConfetti<font color='#60608F'> : 40</font><br />    shamanObject<br />      arrow<font color='#60608F'> : 0</font><br />      littleBox<font color='#60608F'> : 1</font><br />      box<font color='#60608F'> : 2</font><br />      littleBoard<font color='#60608F'> : 3</font><br />      board<font color='#60608F'> : 4</font><br />      ball<font color='#60608F'> : 6</font><br />      trampoline<font color='#60608F'> : 7</font><br />      anvil<font color='#60608F'> : 10</font><br />      cannon<font color='#60608F'> : 17</font><br />      bomb<font color='#60608F'> : 23</font><br />      orangePortal<font color='#60608F'> : 26</font><br />      blueBalloon<font color='#60608F'> : 28</font><br />      redBalloon<font color='#60608F'> : 29</font><br />      greenBalloon<font color='#60608F'> : 30</font><br />      yellowBalloon<font color='#60608F'> : 31</font><br />      rune<font color='#60608F'> : 32</font><br />      chicken<font color='#60608F'> : 33</font><br />      snowBall<font color='#60608F'> : 34</font><br />      cupidonArrow<font color='#60608F'> : 35</font><br />      apple<font color='#60608F'> : 39</font><br />      sheep<font color='#60608F'> : 40</font><br />      littleBoardIce<font color='#60608F'> : 45</font><br />      littleBoardChocolate<font color='#60608F'> : 46</font><br />      iceCube<font color='#60608F'> : 54</font><br />      cloud<font color='#60608F'> : 57</font><br />      bubble<font color='#60608F'> : 59</font><br />      tinyBoard<font color='#60608F'> : 60</font><br />      companionCube<font color='#60608F'> : 61</font><br />      stableRune<font color='#60608F'> : 62</font><br />      balloonFish<font color='#60608F'> : 65</font><br />      longBoard<font color='#60608F'> : 67</font><br />      triangle<font color='#60608F'> : 68</font><br />      sBoard<font color='#60608F'> : 69</font><br />      paperPlane<font color='#60608F'> : 80</font><br />      rock<font color='#60608F'> : 85</font><br />      pumpkinBall<font color='#60608F'> : 89</font><br />      tombstone<font color='#60608F'> : 90</font><br />      paperBall<font color='#60608F'> : 95</font><br />  exec<br />    addBonus<br />    addConjuration<br />    addImage<br />    addJoint<br />    addNPC<br />    addPhysicObject<br />    addShamanObject<br />    attachBalloon<br />    bindKeyboard<br />    changePlayerSize<br />    chatMessage<br />    disableAfkDeath<br />    disableAllShamanSkills<br />    disableAutoNewGame<br />    disableAutoScore<br />    disableAutoShaman<br />    disableAutoTimeLeft<br />    disableDebugCommand<br />    disableMinimalistMode<br />    disableMortCommand<br />    disablePhysicalConsumables<br />    disablePrespawnPreview<br />    disableWatchCommand<br />    displayParticle<br />    explosion<br />    freezePlayer<br />    getPlayerSync<br />    giveCheese<br />    giveConsumables<br />    giveMeep<br />    giveTransformations<br />    killPlayer<br />    linkMice<br />    lowerSyncDelay<br />    moveObject<br />    movePhysicObject<br />    movePlayer<br />    newGame<br />    playEmote<br />    playMusic<br />    playSound<br />    playerVictory<br />    removeBonus<br />    removeCheese<br />    removeImage<br />    removeJoint<br />    removeObject<br />    removePhysicObject<br />    respawnPlayer<br />    setAieMode<br />    setAutoMapFlipMode<br />    setGameTime<br />    setNameColor<br />    setPlayerGravityScale<br />    setPlayerNightMode<br />    setPlayerScore<br />    setPlayerSync<br />    setRoomMaxPlayers<br />    setRoomPassword<br />    setShaman<br />    setShamanMode<br />    setUIMapName<br />    setUIShamanName<br />    setVampirePlayer<br />    setWorldGravity<br />    snow<br />    stopMusic<br />  get<br />    misc<br />      apiVersion<font color='#60608F'> : 0.28</font><br />      transformiceVersion<font color='#60608F'> : 8.5</font><br />    room<br />      community<font color='#60608F'> : -</font><br />      currentMap<font color='#60608F'> : 0</font><br />      isTribeHouse<font color='#60608F'> : false</font><br />      maxPlayers<font color='#60608F'> : 50</font><br />      mirroredMap<font color='#60608F'> : false</font><br />      name<font color='#60608F'> : -</font><br />      objectList<br />        1<br />          angle<font color='#60608F'> : 0</font><br />          baseType<font color='#60608F'> : 2</font><br />          colors<br />            1<br />            2<br />            3<br />          ghost<font color='#60608F'> : false</font><br />          id<font color='#60608F'> : 1</font><br />          type<font color='#60608F'> : 203</font><br />          vx<font color='#60608F'> : 0</font><br />          vy<font color='#60608F'> : 0</font><br />          x<font color='#60608F'> : 400</font><br />          y<font color='#60608F'> : 200</font><br />      passwordProtected<font color='#60608F'> : false</font><br />      playerList<br />        Tigrounette<br />          averageLatency<font color='#60608F'> : 400</font><br />          cheeses<font color='#60608F'> : 0</font><br />          community<font color='#60608F'> : en</font><br />          gender<font color='#60608F'> : 0</font><br />          hasCheese<font color='#60608F'> : false</font><br />          id<font color='#60608F'> : 0</font><br />          inHardMode<font color='#60608F'> : 0</font><br />          isDead<font color='#60608F'> : true</font><br />          isFacingRight<font color='#60608F'> : true</font><br />          isInvoking<font color='#60608F'> : false</font><br />          isJumping<font color='#60608F'> : false</font><br />          isShaman<font color='#60608F'> : false</font><br />          isVampire<font color='#60608F'> : false</font><br />          language<font color='#60608F'> : int</font><br />          look<font color='#60608F'> : 1;0,0,0,0,0,0,0,0,0</font><br />          movingLeft<font color='#60608F'> : false</font><br />          movingRight<font color='#60608F'> : false</font><br />          playerName<font color='#60608F'> : Tigrounette</font><br />          registrationDate<font color='#60608F'> : 1679047881260</font><br />          score<font color='#60608F'> : 0</font><br />          shamanMode<font color='#60608F'> : 0</font><br />          spouseId<font color='#60608F'> : 1</font><br />          spouseName<font color='#60608F'> : Pikashu</font><br />          title<font color='#60608F'> : 0</font><br />          tribeId<font color='#60608F'> : 1234</font><br />          tribeName<font color='#60608F'> : Kikoo</font><br />          vx<font color='#60608F'> : 0</font><br />          vy<font color='#60608F'> : 0</font><br />          x<font color='#60608F'> : 0</font><br />          y<font color='#60608F'> : 0</font><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-tonumber'>tonumber</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-tostring'>tostring</a><br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-type'>type</a><br />ui<br />  addPopup<br />  addTextArea<br />  removeTextArea<br />  setBackgroundColor<br />  setMapName<br />  setShamanName<br />  showColorPicker<br />  updateTextArea<br /><a href='http://www.lua.org/manual/5.2/manual.html#pdf-xpcall'>xpcall</a><br />
+
+<O><font size='20'>Events</font></O>
+
+<D>eventChatCommand</D>(<V>playerName</V>, <V>command</V>)
+This event is triggered when a player uses a chat command (a message beginning with « ! »).
+  <V>playerName</V><G> (String)</G><BL> the player who sent the command</BL>
+  <V>command</V><G> (String)</G><BL> the message (without the initial « ! »)</BL>
+
+<D>eventChatMessage</D>(<V>playerName</V>, <V>message</V>)
+This event is triggered when a player talks in the room chat.
+  <V>playerName</V><G> (String)</G><BL> the player who sent the message</BL>
+  <V>message</V><G> (String)</G><BL> the message</BL>
+
+<D>eventEmotePlayed</D>(<V>playerName</V>, <V>emoteType</V>, <V>emoteParam</V>)
+This event is triggered when the player does an emote.
+  <V>playerName</V><G> (String)</G><BL> the player who did the emote</BL>
+  <V>emoteType</V><G> (Int)</G><BL> the type of emote played</BL>
+  <V>emoteParam</V><G> (String)</G><BL> the parameter used with the emote (only applies to the flag one)</BL>
+
+<D>eventFileLoaded</D>(<V>fileNumber</V>, <V>fileData</V>)
+This event is triggered when a file gets fully loaded.
+  <V>fileNumber</V><G> (String)</G><BL> the file identifier</BL>
+  <V>fileData</V><G> (String)</G><BL> the file data</BL>
+
+<D>eventFileSaved</D>(<V>fileNumber</V>)
+This event is triggered when a file gets saved.
+  <V>fileNumber</V><G> (String)</G><BL> the name of the file</BL>
+
+<D>eventKeyboard</D>(<V>playerName</V>, <V>keyCode</V>, <V>down</V>, <V>xPlayerPosition</V>, <V>yPlayerPosition</V>, <V>xPlayerVelocity</V>, <V>yPlayerVelocity</V>)
+This event is triggered when a player presses a key.
+  <V>playerName</V><G> (String)</G><BL> the player who typed the key</BL>
+  <V>keyCode</V><G> (Int)</G><BL> the code of the typed key</BL>
+  <V>down</V><G> (Boolean)</G><BL> whether it was the press event, or the release one</BL>
+  <V>xPlayerPosition</V><G> (Int)</G><BL> the horizontal coordinate of the player when he or she typed the key</BL>
+  <V>yPlayerPosition</V><G> (Int)</G><BL> the vertical coordinate of the player when he or she typed the key</BL>
+  <V>xPlayerVelocity</V><G> (Number)</G><BL> the horizontal velocity of the player when he or she typed the key</BL>
+  <V>yPlayerVelocity</V><G> (Number)</G><BL> the vertical velocity of the player when he or she typed the key</BL>
+
+<D>eventMouse</D>(<V>playerName</V>, <V>xMousePosition</V>, <V>yMousePosition</V>)
+This event is triggered when a player perfoms a mouse click.
+  <V>playerName</V><G> (String)</G><BL> the player who made the click</BL>
+  <V>xMousePosition</V><G> (Int)</G><BL> the horizontal coordinate of the mouse click</BL>
+  <V>yMousePosition</V><G> (Int)</G><BL> the vertical coordinate of the mouse click</BL>
+
+<D>eventLoop</D>(<V>elapsedTime</V>, <V>remainingTime</V>)
+This event occurs every 500 milliseconds.
+  <V>elapsedTime</V><G> (Int)</G><BL> the time in milliseconds elapsed since the beginning of the round</BL>
+  <V>remainingTime</V><G> (Int)</G><BL> the time in milliseconds remaining before the next round</BL>
+
+<D>eventNewGame</D>()
+This event is triggered when a new round begins.
+
+<D>eventNewPlayer</D>(<V>playerName</V>)
+This event is triggered when a new player joins the room.
+  <V>playerName</V><G> (String)</G><BL> the player who joined the room</BL>
+
+<D>eventPlayerDataLoaded</D>(<V>playerName</V>, <V>playerData</V>)
+This event is triggered when player data gets loaded.
+  <V>playerName</V><G> (String)</G><BL> the player whose data got loaded</BL>
+  <V>playerData</V><G> (String)</G><BL> the data about the player</BL>
+
+<D>eventPlayerDied</D>(<V>playerName</V>)
+This event is triggered when a player dies.
+  <V>playerName</V><G> (String)</G><BL> the player who died</BL>
+
+<D>eventPlayerGetCheese</D>(<V>playerName</V>)
+This event is triggered when a player gets the cheese.
+  <V>playerName</V><G> (String)</G><BL> the player who got the cheese</BL>
+
+<D>eventPlayerBonusGrabbed</D>(<V>playerName</V>, <V>bonusId</V>)
+This event is triggered when a player grab a defilante bonus.
+  <V>playerName</V><G> (String)</G><BL> The player who grabbed the bonus.</BL>
+  <V>bonusId</V><G> (Int)</G><BL> Bonus identifier.</BL>
+
+<D>eventPlayerLeft</D>(<V>playerName</V>)
+This event is triggered when a player leaves the room.
+  <V>playerName</V><G> (String)</G><BL> the player who left the room</BL>
+
+<D>eventPlayerVampire</D>(<V>playerName</V>)
+This event is triggered when a player turns into a vampire.
+  <V>playerName</V><G> (String)</G><BL> the player who turned into a vampire</BL>
+
+<D>eventPlayerWon</D>(<V>playerName</V>, <V>timeElapsed</V>, <V>timeElapsedSinceRespawn</V>)
+This event triggers when a player enters the hole.
+  <V>playerName</V><G> (String)</G><BL> the player who entered the hole</BL>
+  <V>timeElapsed</V><G> (Int)</G><BL> the time in milliseconds elapsed since the beginning of the round</BL>
+  <V>timeElapsedSinceRespawn</V><G> (Int)</G><BL> the time in milliseconds elapsed since the last respawn</BL>
+
+<D>eventPlayerRespawn</D>(<V>playerName</V>)
+This event is triggered when a player respawns.
+  <V>playerName</V><G> (String)</G><BL> the player who respawned</BL>
+
+<D>eventPlayerMeep</D>(<V>playerName</V>, <V>xPosition</V>, <V>yPosition</V>)
+This event is triggered when a player meeps.
+  <V>playerName</V><G> (String)</G><BL> the player who meeped</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal coordinate of the player when they meeped</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical coordinate of the player when they meeped</BL>
+
+<D>eventPopupAnswer</D>(<V>popupId</V>, <V>playerName</V>, <V>answer</V>)
+This event is triggered when a player answers a popup (only type 1 and 2 popups).
+  <V>popupId</V><G> (Int)</G><BL> the popup identifier</BL>
+  <V>playerName</V><G> (String)</G><BL> the player who answered the popup</BL>
+  <V>answer</V><G> (String)</G><BL> the player's answer</BL>
+<BL>    - yes or no for a type 1 popup</BL>
+<BL>    - any string for a type 2 poup</BL>
+
+<D>eventSummoningStart</D>(<V>playerName</V>, <V>objectType</V>, <V>xPosition</V>, <V>yPosition</V>, <V>angle</V>)
+This event is triggered when a player starts summoning a shaman object.
+  <V>playerName</V><G> (String)</G><BL> the player who started summoning</BL>
+  <V>objectType</V><G> (Int)</G><BL> the kind of shaman object being summoned</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal coordinate of the summoning point</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical coordinate of the summoning point</BL>
+  <V>angle</V><G> (Int)</G><BL> the rotation angle of the object being summoned</BL>
+
+<D>eventSummoningCancel</D>(<V>playerName</V>)
+This event is triggered when a player cancels an object invocation.
+  <V>playerName</V><G> (String)</G><BL> the player who stopped summoning</BL>
+
+<D>eventSummoningEnd</D>(<V>playerName</V>, <V>objectType</V>, <V>xPosition</V>, <V>yPosition</V>, <V>angle</V>, <V>objectDescription</V>)
+This event triggers when a player has finished an invocation.
+  <V>playerName</V><G> (String)</G><BL> the player who summoned the object</BL>
+  <V>objectType</V><G> (Int)</G><BL> the kind of the object</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal position of the summoned object</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical position of the summoned object</BL>
+  <V>angle</V><G> (Int)</G><BL> the rotation angle of the summoned object</BL>
+  <V>objectDescription</V><G> (Table)</G><BL> the object table description as it would appear in the room's objectList</BL>
+
+<D>eventTextAreaCallback</D>(<V>textAreaId</V>, <V>playerName</V>, <V>eventName</V>)
+This event is triggered when a player clicks a text event.
+Text event links are anchors tags links beginning with the "event:" string (e.g. : <a href="event:callbackString">Click here</a>).
+If the link eventName begins with '#clear,' the text area will be cleared, and the received eventName will be the text following the coma.
+  <V>textAreaId</V><G> (Int)</G><BL> the text area identifier</BL>
+  <V>playerName</V><G> (String)</G><BL> the player who clicked</BL>
+  <V>eventName</V><G> (String)</G><BL> the name of the clicked text event</BL>
+
+<D>eventColorPicked</D>(<V>colorPickerId</V>, <V>playerName</V>, <V>color</V>)
+This event is triggered when a player chooses a color with a color picker.
+  <V>colorPickerId</V><G> (Int)</G><BL> the color picker identifier</BL>
+  <V>playerName</V><G> (String)</G><BL> the player who picked a color</BL>
+  <V>color</V><G> (Int)</G><BL> the color picked (-1 if the player didn't picked one))</BL>
+
+<D>eventContactListener</D>(<V>playerName</V>, <V>groundId</V>, <V>contactInfos</V>)
+This event is triggered when a player hit a ground with a contact listener.
+  <V>playerName</V><G> (String)</G><BL> the player who hit the ground</BL>
+  <V>groundId</V><G> (Int)</G><BL> ground identifier</BL>
+  <V>contactInfos</V><G> (Table)</G><BL> Collision informations</BL>
+
+<D>eventTalkToNPC</D>(<V>playerName</V>, <V>npcName</V>)
+This event is triggered when a player click on a NPC.
+  <V>playerName</V><G> (String)</G><BL> The player who talk to the NPC</BL>
+  <V>npcName</V><G> (String)</G><BL> The NPC name</BL>
+
+<O><font size='20'>Functions</font></O>
+
+<D>debug.disableEventLog</D>(<V>activate</V>)
+Deactivates the events log.
+  <V>activate</V><G> (Boolean)</G><BL> whether it should be active</BL> <G>(default true)</G>
+
+<D>debug.getCurrentThreadName</D>()
+Get current lua thread name.
+
+<D>system.bindKeyboard</D>(<V>playerName</V>, <V>keyCode</V>, <V>down</V>, <V>activate</V>)
+Listens to the player's keyboard events.
+  <V>playerName</V><G> (String)</G><BL> the player you want to listen keyboard events from</BL>
+  <V>keyCode</V><G> (Int)</G><BL> the code of the key you want to listen</BL>
+<BL>    - to accurately listen for player movement (both arrows and wasd/zqsd keys), you can use 0 (left), 1 (up), 2 (right) or 3 (down)</BL>
+<BL>    - regular AS3 keycodes can be found on http://help.adobe.com/fr_FR/FlashPlatform/reference/actionscript/3/flash/ui/Keyboard.html</BL>
+  <V>down</V><G> (Boolean)</G><BL> whether it should listen for the press event, or the release one</BL>
+  <V>activate</V><G> (Boolean)</G><BL> whether it should be active</BL> <G>(default true)</G>
+
+<D>system.bindMouse</D>(<V>playerName</V>, <V>active</V>)
+Listens to a player's mouse events.
+  <V>playerName</V><G> (String)</G><BL> the player you want to listen mouse events from</BL>
+  <V>active</V><G> (Boolean)</G><BL> whether it should be active</BL> <G>(default true)</G>
+
+<D>system.disableChatCommandDisplay</D>(<V>command</V>, <V>hide</V>)
+Prevents a module command (commands starting with « ! ») to be displayed in the room. If the supplied command is nil, the parameter will apply to all the commands.
+  <V>command</V><G> (String)</G><BL> the command (without the initial « ! ») to hide</BL> <G>(default nil)</G>
+  <V>hide</V><G> (Boolean)</G><BL> whether the command should be hided</BL> <G>(default true)</G>
+
+<D>system.exit</D>()
+Deactivates the lua script running.
+
+<D>system.giveAdventurePoint</D>(<V>playerName</V>, <V>Achievement code.</V>, <V>Amount</V>)
+Gives adventure points to a player..
+  <V>playerName</V><G> (String)</G><BL> Target player.</BL>
+  <V>Achievement code.</V><G> (String)</G><BL> The achievement code to increase.</BL>
+  <V>Amount</V><G> (Int)</G><BL> The amount value.</BL> <G>(default 1)</G>
+
+<D>system.giveEventGift</D>(<V>playerName</V>, <V>giftCode</V>)
+Gives an event reward to the targeted player.
+  <V>playerName</V><G> (String)</G><BL> the player to give the gift to</BL>
+  <V>giftCode</V><G> (String)</G><BL> the gift identifier (given by an admin)</BL>
+
+<D>system.loadFile</D>(<V>fileNumber</V>)
+Requests the loading of a data file. The event eventFileLoaded is triggered when the file gets loaded.
+  <V>fileNumber</V><G> (Int)</G><BL> the identifier of the file to load</BL> <G>(default 0)</G>
+<R>Returns</R> <G>(Boolean)</G> <BL>whether the loading got started</BL>
+
+<D>system.loadPlayerData</D>(<V>playerName</V>)
+Requests the loading of the player's data for this module. The event eventPlayerDataLoaded is triggered when the player data gets loaded.
+  <V>playerName</V><G> (String)</G><BL> the player about whom you want to get the data</BL>
+<R>Returns</R> <G>(Boolean)</G> <BL>whether the loading got started</BL>
+
+<D>system.luaEventLaunchInterval</D>(<V>interval</V>, <V>random</V>)
+Set or get the timer interval between two events.
+  <V>interval</V><G> (Int)</G><BL> Timer interval in min (default 40 min), can't be less than 40 min.</BL>
+  <V>random</V><G> (Int)</G><BL> Random added  interval in min (default 20 min).</BL>
+
+<D>system.newTimer</D>(<V>callback</V>, <V>time</V>, <V>loop</V>, <V>arg1</V>, <V>arg2</V>, <V>arg3</V>, <V>arg4</V>)
+Creates a new timer to call a function after a delay, once or continuously.
+  <V>callback</V><G> (Function)</G><BL> The function to call</BL>
+  <V>time</V><G> (Int)</G><BL> the number of milliseconds that the function call should be delayed by</BL>
+  <V>loop</V><G> (Boolean)</G><BL> whether the function call should loop or happen only once</BL> <G>(default false)</G>
+  <V>arg1</V><G> (Object)</G><BL> 1st argument of the callback function</BL> <G>(default nil)</G>
+  <V>arg2</V><G> (Object)</G><BL> 2nd argument of the callback function</BL> <G>(default nil)</G>
+  <V>arg3</V><G> (Object)</G><BL> 3rd argument of the callback function</BL> <G>(default nil)</G>
+  <V>arg4</V><G> (Object)</G><BL> 4th argument of the callback function</BL> <G>(default nil)</G>
+<R>Returns</R> <G>(Int)</G> <BL>the new timer id</BL>
+
+<D>system.openEventShop</D>(<V>eventName</V>, <V>playerName</V>)
+Open the shop of the specified event.
+  <V>eventName</V><G> (String)</G><BL> Event name.</BL>
+  <V>playerName</V><G> (String)</G><BL> Target player name.</BL>
+
+<D>system.removeTimer</D>(<V>timerId</V>)
+Destroys a timer.
+  <V>timerId</V><G> (Int)</G><BL> the identifier of the timer to stop</BL>
+
+<D>system.saveFile</D>(<V>data</V>, <V>fileNumber</V>)
+Requests the saving of a data file (throttled to one per minute). The event eventFileSaved is triggered when the file get saved.
+  <V>data</V><G> (String)</G><BL> the data to store in the file</BL>
+  <V>fileNumber</V><G> (Int)</G><BL> the identifier (from 0 to 99) of the file to write the data in</BL> <G>(default 0)</G>
+<R>Returns</R> <G>(Boolean)</G> <BL>whether the saving got started</BL>
+
+<D>system.savePlayerData</D>(<V>playerName</V>, <V>data</V>)
+Saves module data about a player. Please note that this data is per player and per Lua dev, so take care not to overwrite data from another one of your modules.
+  <V>playerName</V><G> (String)</G><BL> the player about whom you want to save data</BL>
+  <V>data</V><G> (String)</G><BL> the player data to save</BL>
+
+<D>system.setLuaEventBanner</D>(<V>bannerId</V>)
+Set the login event banner.
+  <V>bannerId</V><G> (Int)</G><BL> Banner id.</BL>
+
+<D>tfm.exec.addBonus</D>(<V>type</V>, <V>x</V>, <V>y</V>, <V>id</V>, <V>angle</V>, <V>visible</V>, <V>targetPlayer</V>)
+Add defilante bonus.
+  <V>type</V><G> (Int)</G><BL> Bonus type (see tfm.enum.bonus)</BL> <G>(default 1)</G>
+  <V>x</V><G> (Int)</G><BL> X position.</BL> <G>(default 0)</G>
+  <V>y</V><G> (Int)</G><BL> Y position.</BL> <G>(default 0)</G>
+  <V>id</V><G> (Int)</G><BL> Identifier.</BL> <G>(default 0)</G>
+  <V>angle</V><G> (Int)</G><BL> Angle (deg).</BL> <G>(default 0)</G>
+  <V>visible</V><G> (Boolean)</G><BL> Make the bonus visible or not.</BL> <G>(default true)</G>
+  <V>targetPlayer</V><G> (String)</G><BL> Send only to this specific player.</BL> <G>(default nil)</G>
+
+<D>tfm.exec.addConjuration</D>(<V>xPosition</V>, <V>yPosition</V>, <V>duration</V>)
+Adds conjuration to the map. Note: Grid coordinate are regular coordinate divided by 10 (as conjuration is a 10x10 pixel square).
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal grid coordinate of the conjuration</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical grid coordinate of the conjuration</BL>
+  <V>duration</V><G> (Int)</G><BL> the duration of the conjuration in milliseconds</BL> <G>(default 10000)</G>
+
+<D>tfm.exec.addImage</D>(<V>imageId</V>, <V>target</V>, <V>xPosition</V>, <V>yPosition</V>, <V>targetPlayer</V>, <V>scaleX</V>, <V>scaleY</V>, <V>rotation</V>, <V>alpha</V>, <V>anchorX</V>, <V>anchorY</V>, <V>fadeIn</V>)
+Displays an image on the map.
+  <V>imageId</V><G> (String)</G><BL> the image identifier</BL>
+  <V>target</V><G> (String)</G><BL> the game element to attach the image to</BL>
+<BL>    - #mobileId</BL>
+<BL>    - =mobileId (keep current sprite)</BL>
+<BL>    - $playerName (on the mouse sprite)</BL>
+<BL>    - %playerName (with the mouse sprite removed)</BL>
+<BL>    - ?backgroundLayerDepth</BL>
+<BL>    - _groundLayerDepth</BL>
+<BL>    - !foregroundLayerDepth</BL>
+<BL>    - &fixedLayerDepthBeforeLuaInterfaces</BL>
+<BL>    - :fixedLayerDepthBehindLuaInterfaces</BL>
+<BL>    - ~fixedLayerDepthWithLuaInterfaces</BL>
+<BL>    - +physicObjectId</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal offset of the top-left corner of the image (0 being the middle of the game element)</BL> <G>(default 0)</G>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical offset of the top-left corner of the image (0 being the middle of the game element)</BL> <G>(default 0)</G>
+  <V>targetPlayer</V><G> (String)</G><BL> the player who will see the image (if nil, applies to all players)</BL> <G>(default nil)</G>
+  <V>scaleX</V><G> (Number)</G><BL> Image scale X</BL> <G>(default 1)</G>
+  <V>scaleY</V><G> (Number)</G><BL> Image scale Y</BL> <G>(default 1)</G>
+  <V>rotation</V><G> (Number)</G><BL> Image rotation in radian</BL> <G>(default 0)</G>
+  <V>alpha</V><G> (Number)</G><BL> Image alpha</BL> <G>(default 1)</G>
+  <V>anchorX</V><G> (Number)</G><BL> Image anchor X (0..1)</BL> <G>(default 0)</G>
+  <V>anchorY</V><G> (Number)</G><BL> Image anchor Y (0..1)</BL> <G>(default 0)</G>
+  <V>fadeIn</V><G> (Boolean)</G><BL> Use a fade in to display the image.</BL> <G>(default false)</G>
+<R>Returns</R> <G>(Int)</G> <BL>the image identifier</BL>
+
+<D>tfm.exec.addJoint</D>(<V>id</V>, <V>ground1</V>, <V>ground2</V>, <V>jointDef</V>)
+Adds a joint between two physic objects. . Note: In map XML codes, you can also add a « lua="id" » property in a joint definition to be able to interact with it with LUA code.
+  <V>id</V><G> (Int)</G><BL> the identifier of the joint</BL>
+  <V>ground1</V><G> (Int)</G><BL> the first ground the joint will affect</BL>
+  <V>ground2</V><G> (Int)</G><BL> the second ground the joint will affect</BL>
+  <V>jointDef</V><G> (Table)</G><BL> the ground description</BL>
+<BL>    - type (Int): 0 -> distance joint, 1 -> prismatic joint, 2 -> pulley joint, 3 -> revolute joint</BL>
+<BL>    - point1 (String "x,y"): location of the ground1 anchor (default: the ground1's center)</BL>
+<BL>    - point2 (String "x,y"): location of the ground2 anchor (default: the ground2's center), only used with distance and pulley joints</BL>
+<BL>    - point3 (String "x,y"), point4 (String "x,y"): locations of the pulley's anchors, only used with pulley joints</BL>
+<BL>    - frequency (Float), damping (Float): distance joints' frequency and damping ratio</BL>
+<BL>    - axis (String "x,y"), angle (Int): prismatic joints' axis and angle</BL>
+<BL>    - limit1 (Float), limit2 (Float), forceMotor (Float), speedMotor (Float): prismatic and revolute joints' translation/rotation limits and motors</BL>
+<BL>    - ratio (Float): revolute joints' ratio</BL>
+<BL>    - line (Int), color (Int), alpha (Float), foreground (Boolean): if none of these properties is defined, the joint won't be drawn</BL>
+
+<D>tfm.exec.addNPC</D>(<V>name</V>, <V>npcDef</V>, <V>targetPlayer</V>)
+Add an NPC to the current map.
+  <V>name</V><G> (String)</G><BL> NPC name.</BL>
+  <V>npcDef</V><G> (Table)</G><BL> The NPC definition</BL>
+<BL>    - title (Int): NPC title.</BL>
+<BL>    - look (String): NPC look.</BL>
+<BL>    - x (int): X position.</BL>
+<BL>    - y (int): Y position.</BL>
+<BL>    - female (bool): Set True if the NPC is female.</BL>
+<BL>    - lookLeft (bool): Set True to make the NPC look to the left.</BL>
+<BL>    - lookAtPlayer (bool): Set True to make the NPC look to the player.</BL>
+<BL>    - interactive (Boolean): If true, player will be able to click on it.</BL>
+  <V>targetPlayer</V><G> (String)</G><BL> the player who will see the NPC (if nil, applies to all players)</BL> <G>(default nil)</G>
+
+<D>tfm.exec.addPhysicObject</D>(<V>id</V>, <V>xPosition</V>, <V>yPosition</V>, <V>bodyDef</V>)
+Spawns a ground.
+  <V>id</V><G> (Int)</G><BL> the identifier of the physic object</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal coordinate of the center of the ground</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical coordinate of the center of the ground</BL>
+  <V>bodyDef</V><G> (Table)</G><BL> the ground description</BL>
+<BL>    - type (Int), width (Int), height (Int), foreground (Boolean), friction (Float), restitution (Float), angle (Int), color (Int), miceCollision (Boolean), groundCollision (Boolean)</BL>
+<BL>    - dynamic (Boolean), fixedRotation (Boolean), mass (Int), linearDamping (Float), angularDamping (Float) for dynamic grounds, contactListener (Boolean) </BL>
+
+<D>tfm.exec.addShamanObject</D>(<V>objectType</V>, <V>xPosition</V>, <V>yPosition</V>, <V>angle</V>, <V>xSpeed</V>, <V>ySpeed</V>, <V>ghost</V>, <V>options</V>)
+Spawns a shaman object.
+  <V>objectType</V><G> (Int)</G><BL> the type of the shaman object to spawn</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal position of the spawn</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical position of the spawn</BL>
+  <V>angle</V><G> (Int)</G><BL> the rotation angle of the object, in degrees</BL> <G>(default 0)</G>
+  <V>xSpeed</V><G> (Int)</G><BL> the horizontal speed of the object</BL> <G>(default 0)</G>
+  <V>ySpeed</V><G> (Int)</G><BL> the vertical speed of the object</BL> <G>(default 0)</G>
+  <V>ghost</V><G> (Boolean)</G><BL> whether the spawned object should be transparent</BL> <G>(default false)</G>
+  <V>options</V><G> (Table)</G><BL> fixedXSpeed (Number), fixedYSpeed (Number)</BL>
+<R>Returns</R> <G>(Int)</G> <BL>the shaman object identifier</BL>
+
+<D>tfm.exec.attachBalloon</D>(<V>playerName</V>, <V>yes</V>, <V>color</V>, <V>transparent</V>, <V>speed</V>)
+Tie a player to a balloon.
+  <V>playerName</V><G> (String)</G><BL> the player's nickname</BL>
+  <V>yes</V><G> (Boolean)</G><BL> Attach or dettach the balloon.</BL> <G>(default true)</G>
+  <V>color</V><G> (Int)</G><BL> Balloon color [1-4].</BL> <G>(default 1)</G>
+  <V>transparent</V><G> (Boolean)</G><BL> Make the balloon transparent.</BL> <G>(default false)</G>
+  <V>speed</V><G> (Number)</G><BL> Balloon speed.</BL> <G>(default 1)</G>
+
+<D>tfm.exec.changePlayerSize</D>(<V>playerName</V>, <V>size</V>)
+Changes the size of a player.
+  <V>playerName</V><G> (String)</G><BL> the player's nickname</BL>
+  <V>size</V><G> (Number)</G><BL> the new size of the player (between 0.1 and 5)</BL> <G>(default 1)</G>
+
+<D>tfm.exec.chatMessage</D>(<V>message</V>, <V>playerName</V>)
+Displays a chat message.
+  <V>message</V><G> (String)</G><BL> the chat message to display</BL>
+  <V>playerName</V><G> (String)</G><BL> the player who will get the message (if nil, applies to all players)</BL> <G>(default nil)</G>
+
+<D>tfm.exec.disableAfkDeath</D>(<V>activate</V>)
+Deactivates the automatic afk death.
+  <V>activate</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disableAllShamanSkills</D>(<V>active</V>)
+Deactivates all shaman skills.
+  <V>active</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disableAutoNewGame</D>(<V>activate</V>)
+Deactivates the automatic renewal of rounds.
+  <V>activate</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disableAutoScore</D>(<V>activate</V>)
+Deactivates the automatic scoring management.
+  <V>activate</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disableAutoShaman</D>(<V>activate</V>)
+Deactivates the automatic selection of shaman.
+  <V>activate</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disableAutoTimeLeft</D>(<V>activate</V>)
+Deactivates the automatic remaining time change to 20s (when the shaman dies for example).
+  <V>activate</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disableDebugCommand</D>(<V>activate</V>)
+Disables the effects of the /debug command.
+  <V>activate</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disableMinimalistMode</D>(<V>activate</V>)
+Disables the minimalist mode.
+  <V>activate</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disableMortCommand</D>(<V>activate</V>)
+Disables the /mort command.
+  <V>activate</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disablePhysicalConsumables</D>(<V>active</V>)
+Deactivates physical consumables (like in racing and bootcamp rooms).
+  <V>active</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.disablePrespawnPreview</D>(<V>display</V>)
+Enables or disables the shaman objects prespawn preview.
+  <V>display</V><G> (Boolean)</G><BL> whether the prespawn preview should not be displayed</BL> <G>(default true)</G>
+
+<D>tfm.exec.disableWatchCommand</D>(<V>activate</V>)
+Disables the effects of the /watch command.
+  <V>activate</V><G> (Boolean)</G><BL> whether the deactivation should be active</BL> <G>(default true)</G>
+
+<D>tfm.exec.displayParticle</D>(<V>particleType</V>, <V>xPosition</V>, <V>yPosition</V>, <V>xSpeed</V>, <V>ySpeed</V>, <V>xAcceleration</V>, <V>yAcceleration</V>, <V>targetPlayer</V>)
+Displays a particle.
+  <V>particleType</V><G> (Int)</G><BL> the kind of particle you want to display</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal coordinate of the particle</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical coordinate of the particle</BL>
+  <V>xSpeed</V><G> (Number)</G><BL> the horizontal speed of the particle</BL> <G>(default 0)</G>
+  <V>ySpeed</V><G> (Number)</G><BL> the vertical speed of the particle</BL> <G>(default 0)</G>
+  <V>xAcceleration</V><G> (Number)</G><BL> the horizontal acceleration of the particle</BL> <G>(default 0)</G>
+  <V>yAcceleration</V><G> (Number)</G><BL> the vertical acceleration of the particle</BL> <G>(default 0)</G>
+  <V>targetPlayer</V><G> (String)</G><BL> the player who should see the particle (if nil, applies to all players)</BL> <G>(default nil)</G>
+
+<D>tfm.exec.explosion</D>(<V>xPosition</V>, <V>yPosition</V>, <V>power</V>, <V>radius</V>, <V>miceOnly</V>)
+Throws an explosion.
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal coordinate of the center of the explosion</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical coordinate of the center of the explosion</BL>
+  <V>power</V><G> (Int)</G><BL> the maximum power of the explosion</BL>
+  <V>radius</V><G> (Int)</G><BL> the explosion radius (players further away won't be affected)</BL>
+  <V>miceOnly</V><G> (Boolean)</G><BL> whether the explosion should affect only mice, or objects too</BL> <G>(default false)</G>
+
+<D>tfm.exec.freezePlayer</D>(<V>playerName</V>, <V>freeze</V>, <V>displayIce</V>)
+Froze a player.
+  <V>playerName</V><G> (String)</G><BL> the player's nickname</BL>
+  <V>freeze</V><G> (Boolean)</G><BL> Freeze or unfreeze</BL> <G>(default true)</G>
+  <V>displayIce</V><G> (Boolean)</G><BL> Display or not ice on the mouse.</BL> <G>(default true)</G>
+
+<D>tfm.exec.getPlayerSync</D>()
+Get current player sync.
+
+<D>tfm.exec.giveCheese</D>(<V>playerName</V>)
+Gives the cheese to a player.
+  <V>playerName</V><G> (String)</G><BL> the player who should get the cheese</BL>
+
+<D>tfm.exec.giveConsumables</D>(<V>playerName</V>, <V>consumableId</V>, <V>amount</V>)
+Gives consumables to the targeted player.
+  <V>playerName</V><G> (String)</G><BL> the player to give the gift to</BL>
+  <V>consumableId</V><G> (String)</G><BL> the consumable identifier</BL>
+  <V>amount</V><G> (String)</G><BL> the amount of consumables to give</BL> <G>(default "1")</G>
+
+<D>tfm.exec.giveMeep</D>(<V>playerName</V>, <V>canMeep</V>)
+Gives the meep competence to a player, or removes it.
+  <V>playerName</V><G> (String)</G><BL> the player's nickname</BL>
+  <V>canMeep</V><G> (Boolean)</G><BL> whether the player should be able to meep</BL> <G>(default true)</G>
+
+<D>tfm.exec.giveTransformations</D>(<V>playerName</V>, <V>canTransform</V>)
+Gives the transformations to a player, or removes them.
+  <V>playerName</V><G> (String)</G><BL> the player's nickname</BL>
+  <V>canTransform</V><G> (Boolean)</G><BL> whether the player should be able to use transformations</BL> <G>(default true)</G>
+
+<D>tfm.exec.killPlayer</D>(<V>playerName</V>)
+Kills the selected player.
+  <V>playerName</V><G> (String)</G><BL> the player to kill</BL>
+
+<D>tfm.exec.linkMice</D>(<V>playerName1</V>, <V>playerName2</V>, <V>linked</V>)
+Allows to link players like in soulmate maps.
+  <V>playerName1</V><G> (String)</G><BL> the first player's nickname</BL>
+  <V>playerName2</V><G> (String)</G><BL> the second player's nickname</BL>
+  <V>linked</V><G> (Boolean)</G><BL> whether the two players should be linked</BL> <G>(default true)</G>
+
+<D>tfm.exec.lowerSyncDelay</D>(<V>playerName</V>)
+Lowers the synchronization delay of a player to 400ms max
+  <V>playerName</V><G> (String)</G><BL> the player who should have a lower sync delay</BL>
+
+<D>tfm.exec.moveObject</D>(<V>objectId</V>, <V>xPosition</V>, <V>yPosition</V>, <V>positionOffset</V>, <V>xSpeed</V>, <V>ySpeed</V>, <V>speedOffset</V>, <V>angle</V>, <V>angleOffset</V>)
+Defines the speed and position of a shaman object.
+  <V>objectId</V><G> (Int)</G><BL> the shaman object identifier</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal coordinate of the point where the object will be moved</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical coordinate of the point where the object will be moved</BL>
+  <V>positionOffset</V><G> (Boolean)</G><BL> whether the specified position is an offset to apply to the current one, or the absolute one</BL> <G>(default false)</G>
+  <V>xSpeed</V><G> (Int)</G><BL> the horizontal coordinate of the speed to give to the object</BL> <G>(default 0)</G>
+  <V>ySpeed</V><G> (Int)</G><BL> the vertical coordinate of the speed to give to the object</BL> <G>(default 0)</G>
+  <V>speedOffset</V><G> (Boolean)</G><BL> whether the specified speed is an offset to apply to the current one, or the absolute one</BL> <G>(default false)</G>
+  <V>angle</V><G> (Int)</G><BL> the angle of the the object</BL> <G>(default 0)</G>
+  <V>angleOffset</V><G> (Boolean)</G><BL> whether the specified angle is an offset to apply to the current one, or the absolute one</BL> <G>(default false)</G>
+
+<D>tfm.exec.movePhysicObject</D>(<V>objectId</V>, <V>xPosition</V>, <V>yPosition</V>, <V>positionOffset</V>, <V>xSpeed</V>, <V>ySpeed</V>, <V>speedOffset</V>, <V>angle</V>, <V>angleOffset</V>)
+Defines the speed and position of a physic object.
+  <V>objectId</V><G> (Int)</G><BL> The physic object identifier</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal coordinate of the point where the object will be moved</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical coordinate of the point where the object will be moved</BL>
+  <V>positionOffset</V><G> (Boolean)</G><BL> whether the specified position is an offset to apply to the current one, or the absolute one</BL> <G>(default false)</G>
+  <V>xSpeed</V><G> (Int)</G><BL> the horizontal coordinate of the speed to give to the object</BL> <G>(default 0)</G>
+  <V>ySpeed</V><G> (Int)</G><BL> the vertical coordinate of the speed to give to the object</BL> <G>(default 0)</G>
+  <V>speedOffset</V><G> (Boolean)</G><BL> whether the specified speed is an offset to apply to the current one, or the absolute one</BL> <G>(default false)</G>
+  <V>angle</V><G> (Int)</G><BL> the angle of the the object</BL> <G>(default 0)</G>
+  <V>angleOffset</V><G> (Boolean)</G><BL> whether the specified angle is an offset to apply to the current one, or the absolute one</BL> <G>(default false)</G>
+
+<D>tfm.exec.movePlayer</D>(<V>playerName</V>, <V>xPosition</V>, <V>yPosition</V>, <V>positionOffset</V>, <V>xSpeed</V>, <V>ySpeed</V>, <V>speedOffset</V>)
+Defines the speed and position of a player.
+  <V>playerName</V><G> (String)</G><BL> the player to move</BL>
+  <V>xPosition</V><G> (Int)</G><BL> the horizontal coordinate of the point where the player will be moved</BL>
+  <V>yPosition</V><G> (Int)</G><BL> the vertical coordinate of the point where the player will be moved</BL>
+  <V>positionOffset</V><G> (Boolean)</G><BL> whether the specified position an offset to apply to the current one, or the absolute one</BL> <G>(default false)</G>
+  <V>xSpeed</V><G> (Int)</G><BL> the horizontal coordinate of the speed to give to the player</BL> <G>(default 0)</G>
+  <V>ySpeed</V><G> (Int)</G><BL> the vertical coordinate of the speed to give to the player</BL> <G>(default 0)</G>
+  <V>speedOffset</V><G> (Boolean)</G><BL> whether the specified speed an offset to apply to the current one, or the absolute one</BL> <G>(default false)</G>
+
+<D>tfm.exec.newGame</D>(<V>mapCode</V>, <V>flipped</V>)
+Starts a new game
+  <V>mapCode</V><G> (String)</G><BL> the map code</BL> <G>(default nil)</G>
+<BL>    - nil (a random map)</BL>
+<BL>    - 6 (vanilla map)</BL>
+<BL>    - @42583 (editor map)</BL>
+<BL>    - #4 (perm category map)</BL>
+<BL>    - anything beginning with '&lt;' (xml map)</BL>
+  <V>flipped</V><G> (Boolean)</G><BL> whether the map should be flipped</BL> <G>(default nil (randomly mirrored in racing and bootcamp rooms, unless))</G>
+
+<D>tfm.exec.playEmote</D>(<V>playerName</V>, <V>emoteId</V>, <V>emoteArg</V>)
+Makes a player do an emote.
+  <V>playerName</V><G> (String)</G><BL> the player who should do the emote</BL>
+  <V>emoteId</V><G> (Int)</G><BL> the emote to do</BL>
+  <V>emoteArg</V><G> (String)</G><BL> the emote attribute (for the flag emote for example)</BL> <G>(default nil)</G>
+
+<D>tfm.exec.playMusic</D>(<V>music</V>, <V>Channel</V>, <V>volume</V>, <V>loop</V>, <V>fade</V>, <V>targetPlayer</V>)
+Play a music. A music can be stopped. Musics list can be found here : http://audio.atelier801.com/sounds.html
+  <V>music</V><G> (String)</G><BL> URL of the music.</BL>
+  <V>Channel</V><G> (String)</G><BL> Channel of the music. Only one music can be played per channel. If a music is playing, it will be stopped.</BL>
+  <V>volume</V><G> (Int)</G><BL> Volume of the sound (0-100).</BL> <G>(default 70)</G>
+  <V>loop</V><G> (Boolean)</G><BL> If the music should be looping.</BL> <G>(default false)</G>
+  <V>fade</V><G> (Boolean)</G><BL> If the music should start with a fading.</BL> <G>(default true)</G>
+  <V>targetPlayer</V><G> (Int)</G><BL> Send only to this specific player (if nil, applies to all players).</BL> <G>(default nil)</G>
+
+<D>tfm.exec.playSound</D>(<V>sound</V>, <V>volume</V>, <V>soundPosX</V>, <V>soundPosY</V>, <V>targetPlayer</V>)
+Play a sound. Sounds list can be found here : http://audio.atelier801.com/sounds.html
+  <V>sound</V><G> (String)</G><BL> URL of the sound.</BL>
+  <V>volume</V><G> (Int)</G><BL> Volume of the sound (0-100).</BL> <G>(default 70)</G>
+  <V>soundPosX</V><G> (Int)</G><BL> X position of the sound. If not nil, the further away the player is, the more the sound is reduced.</BL> <G>(default nil)</G>
+  <V>soundPosY</V><G> (Int)</G><BL> Y position of the sound.</BL> <G>(default nil)</G>
+  <V>targetPlayer</V><G> (Int)</G><BL> Send only to this specific player (if nil, applies to all players).</BL> <G>(default nil)</G>
+
+<D>tfm.exec.playerVictory</D>(<V>playerName</V>)
+Makes a player enter the hole. It only works if the player already has a cheese!
+  <V>playerName</V><G> (String)</G><BL> the player who should win</BL>
+
+<D>tfm.exec.removeBonus</D>(<V>id</V>, <V>targetPlayer</V>)
+Remove a defilante bonus.
+  <V>id</V><G> (Int)</G><BL> Identifier.</BL> <G>(default 0)</G>
+  <V>targetPlayer</V><G> (String)</G><BL> Send only to this specific player.</BL> <G>(default nil)</G>
+
+<D>tfm.exec.removeCheese</D>(<V>playerName</V>)
+Takes away the cheese from a player.
+  <V>playerName</V><G> (String)</G><BL> the player who should get their cheese removed</BL>
+
+<D>tfm.exec.removeImage</D>(<V>imageId</V>, <V>fadeOut</V>)
+Removes an image.
+  <V>imageId</V><G> (Int)</G><BL> the image identifier</BL>
+  <V>fadeOut</V><G> (Boolean)</G><BL> Use a fade out to remove the image.</BL> <G>(default false)</G>
+
+<D>tfm.exec.removeJoint</D>(<V>id</V>)
+Removes a joint from the game.
+  <V>id</V><G> (Int)</G><BL> the identifier of the joint to remove</BL>
+
+<D>tfm.exec.removeObject</D>(<V>objectId</V>)
+Removes a shaman object.
+  <V>objectId</V><G> (Int)</G><BL> the shaman object identifier</BL>
+
+<D>tfm.exec.removePhysicObject</D>(<V>id</V>)
+Removes a ground from the game.
+  <V>id</V><G> (Int)</G><BL> the identifier of the ground to remove</BL>
+
+<D>tfm.exec.respawnPlayer</D>(<V>playerName</V>)
+Respawns a player.
+  <V>playerName</V><G> (String)</G><BL> the player to respawn</BL>
+
+<D>tfm.exec.setAieMode</D>(<V>enable</V>, <V>sensibility</V>, <V>targetPlayer</V>)
+Enable 'Aie' mode when mice can die when they hit something too hard. Last until the next map.
+  <V>enable</V><G> (Boolean)</G><BL> Enabled or disable 'Aie' mode.</BL> <G>(default true)</G>
+  <V>sensibility</V><G> (Number)</G><BL> Sensibility of the 'Aie' mode.</BL> <G>(default 1)</G>
+  <V>targetPlayer</V><G> (String)</G><BL> Target player (nil for all player in room).</BL> <G>(default nil)</G>
+
+<D>tfm.exec.setAutoMapFlipMode</D>(<V>flipped</V>)
+Sets whether the following maps should be flipped (always, never, or TFM's default behaviour).
+  <V>flipped</V><G> (Boolean)</G><BL> whether the maps should be flipped</BL> <G>(default nil (the default TFM behaviour))</G>
+
+<D>tfm.exec.setGameTime</D>(<V>time</V>, <V>init</V>)
+Sets the game remaining time.
+  <V>time</V><G> (Int)</G><BL> the remaining time in seconds</BL>
+  <V>init</V><G> (Boolean)</G><BL> whether the remaining time should change even if the specified remaining time is higher than the current one</BL> <G>(default true)</G>
+
+<D>tfm.exec.setNameColor</D>(<V>playerName</V>, <V>color</V>)
+Changes a player's nickname's color.
+  <V>playerName</V><G> (String)</G><BL> the player whose nickname  should be colored</BL>
+  <V>color</V><G> (Int)</G><BL> the color of the nickname</BL>
+
+<D>tfm.exec.setPlayerGravityScale</D>(<V>playerName</V>, <V>gravityScale</V>, <V>windScale</V>)
+Set the world gravity and wind scale for a player.
+  <V>playerName</V><G> (String)</G><BL> Targeted player name.</BL>
+  <V>gravityScale</V><G> (Number)</G><BL> Gravity scale value.</BL> <G>(default 1)</G>
+  <V>windScale</V><G> (Number)</G><BL> Wind scale value.</BL> <G>(default 1)</G>
+
+<D>tfm.exec.setPlayerNightMode</D>(<V>nightMode</V>, <V>playerName</V>)
+Set the night mode for a player.
+  <V>nightMode</V><G> (Boolean)</G><BL> Enable or disable the night mode.</BL> <G>(default true)</G>
+  <V>playerName</V><G> (String)</G><BL> Targeted player name. If nil affect all player in room.</BL>
+
+<D>tfm.exec.setPlayerScore</D>(<V>playerName</V>, <V>score</V>, <V>add</V>)
+Sets the player's score.
+  <V>playerName</V><G> (String)</G><BL> the player who should get his or her score changed</BL>
+  <V>score</V><G> (Int)</G><BL> the score</BL>
+  <V>add</V><G> (Boolean)</G><BL> whether the current score should be added to the specified one</BL> <G>(default false)</G>
+
+<D>tfm.exec.setPlayerSync</D>(<V>playerName</V>)
+Set current player sync.
+  <V>playerName</V><G> (String)</G><BL> Target player name (Nil to let the server decide).</BL>
+
+<D>tfm.exec.setRoomMaxPlayers</D>(<V>maxPlayers</V>)
+Sets the max number of players in a room.
+  <V>maxPlayers</V><G> (Int)</G><BL> the maximum number of players the room can hold</BL>
+
+<D>tfm.exec.setRoomPassword</D>(<V>password</V>)
+Password-protects a room.
+  <V>password</V><G> (String)</G><BL> the string to set as the password (an empty string removes the protection)</BL>
+
+<D>tfm.exec.setShaman</D>(<V>playerName</V>, <V>makeAShaman</V>)
+Makes a player a shaman.
+  <V>playerName</V><G> (String)</G><BL> the player who should become a shaman</BL>
+  <V>makeAShaman</V><G> (Boolean)</G><BL> whether the player should be a shaman</BL> <G>(default true)</G>
+
+<D>tfm.exec.setShamanMode</D>(<V>playerName</V>, <V>mode</V>)
+Changes the shaman mode of a player.
+  <V>playerName</V><G> (String)</G><BL> the player's nickname who will have another shaman mode</BL>
+  <V>mode</V><G> (Int)</G><BL> the new shaman mode of the target (use nil to use the player's real mode)</BL> <G>(default nil)</G>
+
+<D>tfm.exec.setVampirePlayer</D>(<V>playerName</V>, <V>makeAVampire</V>)
+Makes a player a vampire.
+  <V>playerName</V><G> (String)</G><BL> the player to make a vampire</BL>
+  <V>makeAVampire</V><G> (Boolean)</G><BL> whether the player should be a vampire</BL> <G>(default true)</G>
+
+<D>tfm.exec.setWorldGravity</D>(<V>x</V>, <V>y</V>)
+Set the world gravity.
+  <V>x</V><G> (Int)</G><BL> Gravity on x axis.</BL> <G>(default 0)</G>
+  <V>y</V><G> (Int)</G><BL> Gravity on y axis</BL> <G>(default 10)</G>
+
+<D>tfm.exec.snow</D>(<V>duration</V>, <V>snowballPower</V>)
+Makes the snow fall.
+  <V>duration</V><G> (Int)</G><BL> the snowfall duration in seconds</BL> <G>(default 60)</G>
+  <V>snowballPower</V><G> (Int)</G><BL> </BL> <G>(default 10)</G>
+
+<D>tfm.exec.stopMusic</D>(<V>Channel</V>, <V>targetPlayer</V>)
+Stop a playing music.
+  <V>Channel</V><G> (String)</G><BL> Music channel to stop.</BL>
+  <V>targetPlayer</V><G> (Int)</G><BL> Send only to this specific player (if nil, applies to all players).</BL> <G>(default nil)</G>
+
+<D>ui.addPopup</D>(<V>id</V>, <V>type</V>, <V>text</V>, <V>targetPlayer</V>, <V>x</V>, <V>y</V>, <V>width</V>, <V>fixedPos</V>)
+Displays a popup.
+  <V>id</V><G> (Int)</G><BL> the identifier of the popup</BL>
+  <V>type</V><G> (Int)</G><BL> the popup type (0 for simple, 1 for yes or no, 2 for player input)</BL>
+  <V>text</V><G> (String)</G><BL> the text to display</BL>
+  <V>targetPlayer</V><G> (String)</G><BL> the player who will see the popup (if nil, applies to all players)</BL>
+  <V>x</V><G> (Int)</G><BL> the horizontal coordinate of the top-left corner</BL> <G>(default 50)</G>
+  <V>y</V><G> (Int)</G><BL> the vertical coordinate of the top-left corner</BL> <G>(default 50)</G>
+  <V>width</V><G> (Int)</G><BL> the width in pixels of the popup (if 0, it will be ajusted to the text width)</BL> <G>(default 0)</G>
+  <V>fixedPos</V><G> (Boolean)</G><BL> whether the position is fixed or if it should follow the player's camera on long maps</BL> <G>(default false)</G>
+
+<D>ui.addTextArea</D>(<V>id</V>, <V>text</V>, <V>targetPlayer</V>, <V>x</V>, <V>y</V>, <V>width</V>, <V>height</V>, <V>backgroundColor</V>, <V>borderColor</V>, <V>backgroundAlpha</V>, <V>fixedPos</V>)
+Displays a text area.
+  <V>id</V><G> (Int)</G><BL> the identifier of the text area</BL>
+  <V>text</V><G> (String)</G><BL> the text to display</BL>
+  <V>targetPlayer</V><G> (String)</G><BL> the player who will see the text area (if nil, applies to all players)</BL> <G>(default nil)</G>
+  <V>x</V><G> (Int)</G><BL> the horizontal coordinate of the top-left corner</BL> <G>(default 50)</G>
+  <V>y</V><G> (Int)</G><BL> the vertical coordinate of the top-left corner</BL> <G>(default 50)</G>
+  <V>width</V><G> (Int)</G><BL> the width in pixels of the text area (if 0, it will be ajusted to the text width)</BL> <G>(default 0)</G>
+  <V>height</V><G> (Int)</G><BL> the height in pixels of the text area (if 0, it will be ajusted to the text height)</BL> <G>(default 0)</G>
+  <V>backgroundColor</V><G> (Int)</G><BL> the background color of the text area</BL> <G>(default 0x324650)</G>
+  <V>borderColor</V><G> (Int)</G><BL> the border color of the text area</BL> <G>(default 0)</G>
+  <V>backgroundAlpha</V><G> (Number)</G><BL> the background's opacity, from 0 (transparent) to 1 (opaque)</BL> <G>(default 1)</G>
+  <V>fixedPos</V><G> (Boolean)</G><BL> whether the position is fixed or if it should follow the player's camera on long maps</BL> <G>(default false)</G>
+
+<D>ui.removeTextArea</D>(<V>id</V>, <V>targetPlayer</V>)
+Removes a text area.
+  <V>id</V><G> (Int)</G><BL> the identifier of the text area</BL>
+  <V>targetPlayer</V><G> (String)</G><BL> the player whom the text area will disappear (if nil, applies to all players)</BL> <G>(default nil)</G>
+
+<D>ui.setBackgroundColor</D>(<V>color</V>)
+Set the background color. Last one game.
+  <V>color</V><G> (String)</G><BL> Background color.</BL> <G>(default "#6A7495")</G>
+
+<D>ui.setMapName</D>(<V>text</V>)
+Sets the map name.
+  <V>text</V><G> (String)</G><BL> the text to display as the map name</BL>
+
+<D>ui.setShamanName</D>(<V>text</V>)
+Sets the shaman name.
+  <V>text</V><G> (String)</G><BL> the text to display as the shaman name</BL>
+
+<D>ui.showColorPicker</D>(<V>id</V>, <V>targetPlayer</V>, <V>defaultColor</V>, <V>title</V>)
+Displays a color picker.
+  <V>id</V><G> (Int)</G><BL> the identifier of the color picker</BL>
+  <V>targetPlayer</V><G> (String)</G><BL> the player who will see the color picker (if nil, applies to all players)</BL> <G>(default nil)</G>
+  <V>defaultColor</V><G> (Int)</G><BL> the default color on the color picker</BL> <G>(default 0)</G>
+  <V>title</V><G> (String)</G><BL> the title of the color picker</BL> <G>(default nil)</G>
+
+<D>ui.updateTextArea</D>(<V>id</V>, <V>text</V>, <V>targetPlayer</V>)
+Updates the content of a text area.
+  <V>id</V><G> (Int)</G><BL> the identifier of the text area</BL>
+  <V>text</V><G> (String)</G><BL> the new text to display</BL>
+  <V>targetPlayer</V><G> (String)</G><BL> the player who will get displayed the new text (if nil, applies to all players)</BL> <G>(default nil)</G>
+
