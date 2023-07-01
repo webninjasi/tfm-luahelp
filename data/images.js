@@ -355,4 +355,13 @@ var allImages = {
   "17d4a71307a.png": "emote",
   "17d4a7147ec.png": "emote",
   "17d4a715f5f.png": "emote",
+
+  "188b5c017d4.png": "chocolate",
+  "188b5c064cb.png": "milk",
+  "188b5c0b1c0.png": "butter",
+  "188b5c0fec6.png": "egg, broken egg",
+  "188b5c14bbf.png": "wheat",
+  "188b5bfba0d.png": "sugar cube, brown sugar",
+  "188d0d8ddc6.png": "pokemon, ash, ash ketchum",
+  "188d0d8918e.png": "pokemon, leaf, green",
 };
