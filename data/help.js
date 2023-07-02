@@ -357,8 +357,37 @@ var customHelpData = {
       "name": "system.giveAdventurePoint",
       "restricted": "events",
       "parameters": {
-        "replace": true,
-        "list": ["playerName", "achievementCode", "amount"],
+        "list": {
+          "replace": true,
+          "list": ["playerName", "achievementCode", "amount"],
+        },
+        "details": {
+          "replace": true,
+          "list": [
+            {
+              "name": "playerName",
+              "type": "String",
+              "descriptions": [
+                "Target player."
+              ]
+            },
+            {
+              "name": "achievementCode",
+              "type": "String",
+              "descriptions": [
+                "The achievement code to increase."
+              ]
+            },
+            {
+              "name": "amount",
+              "type": "Int",
+              "descriptions": [
+                "The amount value."
+              ],
+              "default_value": "1"
+            }
+          ],
+        },
       },
     },
     {
