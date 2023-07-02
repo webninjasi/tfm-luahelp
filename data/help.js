@@ -357,6 +357,7 @@ var customHelpData = {
       "name": "system.giveAdventurePoint",
       "restricted": "events",
       "parameters": {
+        "replace": true,
         "list": ["playerName", "achievementCode", "amount"],
       },
     },
