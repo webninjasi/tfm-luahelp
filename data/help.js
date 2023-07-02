@@ -26,7 +26,7 @@ var customHelpData = {
       "value": escapeHTML('<C><P F="0" /><Z><S><S L="800" X="400" H="50" Y="400" T="6" P="0,0,0.3,0.2,0,0,0,0" /></S><D><T Y="375" X="100" /><F Y="210" X="700" /></D><O /></Z></C>'),
     },
     {
-      "name": "tfm.get.room.xmlMapInfo.currentMap",
+      "name": "tfm.get.room.currentMap",
       "value": "@7785550",
     },
     {
@@ -107,6 +107,10 @@ var customHelpData = {
     },
     {
       "name": "tfm.exec.giveConsumables",
+      "restricted": "events",
+    },
+    {
+      "name": "system.giveAdventurePoint",
       "restricted": "events",
     },
   ],
@@ -348,6 +352,13 @@ var customHelpData = {
     {
       "name": "system.openEventShop",
       "restricted": "events",
+    },
+    {
+      "name": "system.giveAdventurePoint",
+      "restricted": "events",
+      "parameters": {
+        "list": ["playerName", "achievementCode", "amount"],
+      },
     },
     {
       "name": "tfm.exec.giveConsumables",
