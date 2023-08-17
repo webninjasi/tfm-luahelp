@@ -379,5 +379,50 @@ var customHelpData = {
         "lua=\"groundId\" attribute can be used in the map XML to be able move the ground using this function."
       ],
     },
+    {
+      "name": "tfm.exec.setPlayerCollision",
+      "descriptions": [
+        "The categoryBits flag can be thought of as the player/object saying 'I am a ...', and the maskBits is like saying 'I will collide with a ...'.",
+        "<b>The important point is that these conditions must be satisfied for both players/objects in order for collision to be allowed.</b>",
+        "See \"iforce2d - Collision filtering\" for more details."
+      ],
+      "parameters": {
+        "details": [
+          {
+            "name": "collisionType",
+            "descriptions": [
+              "-1 = collisions depends on categoryBits and maskBits",
+              "0 = no collision",
+              "1 = collision with grounds and shaman objects",
+              "2 = collision with grounds/objects and mice",
+              "3 = collision with grounds/objects, mice and ghost objects/grounds",
+              "4 = collision with grounds/objects and ghost objects/grounds",
+              "5 = collision with mice only",
+            ],
+          },
+          {
+            "name": "categoryBits",
+            "descriptions": [
+              "2^0 = 1 = mice",
+              "2^1 = 2 = colliding mice",
+              "2^2 = 4 = shaman objects and ground",
+              "2^3 = 8 = ghost shaman objects and grounds",
+              "Remaining powers of 2 up to 65536 (2^16) can be used as custom collision categories.",
+              "Use addition to set multiple categories for a player. (Example: 8 + 1 = 9)",
+            ],
+          },
+          {
+            "name": "maskBits",
+            "descriptions": [
+              "2^0 = 1 = mice (default maskBits = 4 + 2)",
+              "2^1 = 2 = colliding mice (4 + 2 + 1)",
+              "2^2 = 4 = shaman objects and grounds (8 + 4 + 2 + 1)",
+              "2^3 = 8 = ghost shaman objects and grounds (8 + 4)",
+              "Be careful, both categories must allow each other to collide for a collision to occur."
+            ],
+          },
+        ],
+      },
+    },
   ],
 };
