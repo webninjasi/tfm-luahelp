@@ -159,7 +159,7 @@ var categoryList = [
   },
 ];
 
-for (var i=4; i<16; i++) {
+for (var i=4; i<32; i++) {
   var bits = Math.pow(2, i);
   categoryList.push({
     value: bits,
