@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>TFM Lua Help - Collision Calculator</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link type="text/css" rel="stylesheet" href="assets/style.css">
+    <link type="text/css" rel="stylesheet" href="assets/tfm.css">
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <input type="text" id="output"
+          value="0" onclick="copyText(this)" readonly="readonly" />
+
+        <a href="./index.html"><button>Homepage</button></a>
+      </div>
+
+      <div id="content">
+        <table>
+          <thead>
+            <th>
+              Collision Type
+            </th>
+            <th>
+              Collision Category
+            </th>
+            <th>
+              Collision Mask
+            </th>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="vertical-align: top;">
+                <select id="collision-type"></select>
+              </td>
+              <td>
+                <div id="collision-category" style="display: none;"></div>
+              </td>
+              <td>
+                <div id="collision-mask" style="display: none;"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Code:</h3>
+        <textarea id="code_output"
+          onclick="copyText(this)"
+          readonly="readonly" style="width: 30em; max-width: 100em"></textarea>
+      </div>
+    </div>
+    <script src="assets/collision.js"></script>
+  </body>
+</html>
