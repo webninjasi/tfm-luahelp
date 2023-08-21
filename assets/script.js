@@ -54,11 +54,8 @@ const mergeObjects = (obj1, obj2) => {
       const nameMap2 = obj2.reduce((ret, x) => ({ ...ret, [x.name]: x }), {});
 
       return [
-        ...obj1.filter(x => !nameMap2[x.name]),
+        ...obj1.map(x => nameMap2[x.name] ? mergeObjects(x, nameMap2[x.name]) : x),
         ...obj2.filter(x => !nameMap1[x.name]),
-        ...obj1.filter(x => nameMap2[x.name]).map(
-          x => mergeObjects(x, nameMap2[x.name])
-        ),
       ];
     }
 
