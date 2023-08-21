@@ -23,6 +23,8 @@
         <label for="toggle_luatree">Lua Tree</label>
 
         <button id="btn_toggle_rowcol">Rows</button>
+        <button onclick="showSnippet()">Snippet</button>
+
         <a href="./audio.html"><button>Audio Browser</button></a>
         <a href="./image.html"><button>Image Browser</button></a>
         <a href="./tags.html"><button>HTML Tags</button></a>
@@ -58,10 +60,25 @@
           <div id="section_luatree" class="section"></div>
         </div>
       </div>
+
+      <div class="overlay" id="snippet_overlay">
+        <div>
+          <button onclick="hideSnippet()">Go Back</button>
+          <br />
+          <h1>Snippet Generator</h1>
+          <h2>Visual Studio Code</h2>
+          <textarea id="snippet_code" onclick="copyText(this)" readonly="readonly"></textarea>
+          <br />
+          <br />
+          <button onclick="generateSnippet()">Generate Snippet</button>
+          <button onclick="downloadSnippet()">Download Snippet</button>
+        </div>
+      </div>
     </div>
     <script src="assets/escape.js"></script>
     <script src="data/help.js"></script>
     <script src="assets/script.js"></script>
+    <script src="assets/snippet.js"></script>
     <script async defer src="https://buttons.github.io/buttons.js"></script>
   </body>
 </html>

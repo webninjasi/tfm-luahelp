@@ -135,7 +135,7 @@ button {
   font-size: 0.9em;
 }
 
-#image_overlay, #add_image_overlay {
+#image_overlay, #add_image_overlay, .overlay {
   display: none;
   position: absolute;
   top: 0;
@@ -146,7 +146,7 @@ button {
   background-color: #1E3D42;
 }
 
-#image_overlay > div, #add_image_overlay > div {
+#image_overlay > div, #add_image_overlay > div, .overlay > div {
   margin: 1em;
 }
 
