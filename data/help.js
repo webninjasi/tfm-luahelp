@@ -226,6 +226,29 @@ var customHelpData = {
       "descriptions": [
         "You can request to host an image on <a href=\"https://atelier801.com/topic?f=6&t=893819&p=1\">Module Image Upload Center</a>",
       ],
+      "parameters": {
+        "details": [
+          {
+            "name": "imageId",
+            "descriptions": [
+              "Image id is a bad name, this is actually image file name. (e.g. \"149a49e4b38.jpg\")"
+            ],
+          },
+        ],
+      },
+    },
+    {
+      "name": "tfm.exec.removeImage",
+      "parameters": {
+        "details": [
+          {
+            "name": "imageId",
+            "descriptions": [
+              "Do NOT confuse with image file name, image id is returned by tfm.exec.addImage function."
+            ],
+          },
+        ],
+      },
     },
     {
       "name": "tfm.exec.playSound",
