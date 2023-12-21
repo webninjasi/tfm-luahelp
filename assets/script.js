@@ -477,6 +477,8 @@ const applyTags = tree => tree.map(item => {
   }
   else if (item.restricted == "events") {
     item.tags = "events event modules eventmodules";
+  } else {
+    item.tags = "tribehouse"
   }
 
   return item;
