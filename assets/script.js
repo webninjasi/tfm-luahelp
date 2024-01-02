@@ -469,19 +469,21 @@ const scanTree = tree => tree.map(item => {
 });
 
 const applyTags = tree => tree.map(item => {
+  let tags;
+  
   if (item.restricted == "modules") {
-    item.tags = "funcorp fc moduleteam module team mt modules";
+    tags = "funcorp fc moduleteam module team mt modules";
   }
   else if (item.restricted == "moduleteam") {
-    item.tags = "moduleteam module team mt";
+    tags = "moduleteam module team mt";
   }
   else if (item.restricted == "events") {
-    item.tags = "events event modules eventmodules";
+    tags = "events event modules eventmodules";
   } else {
-    item.tags = "tribehouse"
+    tags = "tribehouse";
   }
 
-  return item;
+  return { ...item, tags };
 });
 
 const createParentIndex = (sections) => {
