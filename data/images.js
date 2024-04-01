@@ -185,6 +185,7 @@ var allImages = {
   "16fe31c8ffd.png": "icon, four snowballs",
   "17136fe68cc.png": "mouse, please",
   "17161288bee.png": "bird, derpy",
+  "1831d9ef9cf.png": "emoji, clown",
 
   "17948d9ecc2.png": "red pixel, 0xff0000",
   "17948da0435.png": "green pixel, 0x00ff00",
