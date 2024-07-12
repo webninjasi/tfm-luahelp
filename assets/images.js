@@ -1,16 +1,45 @@
 (function() {
-  const id = selector => document.getElementById(selector);
-  const toggle = (elmId, value) => id(elmId).style.display = (value == null && id(elmId).style.display == "none" || value) ? 'block' : "none";
   const defaultContent = id('image-wrapper').innerHTML;
+
   let localImages = {};
   let currentOverlayImgId;
+  let imageCount = 0;
+  let pageCount = 0;
+  let imageList = [];
 
-  window.toggle = toggle;
+  let filterText = '';
+  let page = 0;
+  let pageSize = 30;
+  let sortKind = 'timestamp';
+  let sortDir = 'asc';
+
   window.load = (btn, elmId, image) => {
     btn.style.display = "none";
     id(elmId).src = `http://images.atelier801.com/${image}`;
     id(elmId).style.display = null;
   };
+
+  window.page = function(value) {
+    page = value;
+    update();
+    render();
+  }
+  window.paginate = function(value) {
+    page = 0;
+    pageSize = value;
+    update();
+    render();
+  }
+  window.sortBy = function(value) {
+    sortKind = value;
+    update();
+    render();
+  }
+  window.sortDirection = function(value) {
+    sortDir = value;
+    update();
+    render();
+  }
 
   window.addPrivate = () => {
     const newImages = JSON.parse('{' + id('add_image_output').value + '}');
@@ -26,7 +55,8 @@
 
     save();
     load();
-    updateContent();
+    update();
+    render();
 
     id('add_image_result').innerHTML = `Added ${count} new images!`;
   }
@@ -45,29 +75,18 @@
 
     toggle('image_overlay', false);
     save();
-    updateContent();
+    update();
+    render();
   });
 
   load();
-
-  // Init
-  let filterText = '';
-
-  updateContent();
+  update();
+  render();
 
   id('input_filter').addEventListener('keyup', () => {
     filterText = id('input_filter').value.trim();
-    filterContent();
+    render();
   });
-
-  window.selectText = function(elm) {
-    elm.select();
-  }
-
-  window.copyText = function(elm) {
-    elm.select();
-    document.execCommand('copy');
-  }
 
   id('add_image_input').addEventListener('change', function() {
     id('add_image_output').value = [
@@ -104,12 +123,10 @@
       .join(',\n');
   });
 
-  // Functions
-  function filterContent() {
+
+  function filterContent(images) {
     if (!filterText) {
-      const images = [ ...document.getElementsByClassName('image') ];
-      images.map(elm => { elm.style.display = ''; });
-      return;
+      return images;
     }
 
     let regs;
@@ -121,23 +138,14 @@
     }
     catch(err) {
       console.error(err.message);
-      return;
+      return images;
     }
 
-    Object.keys(allImages).map((image, idx) => {
-      const visible = regs.every(reg => allImages[image].match(reg));
-
-      id('image-' + idx).style.display = visible ? null : 'none';
-    });
+    return images.map(image => regs.every(reg => allImages[image].match(reg)));
   }
 
-  function updateContent() {
-    if (!allImages) {
-      return;
-    }
-
-    id('image-wrapper').innerHTML = Object.keys(allImages).map(
-      (image, idx) => `
+  function renderSingleImage(image, idx) {
+    return `
 <div class="image" id="image-${idx}">
   <input onclick="copyText(this)" value="${image}" readonly="readonly" />
   <br />
@@ -148,10 +156,30 @@
       <br />
       <img class="image-img" src="http://images.atelier801.com/${image}" data-code="${image}" data-islocal="${Boolean(localImages[image])}" loading="lazy" />
       <p class="image-dimensions"></p>
+      <p class="image-date">${new Date(parseInt(image, 16)).toLocaleString()}</p>
     </div>
   </div>
-</div>
-    `).join('');
+</div>`;
+  }
+
+  function renderPagination(pageCount) {
+    id('pagination').innerHTML = (new Array(pageCount)).fill(1).map(
+      (_, i) => '<button onclick="page(' + i + ')">' + (i+1) + '</button>'
+    ).join('');
+  }
+
+  function render() {
+    if (!allImages) {
+      return;
+    }
+
+    renderPagination(pageCount);
+
+    const images = filterContent(imageList.slice(page * pageSize, (page + 1) * pageSize));
+
+    id('image-wrapper').innerHTML = images.map(
+      (image, idx) => renderSingleImage(image, idx)
+    ).join('');
 
     const imageElms = [...document.getElementsByClassName('image-img')];
     imageElms.map(
@@ -173,14 +201,26 @@
         });
       }
     );
-
-    filterContent();
   }
 
   function errorSet(err) {
     id('image-wrapper').innerHTML = defaultContent;
     id('error').innerHTML = err.stack;
     console.error(err.stack);
+  }
+
+  function update() {
+    imageList = Object.keys(allImages);
+    imageCount = imageList.length;
+    pageCount = Math.ceil(imageCount / pageSize);
+    imageList.sort((a, b) => {
+      if (sortKind == 'timestamp') {
+        if (sortDir == 'asc') {
+          return parseInt(a, 16) - parseInt(b, 16);
+        }
+        return parseInt(b, 16) - parseInt(a, 16);
+      }
+    });
   }
 
   function load() {

@@ -8,11 +8,37 @@
     <link type="text/css" rel="stylesheet" href="assets/tfm.css">
   </head>
   <body>
-    <div class="wrapper">
+    <div class="wrapper" style="height: 100vh;">
       <div class="header">
         <input type="text" id="input_filter" placeholder="Search by tags" />
         <a href="./index.html"><button>Homepage</button></a>
         <button onclick="toggle('add_image_overlay', true)">Add Image</button>
+
+        <span>|</span>
+
+        <select onchange="paginate(this.value)">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="30" selected>30</option>
+          <option value="40">40</option>
+          <option value="50">50</option>
+          <option value="60">60</option>
+          <option value="70">70</option>
+          <option value="80">80</option>
+          <option value="90">90</option>
+          <option value="100">100</option>
+        </select>
+
+        <select onchange="sortBy(this.value)">
+          <option value="timestamp" selected>Sort by upload date</option>
+          <!--<option value="tags">Sort by tags</option>-->
+        </select>
+
+        <select onchange="sortDirection(this.value)">
+          <option value="asc" selected>Ascending Sorting</option>
+          <option value="desc">Descending Sorting</option>
+        </select>
+
         <span id="error"></span>
         
         <br />
@@ -24,6 +50,11 @@
           <a href="https://atelier801.com/topic?f=6&t=877911">Sharing Hosted Images by MT</a>,
           <a href="https://atelier801.com/topic?f=6&t=896545">Tactcat's Emote Shop</a>
         </small>
+      </div>
+
+      <div id="pagination">
+        <button onclick="page(1)">1</button>
+        <button onclick="page(2)">2</button>
       </div>
 
       <div id="image-wrapper">
@@ -63,6 +94,7 @@
       </div>
     </div>
     <script src="data/images.js"></script>
+    <script src="assets/common.js"></script>
     <script src="assets/images.js"></script>
   </body>
 </html>

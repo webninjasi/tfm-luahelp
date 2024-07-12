@@ -135,6 +135,15 @@ button {
   font-size: 0.9em;
 }
 
+.image-date {
+  color: #6C77C1;
+  font-size: 0.9em;
+}
+
+#pagination {
+  margin: 0 1em;
+}
+
 #image_overlay, #add_image_overlay, .overlay {
   display: none;
   position: absolute;
