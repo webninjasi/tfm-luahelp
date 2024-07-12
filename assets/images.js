@@ -6,6 +6,7 @@
   let imageCount = 0;
   let pageCount = 0;
   let imageList = [];
+  let pageImages = [];
 
   let filterText = '';
   let page = 0;
@@ -83,10 +84,11 @@
   update();
   render();
 
-  id('input_filter').addEventListener('keyup', () => {
+  id('input_filter').addEventListener('keyup', debounce(() => {
     filterText = id('input_filter').value.trim();
+    update();
     render();
-  });
+  }), 500);
 
   id('add_image_input').addEventListener('change', function() {
     id('add_image_output').value = [
@@ -141,7 +143,7 @@
       return images;
     }
 
-    return images.map(image => regs.every(reg => allImages[image].match(reg)));
+    return images.filter(image => regs.every(reg => allImages[image].match(reg)));
   }
 
   function renderSingleImage(image, idx) {
@@ -175,9 +177,7 @@
 
     renderPagination(pageCount);
 
-    const images = filterContent(imageList.slice(page * pageSize, (page + 1) * pageSize));
-
-    id('image-wrapper').innerHTML = images.map(
+    id('image-wrapper').innerHTML = pageImages.map(
       (image, idx) => renderSingleImage(image, idx)
     ).join('');
 
@@ -211,9 +211,10 @@
 
   function update() {
     imageList = Object.keys(allImages);
-    imageCount = imageList.length;
+    const images = filterContent(imageList);
+    imageCount = images.length;
     pageCount = Math.ceil(imageCount / pageSize);
-    imageList.sort((a, b) => {
+    images.sort((a, b) => {
       if (sortKind == 'timestamp') {
         if (sortDir == 'asc') {
           return parseInt(a, 16) - parseInt(b, 16);
@@ -221,6 +222,7 @@
         return parseInt(b, 16) - parseInt(a, 16);
       }
     });
+    pageImages = filterContent(images.slice(page * pageSize, (page + 1) * pageSize));
   }
 
   function load() {
