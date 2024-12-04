@@ -430,6 +430,7 @@ var customHelpData = {
               "2^1 = 2 = colliding mice",
               "2^2 = 4 = shaman objects and ground",
               "2^3 = 8 = ghost shaman objects and grounds",
+              "2^4 = 16 = only mice colliding ground",
               "Remaining powers of 2 up to 1073741824 (2^31) can be used as custom collision categories.",
               "Use addition to set multiple categories for a player. (Example: 8 + 1 = 9)",
             ],
@@ -441,6 +442,7 @@ var customHelpData = {
               "2^1 = 2 = colliding mice (4 + 2 + 1)",
               "2^2 = 4 = shaman objects and grounds (8 + 4 + 2 + 1)",
               "2^3 = 8 = ghost shaman objects and grounds (8 + 4)",
+              "2^4 = 16 = only mice colliding ground (1 + 2)",
               "Be careful, both categories must allow each other to collide for a collision to occur."
             ],
           },
