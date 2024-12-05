@@ -149,24 +149,21 @@
   function renderSingleImage(image, idx) {
     return `
 <div class="image" id="image-${idx}">
-  <input onclick="copyText(this)" value="${image}" readonly="readonly" />
-  <br />
   <div class="image-tags">
     <div>
-      <i>${allImages[image]}</i>
-      <br />
-      <br />
       <img class="image-img" src="http://images.atelier801.com/${image}" data-code="${image}" data-islocal="${Boolean(localImages[image])}" loading="lazy" />
       <p class="image-dimensions"></p>
       <p class="image-date">${new Date(parseInt(image, 16)).toLocaleString()}</p>
+      <i>${allImages[image]}</i>
     </div>
   </div>
+  <input onclick="copyText(this)" value="${image}" readonly="readonly" />
 </div>`;
   }
 
   function renderPagination(pageCount) {
     id('pagination').innerHTML = (new Array(pageCount)).fill(1).map(
-      (_, i) => '<button onclick="page(' + i + ')">' + (i+1) + '</button>'
+      (_, i) => '<button' + (page == i ? ' class="current-page"': '') + ' onclick="page(' + i + ')">' + (i+1) + '</button>'
     ).join('');
   }
 

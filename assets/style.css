@@ -21,6 +21,10 @@ button, input, select, textarea {
   padding: 0.3em;
 }
 
+button.current-page {
+  background-color: #444444;
+}
+
 button {
   cursor: pointer;
   font-weight: bold;
