@@ -93,11 +93,11 @@
   id('add_image_input').addEventListener('change', function() {
     id('add_image_output').value = [
         ...this.value.replace(/https?\S+/g, '').matchAll(
-          /^(\s*[a-z0-9]{11}\.(?:png|jpg|jpeg|gif))?(.+?)?$/mig
+          /^(\s*(?:img@)?[a-z0-9]{11}(?:\.(?:png|jpg|jpeg|gif))?)?(.+?)?$/mig
         )
       ]
       .map(m => ({
-        "image": m[1] && m[1].trim(),
+        "image": m[1] && m[1].trim().toLowerCase(),
         "tags": m[2] ? m[2].replace(/[^a-z0-9,\s]+/ig, '').trim().toLowerCase() : null
       }))
       .filter(x => x.tags || x.image)
@@ -146,14 +146,19 @@
     return images.filter(image => regs.every(reg => allImages[image].match(reg)));
   }
 
+  function getImageTimestamp(image) {
+    return parseInt(image.indexOf('img@') == 0 ? image.substr(4) : image, 16);
+  }
+
   function renderSingleImage(image, idx) {
+    var url = image.indexOf('img@') == 0 ? `http://avatars.atelier801.com/module/${image.substr(4)}.png` : `http://images.atelier801.com/${image}`;
     return `
 <div class="image" id="image-${idx}">
   <div class="image-tags">
     <div>
-      <img class="image-img" src="http://images.atelier801.com/${image}" data-code="${image}" data-islocal="${Boolean(localImages[image])}" loading="lazy" />
+      <img class="image-img" src="${url}" data-code="${image}" data-islocal="${Boolean(localImages[image])}" loading="lazy" />
       <p class="image-dimensions"></p>
-      <p class="image-date">${new Date(parseInt(image, 16)).toLocaleString()}</p>
+      <p class="image-date">${new Date(getImageTimestamp(image)).toLocaleString()}</p>
       <i>${allImages[image]}</i>
     </div>
   </div>
@@ -214,9 +219,9 @@
     images.sort((a, b) => {
       if (sortKind == 'timestamp') {
         if (sortDir == 'asc') {
-          return parseInt(a, 16) - parseInt(b, 16);
+          return getImageTimestamp(a) - getImageTimestamp(b);
         }
-        return parseInt(b, 16) - parseInt(a, 16);
+        return getImageTimestamp(b) - getImageTimestamp(a);
       }
     });
     pageImages = filterContent(images.slice(page * pageSize, (page + 1) * pageSize));

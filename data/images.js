@@ -5994,4 +5994,5 @@ var allImages = {
   '188b1c8bdc9.png': 'Module Image Upload Center',
   '188b1c90bee.png': 'Module Image Upload Center',
   '188b5c29e58.jpg': 'Module Image Upload Center',
+  'img@19350a6d276': 'shop, boba',
 }
