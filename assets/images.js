@@ -151,7 +151,7 @@
   }
 
   function renderSingleImage(image, idx) {
-    var url = image.indexOf('img@') == 0 ? `http://avatars.atelier801.com/module/${image.substr(4)}.png` : `http://images.atelier801.com/${image}`;
+    var url = image.indexOf('img@') == 0 ? `https://wsrv.nl/?url=http://avatars.atelier801.com/module/${image.substr(4)}.png` : `http://images.atelier801.com/${image}`;
     return `
 <div class="image" id="image-${idx}">
   <div class="image-tags">
