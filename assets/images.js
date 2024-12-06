@@ -62,6 +62,24 @@
     id('add_image_result').innerHTML = `Added ${count} new images!`;
   }
 
+  // https://stackoverflow.com/questions/45831191/generate-and-download-file-from-js
+  function download(filename, data) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(data));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+  }
+
+  window.export_local = () => {
+    download("luahelp-images-local.json", JSON.stringify(localImages, null, '  '));
+  }
+
   id('image_overlay_delete').addEventListener('click', function() {
     if (currentOverlayImgId == null) {
       return;
