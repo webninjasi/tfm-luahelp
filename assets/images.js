@@ -161,7 +161,7 @@
       return images;
     }
 
-    return images.filter(image => regs.every(reg => allImages[image].match(reg)));
+    return images.filter(image => regs.every(reg => allImages[image].match(reg)) || regs.every(reg => image.match(reg)));
   }
 
   function getImageTimestamp(image) {
