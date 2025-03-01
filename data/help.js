@@ -353,6 +353,10 @@ var customHelpData = {
       "restricted": "modules",
     },
     {
+      "name": "tfm.exec.setPlayerLook",
+      "restricted": "modules",
+    },
+    {
       "name": "system.luaEventLaunchInterval",
       "restricted": "events",
       "parameters": {
