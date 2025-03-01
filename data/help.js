@@ -90,6 +90,10 @@ var customHelpData = {
       "restricted": "modules",
     },
     {
+      "name": "tfm.exec.setPlayerLook",
+      "restricted": "modules",
+    },
+    {
       "name": "tfm.exec.setRoomPassword",
       "restricted": "modules",
     },
