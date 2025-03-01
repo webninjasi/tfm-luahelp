@@ -91,7 +91,7 @@ var customHelpData = {
     },
     {
       "name": "tfm.exec.setPlayerLook",
-      "restricted": "modules",
+      "restricted": "moduleteam",
     },
     {
       "name": "tfm.exec.setRoomPassword",
@@ -354,7 +354,7 @@ var customHelpData = {
     },
     {
       "name": "tfm.exec.setPlayerLook",
-      "restricted": "modules",
+      "restricted": "moduleteam",
     },
     {
       "name": "system.luaEventLaunchInterval",
