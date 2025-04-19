@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>TFM Lua Help - XML Tools</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link type="text/css" rel="stylesheet" href="assets/style.css">
+    <link type="text/css" rel="stylesheet" href="assets/tfm.css">
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <a href="./index.html"><button>Homepage</button></a>
+      </div>
+
+      <div class="sections-wrapper" style="padding: 1em;">
+        <div class="section">
+          <textarea id="xml_input"></textarea>
+        </div>
+        <div class="section">
+          <textarea id="xml_output" onclick="copyText(this)" readonly="readonly" placeholder="Minimized XML"></textarea>
+        </div>
+      </div>
+    </div>
+    <script src="assets/common.js"></script>
+    <script src="assets/xml.js"></script>
+  </body>
+</html>

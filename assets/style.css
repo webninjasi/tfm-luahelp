@@ -163,7 +163,7 @@ button {
   margin: 1em;
 }
 
-#add_image_overlay textarea {
+#add_image_overlay textarea, #xml_input, #xml_output {
   width: 100%;
   height: 10em;
 }
