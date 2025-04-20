@@ -11,7 +11,31 @@
     <div class="wrapper">
       <div class="header">
         <a href="./index.html"><button>Homepage</button></a>
+        <button onclick="askResetDefaults()">Reset Rules</button>
       </div>
+
+      <table style="display: block; text-align: center;">
+        <thead>
+          <tr>
+            <th>Enable</th>
+            <th>Regex</th>
+            <th>Pattern</th>
+            <th>Replacement</th>
+            <th>Regex Flags</th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="xml_rules"></tbody>
+        <tfoot>
+          <tr>
+            <td>
+              <button onclick="newRule()">New Rule</button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
 
       <div class="sections-wrapper" style="padding: 1em;">
         <div class="section">
