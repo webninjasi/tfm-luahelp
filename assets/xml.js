@@ -180,7 +180,7 @@ function renderRules() {
 }
 
 function newRule() {
-  transformations.push([true, true, "", ""]);
+  transformations.push([true, true, "", "", "g"]);
   renderRules();
 }
 
