@@ -8,12 +8,16 @@ var defaultTransformations = [
   [true, true, "<S (.*?)T=\"0\"(.*?)/>", "<S $1$2/>", "g"],
   [true, false, "L=\"(10|\\d)\"", "", "g"],
   [true, false, "H=\"(10|\\d)\"", "", "g"],
+  [true, true, "(<\\w+)\\s+(/?>)", "$1$2", "g"],
+  [true, true, "(<\\w+)\\s+(\\w)", "$1 $2", "g"],
 ];
 var transformations = [];
 
 load();
 if (!transformations || !transformations.length) {
   resetDefaults();
+} else {
+  includeDefaults();
 }
 renderRules();
 
@@ -37,6 +41,25 @@ function resetDefaults() {
   transformations = defaultTransformations.map(function(t) {
     return t.slice();
   });
+  compileTransformations();
+}
+
+function includeDefaults() {
+  for (var i = 0; i < defaultTransformations.length; i++) {
+    var found = false;
+    // search if pattern exists
+    for (var j = 0; j < transformations.length; j++) {
+      if (defaultTransformations[i][2] == transformations[j][2]) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      var rule = defaultTransformations[i].slice();
+      rule[1] = false; // disabled by default
+      transformations.push(rule);
+    }
+  }
   compileTransformations();
 }
 
