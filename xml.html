@@ -14,7 +14,7 @@
         <button onclick="askResetDefaults()">Reset Rules</button>
       </div>
 
-      <table style="display: block; text-align: center;">
+      <table style="display: block; text-align: center; margin: 1em;">
         <thead>
           <tr>
             <th>Enable</th>
@@ -39,10 +39,12 @@
 
       <div class="sections-wrapper" style="padding: 1em;">
         <div class="section">
-          <textarea id="xml_input"></textarea>
+          <span id="input_count">0 characters</span>
+          <textarea id="xml_input" placeholder="Your Map's XML Code"></textarea>
         </div>
         <div class="section">
-          <textarea id="xml_output" onclick="copyText(this)" readonly="readonly" placeholder="Minimized XML"></textarea>
+          <span id="output_count">0 characters</span>
+          <textarea id="xml_output" onclick="copyText(this)" readonly="readonly" placeholder="Minified XML"></textarea>
         </div>
       </div>
     </div>

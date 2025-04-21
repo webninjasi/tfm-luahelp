@@ -25,6 +25,8 @@ id('xml_input').addEventListener('change', updateXMLOutput);
 
 function updateXMLOutput() {
   id('xml_output').value = applyTransformations(id('xml_input').value);
+  id('input_count').innerText = id('xml_input').value.length + " characters";
+  id('output_count').innerText = id('xml_output').value.length + " characters";
 }
 
 function askResetDefaults() {
