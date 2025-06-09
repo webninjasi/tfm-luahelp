@@ -244,3 +244,8 @@ button {
   min-width: 25vw;
   min-height: 20vh;
 }
+
+/* PK Tools */
+#shopcanvas {
+  background-color: #6a7495;
+}

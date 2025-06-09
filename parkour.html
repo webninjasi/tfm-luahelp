@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>TFM Lua Help - Parkour</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link type="text/css" rel="stylesheet" href="assets/style.css">
+    <link type="text/css" rel="stylesheet" href="assets/tfm.css">
+  </head>
+  <body>
+    <div class="wrapper" style="height: 100vh;">
+      <div class="header">
+        <a href="./index.html"><button>Homepage</button></a>
+
+        <span id="error"></span>
+        
+        <br />
+      </div>
+
+      <div id="content">
+        <input type='file' accept="image/*" id="shopfile" />
+        <button onclick="addObject()">Add Object</button>
+        <br />
+        <button onclick="addImageURL('assets/mikifit.png', 'Mckey')">Add Mckey</button>
+        <button onclick="addImageURL('assets/blankfit.png', 'Blank')">Add Blank</button>
+        <button onclick="addImageURL('assets/laysfit.png', 'Lays')">Add Lays</button>
+        <br />
+        <br />
+        <canvas id="shopcanvas"></canvas>
+        <table style="text-align: center;">
+          <thead>
+            <th>Select</th>
+            <th>Name</th>
+            <th>Size</th>
+            <th>Scale%</th>
+            <th>Ratio</th>
+            <th>New Size</th>
+          </thead>
+          <tbody id="objects"></tbody>
+        </div>
+        <canvas id="downloadcanvas" style="display: none;"></canvas>
+      </div>
+    </div>
+    <script src="assets/common.js"></script>
+    <script src="assets/parkour.js"></script>
+  </body>
+</html>
