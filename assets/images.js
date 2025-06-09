@@ -13,6 +13,11 @@
   let pageSize = 30;
   let sortKind = 'timestamp';
   let sortDir = 'asc';
+  let focusImage = null;
+
+  window.followImage = function(elm) {
+    focusImage = elm.querySelector("div > div > img").dataset['code'];
+  }
 
   window.load = (btn, elmId, image) => {
     btn.style.display = "none";
@@ -171,7 +176,7 @@
   function renderSingleImage(image, idx) {
     var url = image.indexOf('img@') == 0 ? `https://wsrv.nl/?url=http://avatars.atelier801.com/module/${image.substr(4)}.png` : `http://images.atelier801.com/${image}`;
     return `
-<div class="image" id="image-${idx}">
+<div class="image" id="image-${idx}" onclick="followImage(this)">
   <div class="image-tags">
     <div>
       <img class="image-img" src="${url}" data-code="${image}" data-islocal="${Boolean(localImages[image])}" loading="lazy" />
@@ -242,7 +247,18 @@
         return getImageTimestamp(b) - getImageTimestamp(a);
       }
     });
-    pageImages = filterContent(images.slice(page * pageSize, (page + 1) * pageSize));
+    if (focusImage) {
+      const focusIndex = images.indexOf(focusImage);
+      if (focusIndex >= 0) {
+        page = Math.floor(focusIndex / pageSize);
+      } else {
+        focusImage = null;
+      }
+    }
+    if (page >= pageCount) {
+      page = pageCount - 1;
+    }
+    pageImages = images.slice(page * pageSize, (page + 1) * pageSize);
   }
 
   function load() {
