@@ -26,6 +26,7 @@
   };
 
   window.page = function(value) {
+    focusImage = null;
     page = value;
     update();
     render();
