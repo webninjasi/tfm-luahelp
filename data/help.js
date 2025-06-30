@@ -192,6 +192,12 @@ var customHelpData = {
   ],
   "functions": [
     {
+      "name": "tfm.exec.addPhysicObject",
+      "examples": [
+        [1, "400", "200", "{\n\ttype = 1,\n\twidth = 100,\n\theight = 100,\n\tmiceCollision = false,\n\tgroundCollision = false\n}"],
+      ],
+    },
+    {
       "name": "system.bindKeyboard",
       "examples": [
         [null, "32", "true", "true"],
