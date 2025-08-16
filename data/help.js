@@ -273,6 +273,9 @@ var customHelpData = {
     {
       "name": "system.loadFile",
       "restricted": "moduleteam",
+      "descriptions": [
+        "This function can only be called every 10 seconds.",
+      ],
     },
     {
       "name": "system.loadPlayerData",
@@ -333,10 +336,41 @@ var customHelpData = {
     {
       "name": "system.saveFile",
       "restricted": "moduleteam",
+      "descriptions": [
+        "This function can only be called every 10 seconds.",
+      ],
     },
     {
       "name": "system.savePlayerData",
       "restricted": "moduleteam",
+      "parameters": {
+        "details": [
+          {
+            "name": "data",
+            "descriptions": [
+              "Max length is 5000 characters.",
+            ],
+          },
+        ]
+      },
+    },
+    {
+      "name": "tfm.exec.playEmote",
+      "parameters": {
+        "details": [
+          {
+            "name": "emoteArg",
+            "descriptions": [
+              "When using flag (10) emote, you can specify country code here.",
+              "Country codes are used in upper-case form, you can view flags at http://www.transformice.com/images/x_divers/x_drapeaux/TR.png",
+              "You can use a few different images using following paths as argument:",
+              ["M1", "M2", "M5", "M6", "M_0", "M_1", "M_2", "M_3", "M_4"].map(
+                x => "../../" + x
+              ).join('<br>')
+            ],
+          },
+        ]
+      },
     },
     {
       "name": "tfm.exec.getPlayerSync",
