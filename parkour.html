@@ -18,12 +18,16 @@
       </div>
 
       <div id="content">
-        <input type='file' accept="image/*" id="shopfile" />
-        <button onclick="addObject()">Add Object</button>
+        <input type='file' accept="image/*" id="shopfile" multiple />
+        <div id="dropArea">
+          Drop images here or click "Choose File"
+        </div>
         <br />
-        <button onclick="addImageURL('assets/mikifit.png', 'Mckey')">Add Mckey</button>
+        <button onclick="addImageURL('assets/mikifit.png', 'Mckey', { radius: 30 })">Add Mckey</button>
         <button onclick="addImageURL('assets/blankfit.png', 'Blank')">Add Blank</button>
         <button onclick="addImageURL('assets/laysfit.png', 'Lays')">Add Lays</button>
+        <br />
+        <span>Background alpha:</span> <input type="number" value="100" step="1" min="0" max="100" id="bgalpha" />
         <br />
         <br />
         <canvas id="shopcanvas"></canvas>
@@ -32,9 +36,11 @@
             <th>Select</th>
             <th>Name</th>
             <th>Size</th>
+            <th>Preset</th>
             <th>Scale%</th>
             <th>Ratio</th>
             <th>New Size</th>
+            <th>Opacity</th>
           </thead>
           <tbody id="objects"></tbody>
         </div>
