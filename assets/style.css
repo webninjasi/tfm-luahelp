@@ -249,10 +249,3 @@ button {
 #shopcanvas {
   background-color: #6a7495;
 }
-
-#dropArea {
-  border: 2px dashed #888;
-  padding: 20px;
-  margin: 10px;
-  text-align: center;
-}
