@@ -10,13 +10,12 @@
   const centerX = canvasElm.width / 2;
   const centerY = canvasElm.height / 2;
 
-  function presetForBox(w, h) {
-    const defaultAR = w / h;
-    return (ar) => {
-      if (ar >= defaultAR) {
-        return { w: w, h: Math.round(w / ar) };
+  function presetForBox(defaultWidth, defaultHeight) {
+    return (width, height) => {
+      if (defaultWidth > defaultHeight) {
+        return { scale: defaultWidth / width };
       } else {
-        return { w: Math.round(h * ar), h: h };
+        return { scale: defaultHeight / height };
       }
     }
   }
@@ -56,7 +55,7 @@
       name: "Cloud",
       image: "cloud.png",
       collision: { x: centerX - 30, y: centerY - 14, w: 61, h: 31 },
-      preset: presetForBox(85, 58),
+      preset: presetForBox(90, 56),
     },
     {
       name: "Tombstone",
@@ -353,10 +352,10 @@
             return;
           }
 
-          const preset = anchor.preset(obj.image.width / obj.image.height);
+          const preset = anchor.preset(obj.image.width, obj.image.height);
 
           obj.anchor = anchor;
-          setScale(obj, Math.min(preset.w / obj.image.width, preset.h / obj.image.height));
+          setScale(obj, preset.scale);
 
           obj.x = centerX - obj.cached.width / 2;
           obj.y = centerY - obj.cached.height / 2;
