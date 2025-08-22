@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Transformice Parkour Skin Tool</title>
+
+  <style>
+    :root{
+      --bg: #0b0f13;
+      --panel: #0f1520;
+      --panel-2:#121a27;
+      --ink: #e8eef7;
+      --muted:#9fb0c3;
+      --brand:#67e8f9;
+      --brand-2:#7c4dff;
+      --ok:#34d399;
+      --ring:#93c5fd66;
+      --border: 1px solid rgba(255,255,255,.08);
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --blur: saturate(1.2) blur(0px);
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 600px at 15% -10%, #0f1d2d 0%, transparent 60%),
+        radial-gradient(1200px 800px at 110% 20%, #182235 0%, transparent 60%),
+        linear-gradient(180deg,#0b0f13 0%, #0b1016 100%);
+      font: 500 14px/1.6 "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      letter-spacing: .2px;
+    }
+
+    .container{ max-width:1200px; margin:36px auto; padding:0 20px; }
+    .header{ display:flex; gap:18px; align-items:flex-start; justify-content:space-between; margin-bottom:18px; }
+    .title{ display:flex; align-items:center; gap:12px; font-size:24px; font-weight:800; letter-spacing:.3px; }
+    .sub{ color:var(--muted); font-size:13px; max-width:720px; }
+
+    .card{
+      background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+      border: var(--border);
+      border-radius: calc(var(--radius) + 2px);
+      box-shadow: var(--shadow);
+      overflow: clip;
+    }
+
+    .controls{
+      padding:18px; display:grid; gap:12px; grid-template-columns: repeat(12, 1fr);
+      backdrop-filter: var(--blur);
+    }
+    .field{ display:flex; flex-direction:column; gap:6px; }
+    .field label{ color:var(--muted); font-size:12px; }
+    .two{ grid-column: span 3; }
+    .twelve{ grid-column: 1 / -1; }
+
+    .input, select{
+      width:100%; padding:12px 14px; border-radius:12px;
+      background:#0e1622; color:var(--ink); border:var(--border);
+      outline: none; transition: box-shadow .2s, border-color .2s, transform .04s;
+    }
+    .input:focus, select:focus{ box-shadow: 0 0 0 4px var(--ring); border-color:#8ab4ff88; }
+    select{
+      appearance:none; background-image:
+       linear-gradient(45deg,transparent 50%, #9fb0c3 50%),
+       linear-gradient(135deg,#9fb0c3 50%, transparent 50%),
+       linear-gradient(to right, transparent, transparent);
+      background-position: calc(100% - 22px) calc(1.05em), calc(100% - 16px) calc(1.05em), 100% 0;
+      background-size: 6px 6px, 6px 6px, 2.5em 2.5em;
+      background-repeat:no-repeat; padding-right:42px;
+    }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      --bgc: var(--brand);
+      display:inline-flex; align-items:center; gap:10px;
+      border:0; border-radius:999px; padding:11px 16px;
+      font-weight:800; color:#04121a; background:var(--bgc);
+      cursor:pointer; transition: transform .06s ease, filter .16s ease, box-shadow .16s;
+      box-shadow: 0 6px 18px rgba(103,232,249,.25);
+    }
+    .btn:hover{ filter: brightness(1.02) saturate(1.05); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0); }
+    .btn.secondary{ --bgc:#263246; color:var(--ink); box-shadow:none; }
+    .btn.ghost{ background:transparent; color:var(--ink); border:var(--border); box-shadow:none; }
+    .btn .icon{ width:16px; height:16px; display:inline-block; }
+
+    .drop{ margin-top:10px; padding:28px; border: 1.5px dashed rgba(255,255,255,.18); border-radius: calc(var(--radius) + 2px);
+      background: linear-gradient(180deg,#0c1421 0%, #0c1320 100%); color:var(--muted); text-align:center; transition: border-color .2s, background .2s, transform .05s; }
+    .drop:hover{ transform: translateY(-1px); }
+    .drop.drag{ border-color: var(--brand);
+      background: radial-gradient(600px 180px at 50% 0%, rgba(103,232,249,.16), transparent 60%), linear-gradient(180deg,#0c1421 0%, #0c1320 100%); color: var(--ink); }
+    .drop .dz{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; color:var(--muted); }
+
+    .grid{ display:grid; gap:16px; padding:16px; border-top:var(--border); background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%); grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+    .item{ background:#0d141f; border:var(--border); border-radius:16px; overflow:hidden; box-shadow: 0 10px 20px rgba(0,0,0,.25); transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease; }
+    .item:hover{ transform: translateY(-2px); box-shadow: 0 14px 28px rgba(0,0,0,.32); border-color: rgba(255,255,255,.14); }
+    .thumbs{ display:grid; grid-template-columns:1fr 1fr; border-bottom:var(--border); }
+    .thumb{ background: repeating-conic-gradient(#0b0f13 0% 25%, #0e1520 0% 50%) 50% / 18px 18px; padding:12px; height:200px; display:flex; align-items:center; justify-content:center; }
+    .thumb canvas{ max-width:100%; max-height:100%; image-rendering:pixelated; }
+    .meta{ padding:12px; display:flex; align-items:center; gap:10px; justify-content:space-between; }
+    .name{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#c6d6ea; }
+    .pill{ display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; background:#121b28; border:var(--border); color:#adc3dc; font-size:11px; }
+
+    .footer{ display:flex; align-items:center; gap:10px; justify-content:space-between; padding:12px 16px; border-top:var(--border); background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 40%); }
+    .status{ display:inline-flex; align-items:center; gap:8px; color:var(--muted); font-size:12px; }
+    .status .dot{ width:8px; height:8px; border-radius:999px; background:var(--ok); box-shadow:0 0 0 3px rgba(52,211,153,.12); }
+
+    @media (max-width: 900px){
+      .two{ grid-column: 1 / -1; }
+      .thumb{ height:160px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <div class="title">Parkour Skin Tool</div>
+        <div class="sub">
+          Images must have a transparent background. The tool will automatically trim all empty transparent edges. <br/>
+          Enter either width or height — the other dimension is scaled automatically to keep the original aspect ratio.<br/>
+          You can also pick a preset below for exact Transformice item sizes.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="controls">
+        <div class="field two">
+          <label>Preset</label>
+          <select id="preset" class="input">
+            <option value="custom" selected>— Custom —</option>
+            <option value="small_box">Small Box (W: 31px)</option>
+            <option value="big_box">Big Box (W: 61px)</option>
+            <option value="choco_plank">Choco Plank (W: 100px H: 10px)</option>
+            <option value="trampoline">Trampoline (W: 100px H: 20px)</option>
+            <option value="balloon">Balloon (H: 45px)</option>
+            <option value="cloud">Cloud (W: 90px)</option>
+            <option value="tombstone">Tombstone (H: 60px)</option>
+          </select>
+        </div>
+
+        <div class="field two">
+          <label>Target Width (px)</label>
+          <input id="width" class="input" type="number" placeholder="e.g. 256" min="1">
+        </div>
+
+        <div class="field two">
+          <label>Target Height (px)</label>
+          <input id="height" class="input" type="number" placeholder="e.g. 256" min="1">
+        </div>
+
+        <div class="field two">
+          <label>Margin (ratio, e.g. 0.02 = 2%)</label>
+          <input id="margin" class="input" type="text" value="0.00">
+        </div>
+
+        <!-- shown only for choco plank -->
+        <div class="field two" id="plankBottomWrap" style="display:none;">
+          <label>Choco Plank - FLIP</label>
+          <select id="plankBottom" class="input">
+            <option value="orig_bottom" selected>Bottom</option>
+            <option value="orig_top">Top</option>
+          </select>
+        </div>
+
+        <div class="row twelve">
+          <input id="file" type="file" accept="image/*" multiple style="display:none"/>
+          <button class="btn" id="pick">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#002733" stroke-width="2" stroke-linecap="round"/></svg>
+            Choose Files
+          </button>
+          <button class="btn secondary" id="clear">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#b9c9de" stroke-width="2" stroke-linecap="round"/></svg>
+            Clear List
+          </button>
+          <button class="btn ghost" id="process">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#cfe3fa" stroke-width="2" stroke-linecap="round"/></svg>
+            Process Selected
+          </button>
+        </div>
+
+        <div class="twelve">
+          <div class="drop" id="drop">
+            <div class="dz">
+              <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8" stroke="#9fb0c3" stroke-width="1.6" stroke-linecap="round"/></svg>
+              Drop images here or click “Choose Files”
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" id="grid"></div>
+
+      <div class="footer">
+        <span class="status">
+          <span class="dot"></span>
+          <span id="status">Ready</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ---------- Helpers & DOM ----------
+  const $ = (sel) => document.querySelector(sel);
+  const presetEl = $('#preset');
+  const widthEl = $('#width');
+  const heightEl = $('#height');
+  const marginEl = $('#margin');
+  const plankBottomWrap = $('#plankBottomWrap');
+  const plankBottomEl = $('#plankBottom');
+  const pickBtn = $('#pick');
+  const clearBtn = $('#clear');
+  const processBtn = $('#process');
+  const fileInput = $('#file');
+  const drop = $('#drop');
+  const grid = $('#grid');
+  const statusEl = $('#status');
+
+  let files = [];
+
+  // ---------- core image ops ----------
+  function computeBBoxAlphaStrict(imageData){
+    const {width:w,height:h,data} = imageData;
+    let minX=w, minY=h, maxX=-1, maxY=-1;
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        const i = (y*w + x)*4;
+        const a = data[i+3];
+        if(a>0){
+          if(x<minX) minX=x; if(y<minY) minY=y; if(x>maxX) maxX=x; if(y>maxY) maxY=y;
+        }
+      }
+    }
+    if(maxX<minX || maxY<minY) return null; // fully transparent
+    return {x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1};
+  }
+
+  function addMarginToBox(box, marginRatio, imgW, imgH){
+    if(marginRatio<=0) return box;
+    const pad = Math.round(Math.max(box.w, box.h) * marginRatio);
+    const x = Math.max(0, box.x - pad);
+    const y = Math.max(0, box.y - pad);
+    const w = Math.min(imgW - x, box.w + 2*pad);
+    const h = Math.min(imgH - y, box.h + 2*pad);
+    return {x,y,w,h};
+  }
+
+  function drawSubimage(srcCanvas, box){
+    const tmp = document.createElement('canvas');
+    tmp.width = box.w; tmp.height = box.h;
+    const tctx = tmp.getContext('2d');
+    tctx.clearRect(0,0,tmp.width,tmp.height);
+    tctx.drawImage(srcCanvas, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
+    return tmp;
+  }
+
+  function rotateCanvas90(canvas, direction = -90){
+    const out = document.createElement('canvas');
+    out.width = canvas.height; out.height = canvas.width;
+    const ctx = out.getContext('2d');
+    ctx.clearRect(0,0,out.width,out.height);
+    if(direction === -90){
+      ctx.translate(0, out.height);
+      ctx.rotate(-Math.PI/2);
+    } else {
+      ctx.translate(out.width, 0);
+      ctx.rotate(Math.PI/2);
+    }
+    ctx.drawImage(canvas, 0, 0);
+    return out;
+  }
+
+  function flipCanvasVertical(canvas){
+    const out = document.createElement('canvas');
+    out.width = canvas.width; out.height = canvas.height;
+    const ctx = out.getContext('2d');
+    ctx.translate(0, out.height);
+    ctx.scale(1, -1);
+    ctx.drawImage(canvas, 0, 0);
+    return out;
+  }
+
+  function resizeExact(canvas, targetW, targetH){
+    const out = document.createElement('canvas');
+    out.width = targetW; out.height = targetH;
+    const ctx = out.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0,0,targetW,targetH);
+    ctx.drawImage(canvas, 0, 0, targetW, targetH);
+    return out;
+  }
+
+  function resizeProportional(canvas, targetW, targetH){
+    const scale = Math.min(targetW / canvas.width, targetH / canvas.height);
+    const newW = Math.max(1, Math.round(canvas.width * scale));
+    const newH = Math.max(1, Math.round(canvas.height * scale));
+    return resizeExact(canvas, newW, newH);
+  }
+
+  async function readImageFile(file){
+    const url = URL.createObjectURL(file);
+    const img = new Image(); img.src = url; await img.decode();
+    const c = document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight;
+    const ctx=c.getContext('2d', {willReadFrequently:true});
+    ctx.clearRect(0,0,c.width,c.height); ctx.drawImage(img,0,0);
+    URL.revokeObjectURL(url);
+    return c;
+  }
+
+  // ---------- ui rendering ----------
+  function renderItemCard(entry){
+    const div = document.createElement('div'); div.className='item';
+    div.innerHTML = `
+      <div class="thumbs">
+        <div class="thumb"><canvas></canvas></div>
+        <div class="thumb"><canvas></canvas></div>
+      </div>
+      <div class="meta">
+        <span class="name" title="${entry.file.name}">${entry.file.name}</span>
+        <span class="pill" id="size-${entry.id}"></span>
+        <div class="actions">
+          <button class="btn ghost" id="dl-${entry.id}">Download PNG</button>
+        </div>
+      </div>`;
+    grid.appendChild(div);
+    const [c1,c2] = div.querySelectorAll('canvas');
+    const s1 = Math.min(1, 260/entry.original.width, 170/entry.original.height);
+    c1.width = Math.max(1, Math.round(entry.original.width*s1));
+    c1.height= Math.max(1, Math.round(entry.original.height*s1));
+    c1.getContext('2d').drawImage(entry.original,0,0,c1.width,c1.height);
+    entry.previewCanvas = c2;
+    entry.card = div;
+  }
+
+  function updateStatus(msg){ statusEl.textContent = msg; }
+
+  function lockSizeInputs(locked){
+    widthEl.disabled = locked; heightEl.disabled = locked;
+  }
+
+  function presetForBox(ar){
+    const p = presetEl.value;
+    if(p === 'small_box') return {w:31, h:Math.round(31/ ar)};
+    if(p === 'big_box')   return {w:61, h:Math.round(61/ ar)};
+    if(p === 'cloud')     return {w:90, h:Math.round(90/ ar)};
+    if(p === 'balloon')   return {h:45, w:Math.round(45* ar)};
+    if(p === 'tombstone') return {h:60, w:Math.round(60* ar)};
+    if(p === 'trampoline')return {w:100, h:20, type:'trampoline'};
+    if(p === 'choco_plank') return {w:100, h:10, type:'choco'};
+    return null;
+  }
+
+  // ---------- processing ----------
+  async function processEntry(entry){
+    let targetW = parseInt(widthEl.value||'0',10) || 0;
+    let targetH = parseInt(heightEl.value||'0',10) || 0;
+    const margin = Math.max(0, parseFloat(marginEl.value||'0'));
+
+    const src = entry.original;
+    const ctx = src.getContext('2d', {willReadFrequently:true});
+    const imgData = ctx.getImageData(0,0,src.width,src.height);
+
+    // alpha>0 strict crop
+    let box = computeBBoxAlphaStrict(imgData);
+    if(!box){ box = {x:0,y:0,w:1,h:1}; }
+    box = addMarginToBox(box, margin, src.width, src.height);
+
+    let cropped = drawSubimage(src, box);
+    const ar = box.w / box.h;
+    const preset = presetForBox(ar);
+
+    // choco olank: always horizontal 100×10 + orientation selector
+    if(preset && preset.type === 'choco'){
+      if(cropped.width < cropped.height){
+        cropped = rotateCanvas90(cropped, -90);
+      }
+      if(plankBottomEl && plankBottomEl.value === 'orig_top'){
+        cropped = flipCanvasVertical(cropped);
+      }
+      var out = resizeExact(cropped, 100, 10);
+    }
+    // trampoline: fit proportionally into 100×20
+    else if(preset && preset.type === 'trampoline'){
+      var out = resizeProportional(cropped, 100, 20);
+    }
+    else {
+      // Other presets/custom: keep aspect – one dimension fixes the other
+      if(preset){
+        if(preset.w && preset.h){ targetW=preset.w; targetH=preset.h; }
+        else if(preset.w){ targetW=preset.w; targetH=Math.max(1, Math.round(targetW / ar)); }
+        else if(preset.h){ targetH=preset.h; targetW=Math.max(1, Math.round(targetH * ar)); }
+      } else {
+        if(targetW<=0 && targetH<=0){ targetW = cropped.width; targetH = cropped.height; }
+        else if(targetW>0 && targetH<=0){ targetH = Math.max(1, Math.round(targetW / ar)); }
+        else if(targetH>0 && targetW<=0){ targetW = Math.max(1, Math.round(targetH * ar)); }
+      }
+      var out = resizeProportional(cropped, targetW, targetH);
+    }
+
+    // preview
+    const scale = Math.min(1, 260/out.width, 170/out.height);
+    entry.previewCanvas.width = Math.max(1, Math.round(out.width*scale));
+    entry.previewCanvas.height= Math.max(1, Math.round(out.height*scale));
+    const pctx = entry.previewCanvas.getContext('2d');
+    pctx.clearRect(0,0,entry.previewCanvas.width, entry.previewCanvas.height);
+    pctx.drawImage(out, 0, 0, entry.previewCanvas.width, entry.previewCanvas.height);
+
+    // attach full canvas for download
+    const dlBtn = entry.card.querySelector('#dl-'+entry.id);
+    dlBtn._fullCanvas = out;
+    dlBtn.dataset.filename = entry.file.name.replace(/\.[^.]+$/, '');
+
+    // label
+    const sizeEl = entry.card.querySelector('#size-'+entry.id);
+    const presetText = preset ? ` • ${presetEl.options[presetEl.selectedIndex].text}` : '';
+    sizeEl.textContent = `${out.width}×${out.height}${presetText}`;
+  }
+
+  // ---------- file list & events ----------
+  function addFiles(list){
+    for(const file of list){ if(!file.type.startsWith('image/')) continue; files.push(file); }
+    if(files.length===0){ updateStatus('No images found'); return; }
+    updateStatus(`${files.length} file(s) loaded. Click “Process Selected”.`);
+    refreshGrid();
+  }
+
+  async function refreshGrid(){
+    grid.innerHTML = '';
+    let i=0; for(const file of files){
+      const original = await readImageFile(file);
+      const entry = { id: i++, file, original };
+      renderItemCard(entry);
+      await processEntry(entry);
+    }
+  }
+
+  function applyPresetUI(){
+    const v = presetEl.value;
+    const lock = v!=='custom';
+    widthEl.disabled = lock; heightEl.disabled = lock;
+    if(v==='custom'){ widthEl.value=''; heightEl.value=''; }
+    plankBottomWrap.style.display = (v==='choco_plank') ? '' : 'none';
+  }
+
+  presetEl.onchange = applyPresetUI;
+  applyPresetUI();
+
+  pickBtn.onclick = ()=> fileInput.click();
+  fileInput.onchange = (e)=> addFiles(e.target.files || []);
+  clearBtn.onclick = ()=>{ files = []; grid.innerHTML = ''; updateStatus('Cleared.'); };
+  processBtn.onclick = async ()=>{
+    if(files.length===0){ updateStatus('Add images first.'); return; }
+    updateStatus('Processing…');
+    await refreshGrid();
+    updateStatus('Done. Previews and downloads are ready.');
+  };
+
+  // dropzone
+  ;['dragenter','dragover'].forEach(evt=> drop.addEventListener(evt, e=>{ e.preventDefault(); drop.classList.add('drag'); }));
+  ;['dragleave','drop'].forEach(evt=> drop.addEventListener(evt, e=>{ e.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    const items = e.dataTransfer.items;
+    if(items){ const list = []; for(const it of items){ if(it.kind==='file') list.push(it.getAsFile()); } addFiles(list); }
+    else { addFiles(e.dataTransfer.files||[]); }
+  });
+
+  // ---------- Robust Download Handler ----------
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[id^="dl-"], .download-btn');
+    if (!btn) return;
+    const canvas = btn._fullCanvas
+      || btn.closest('.item')?.querySelector('.thumbs .thumb:last-child canvas')
+      || btn.closest('.item')?.querySelector('canvas');
+    if (!canvas) return;
+
+    canvas.toBlob((blob) => {
+      const a = document.createElement('a');
+      a.download = (btn.dataset.filename || 'skin') + '.png';
+      a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    }, 'image/png');
+  });
+
+  </script>
+</body>
+</html>
