@@ -92,6 +92,12 @@
     render();
   });
 
+  let hideObject = false;
+  id('hideobject').addEventListener('change', function() {
+    hideObject = this.checked;
+    render();
+  });
+
   canvasElm.addEventListener("wheel", function(event) {
     if (selected >= objects.length) return;
     event.preventDefault();
@@ -509,7 +515,7 @@
   function render() {
     canvasCtx.clearRect(0, 0, canvasElm.width, canvasElm.height);
 
-    if (bgSelected) {
+    if (bgSelected && !hideObject) {
       canvasCtx.globalAlpha = bgAlpha;
       canvasCtx.drawImage(bgSelected.image, centerX - bgSelected.image.width / 2, centerY - bgSelected.image.height / 2);
       canvasCtx.globalAlpha = 1.0;
@@ -687,6 +693,7 @@
 
   window.addImageURL = function(url, name, collision) {
     const image = new Image();
+    image.crossOrigin = "Anonymous";
     image.src = url;
     image.decode().then(() => {
       const cropped = cropImage(image);
@@ -746,4 +753,11 @@
       addFiles(e.dataTransfer.files);
     }
   });
+
+  // Load from params
+  const params = new URLSearchParams(window.location.search);
+  const initialImage = params.get('i');
+  if (initialImage) {
+    addImageURL(initialImage, "Imported");
+  }
 })();
