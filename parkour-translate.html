@@ -1,0 +1,626 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0f131a;
+  --surface:#161b24;
+  --surface-2:#1d2330;
+  --border:#2a3140;
+  --text:#e6e9ef;
+  --text-muted:#8d96a8;
+  --accent:#5eead4;
+  --accent-press:#2dd4bf;
+  --tag:#f0b429;
+  --tag-bg:rgba(240,180,41,0.14);
+  --empty:#fb7185;
+  --empty-bg:rgba(251,113,133,0.09);
+  --edited:#a78bfa;
+  --edited-bg:rgba(167,139,250,0.10);
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+#root{display:flex;flex-direction:column;height:100vh;min-height:640px;}
+
+/* ---------- header ---------- */
+.tw-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--surface),var(--bg));flex:0 0 auto;}
+.tw-title{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:0.02em;color:var(--text);display:flex;align-items:center;gap:10px;}
+.tw-title .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.tw-subtitle{font-size:12.5px;color:var(--text-muted);margin-top:4px;}
+
+/* ---------- generic buttons / inputs ---------- */
+button{font-family:var(--sans);font-size:12.5px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);padding:7px 12px;cursor:pointer;transition:border-color .15s, color .15s, background .15s;}
+button:hover{border-color:var(--accent);color:var(--accent);}
+button:active{transform:translateY(1px);}
+button.primary{background:var(--accent);border-color:var(--accent);color:#06201c;}
+button.primary:hover{background:var(--accent-press);color:#06201c;}
+button.ghost{background:transparent;}
+button.danger:hover{border-color:var(--empty);color:var(--empty);}
+button:disabled{opacity:.4;cursor:not-allowed;}
+input[type=text],input[type=url],textarea,select{
+  font-family:var(--mono);font-size:13px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);padding:7px 10px;outline:none;
+}
+input[type=text]:focus,input[type=url]:focus,textarea:focus,select:focus{border-color:var(--accent);}
+select{font-family:var(--sans);}
+::placeholder{color:#566071;}
+
+/* ---------- source panel ---------- */
+.tw-source{padding:14px 22px;border-bottom:1px solid var(--border);flex:0 0 auto;background:var(--surface);}
+.tw-tabs{display:flex;gap:6px;margin-bottom:10px;}
+.tw-tab{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);border:1px solid transparent;}
+.tw-tab.active{color:var(--accent);background:var(--edited-bg);border-color:var(--border);}
+.tw-pane{display:flex;gap:8px;align-items:flex-start;}
+.tw-pane textarea{flex:1;min-height:64px;resize:vertical;font-size:12px;}
+.tw-pane input[type=url]{flex:1;}
+.tw-loaded-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);}
+.tw-loaded-bar b{color:var(--text);}
+.tw-error{color:var(--empty);font-size:12px;margin-top:8px;}
+.tw-hint{color:var(--text-muted);font-size:11.5px;margin-top:6px;line-height:1.5;}
+
+/* ---------- toolbar ---------- */
+.tw-toolbar{display:flex;align-items:center;gap:10px;padding:10px 22px;border-bottom:1px solid var(--border);flex:0 0 auto;flex-wrap:wrap;background:var(--bg);}
+.tw-toolbar .grow{flex:1;min-width:160px;}
+.tw-check{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-muted);cursor:pointer;user-select:none;}
+.tw-check input{accent-color:var(--accent);}
+.tw-stats{display:flex;gap:10px;font-size:11.5px;color:var(--text-muted);margin-left:auto;}
+.tw-stats span b{color:var(--text);}
+.tw-stat-empty{color:var(--empty);}
+.tw-stat-edited{color:var(--edited);}
+
+/* ---------- table ---------- */
+.tw-table-wrap{flex:1;overflow:auto;position:relative;}
+table.tw-table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;font-family:var(--mono);}
+table.tw-table thead th{position:sticky;top:0;background:var(--surface-2);border-bottom:1px solid var(--border);text-align:left;padding:9px 12px;font-family:var(--sans);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);z-index:2;white-space:nowrap;}
+table.tw-table thead th.col-name{position:sticky;left:0;z-index:3;}
+table.tw-table tbody td{border-bottom:1px solid var(--border);padding:8px 12px;vertical-align:top;max-width:340px;}
+table.tw-table tbody tr:hover td{background:#161b2466;}
+td.col-name{position:sticky;left:0;background:var(--bg);font-weight:600;color:var(--text);z-index:1;border-right:1px solid var(--border);white-space:nowrap;}
+tbody tr:hover td.col-name{background:#1a212c;}
+td.col-ref{color:var(--text-muted);}
+td.cell{cursor:text;position:relative;white-space:pre-wrap;word-break:break-word;line-height:1.5;}
+td.cell:hover{outline:1px solid var(--border);outline-offset:-1px;}
+td.cell.empty{background:var(--empty-bg);}
+td.cell.empty .empty-label{color:var(--empty);font-style:italic;font-size:12px;}
+td.cell.edited{background:var(--edited-bg);}
+td.cell.edited::before{content:'';position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--edited);}
+.tag-chip{background:var(--tag-bg);color:var(--tag);border-radius:4px;padding:0 3px;font-weight:600;}
+.cell-edit-input{width:100%;min-height:30px;resize:vertical;background:var(--surface-2);border:1px solid var(--accent);color:var(--text);font-family:var(--mono);font-size:13px;padding:4px 6px;border-radius:4px;}
+.diff-stack{display:flex;flex-direction:column;gap:2px;}
+.diff-old{color:var(--text-muted);text-decoration:line-through;opacity:.7;font-size:12px;}
+.diff-new{color:var(--text);}
+.revert-btn{font-family:var(--sans);font-size:10.5px;color:var(--text-muted);background:none;border:none;padding:0;margin-top:2px;cursor:pointer;text-decoration:underline;}
+.revert-btn:hover{color:var(--empty);}
+.empty-state{padding:60px 24px;text-align:center;color:var(--text-muted);}
+.empty-state .big{font-family:var(--mono);font-size:14px;color:var(--text);margin-bottom:6px;}
+
+/* ---------- footer / export ---------- */
+.tw-footer{display:flex;align-items:center;gap:10px;padding:12px 22px;border-top:1px solid var(--border);flex:0 0 auto;background:var(--surface);flex-wrap:wrap;}
+.tw-footer .spacer{flex:1;}
+.tw-footer .save-status{font-size:11.5px;color:var(--text-muted);}
+</style>
+
+<div id="root">
+  <div class="tw-header">
+    <div class="tw-title"><span class="dot"></span>parkour translations</div>
+    <div class="tw-subtitle">Load the locale sheet, fill gaps, edit values, and export a CSV the bot can diff.</div>
+  </div>
+
+  <div class="tw-source" id="sourcePanel"></div>
+  <div class="tw-toolbar" id="toolbar" style="display:none;"></div>
+  <div class="tw-table-wrap" id="tableWrap"><div class="empty-state"><div class="big">No data loaded yet</div>Fetch a CSV by URL, paste it, or upload a file above.</div></div>
+  <div class="tw-footer" id="footer" style="display:none;"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+(function(){
+
+// ---------------------------------------------------------------------------
+// state
+// ---------------------------------------------------------------------------
+let headers = [];          // CSV column order, e.g. ['name','en','tr','fr']
+let otherLangs = [];       // headers minus name/en
+let originalMap = {};      // { name: { col: value } }
+let rowOrder = [];         // array of names, preserves CSV order
+let edits = {};            // { "name||col": value }
+let sourceMeta = {
+  "kind": "url",
+  "value": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRknFKm8_SxH0eIFVpHXs9T42h4itEqXKq4x319dX7njhSvVLqHsarZF0PfPnZXPpTvtBSxWyEPtbfL/pub?gid=1657710783&single=true&output=csv",
+  "fetched": 0,
+};     // { kind, value, fetchedAt }
+let activeTab = 'url';
+let filterLang = 'all';
+let searchText = '';
+let emptyOnly = false;
+let editedOnly = false;
+let diffView = false;
+let saveTimer = null;
+
+const STORAGE_SOURCE_KEY = 'csv-source';
+const STORAGE_EDITS_KEY = 'csv-edits';
+
+// ---------------------------------------------------------------------------
+// helpers
+// ---------------------------------------------------------------------------
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const TAG_REGEX = /(\{\{[^{}]*\}\}|\{[^{}]*\}|%\d*\$?[sd]|<\/?[a-zA-Z][^<>]*>|\$\{[^}]*\}|\[[^\[\]]*\])/g;
+
+function highlightTags(str){
+  str = String(str ?? '');
+  let out = '', last = 0, m;
+  const re = new RegExp(TAG_REGEX);
+  while((m = re.exec(str)) !== null){
+    out += escapeHtml(str.slice(last, m.index));
+    out += `<span class="tag-chip">${escapeHtml(m[0])}</span>`;
+    last = m.index + m[0].length;
+  }
+  out += escapeHtml(str.slice(last));
+  return out;
+}
+
+function key(name, col){ return name + '||' + col; }
+
+function originalValue(name, col){
+  const row = originalMap[name];
+  return row ? (row[col] ?? '') : '';
+}
+
+function currentValue(name, col){
+  const k = key(name, col);
+  return Object.prototype.hasOwnProperty.call(edits, k) ? edits[k] : originalValue(name, col);
+}
+
+function isEdited(name, col){
+  return Object.prototype.hasOwnProperty.call(edits, key(name, col));
+}
+
+// ---------------------------------------------------------------------------
+// storage (persists across sessions for this artifact)
+// ---------------------------------------------------------------------------
+async function persistSourceNow(){
+  try{
+    await window.storage.set(STORAGE_SOURCE_KEY, JSON.stringify({
+      meta: sourceMeta, headers, originalMap, rowOrder
+    }), false);
+  }catch(e){ console.error('storage set source failed', e); }
+}
+
+function scheduleSaveEdits(){
+  clearTimeout(saveTimer);
+  setSaveStatus('saving…');
+  saveTimer = setTimeout(async () => {
+    try{
+      await window.storage.set(STORAGE_EDITS_KEY, JSON.stringify(edits), false);
+      setSaveStatus('saved ✓');
+    }catch(e){
+      console.error('storage set edits failed', e);
+      setSaveStatus('save failed');
+    }
+  }, 450);
+}
+
+function setSaveStatus(text){
+  const el = document.getElementById('saveStatus');
+  if(el) el.textContent = text;
+}
+
+async function loadFromStorage(){
+  try{
+    const src = await window.storage.get(STORAGE_SOURCE_KEY, false);
+    if(src && src.value){
+      const parsed = JSON.parse(src.value);
+      sourceMeta = parsed.meta;
+      headers = parsed.headers;
+      originalMap = parsed.originalMap;
+      rowOrder = parsed.rowOrder;
+      otherLangs = headers.filter(h => h !== 'name' && h !== 'en');
+    }
+  }catch(e){ /* no saved source yet */ }
+  try{
+    const ed = await window.storage.get(STORAGE_EDITS_KEY, false);
+    if(ed && ed.value) edits = JSON.parse(ed.value);
+  }catch(e){ /* no saved edits yet */ }
+
+  if(headers.length){
+    renderAll();
+  }else{
+    renderSourcePanel();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// loading data
+// ---------------------------------------------------------------------------
+function parseCsvText(text){
+  const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+  const flds = parsed.meta.fields || [];
+  if(!flds.includes('name')){
+    throw new Error("CSV is missing a 'name' column.");
+  }
+  return { fields: flds, rows: parsed.data };
+}
+
+function applyLoadedData(fields, rows, meta){
+  headers = fields;
+  otherLangs = headers.filter(h => h !== 'name' && h !== 'en');
+  originalMap = {};
+  rowOrder = [];
+  rows.forEach(r => {
+    const nm = (r.name || '').trim();
+    if(!nm) return;
+    if(!(nm in originalMap)) rowOrder.push(nm);
+    const obj = {};
+    headers.forEach(h => { obj[h] = (r[h] ?? '').trim(); });
+    originalMap[nm] = obj;
+  });
+  sourceMeta = meta;
+  // dropping edits for keys that no longer correspond to any header is left
+  // intact intentionally — edits are kept even across re-fetches so in-flight
+  // work is never silently discarded.
+  persistSourceNow();
+  filterLang = 'all';
+  renderAll();
+}
+
+async function loadFromUrl(url){
+  setSourceError('');
+  setSourceBusy(true);
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const { fields, rows } = parseCsvText(text);
+    applyLoadedData(fields, rows, { kind: 'url', value: url, fetchedAt: Date.now() });
+  }catch(e){
+    setSourceError('Could not fetch that URL (' + e.message + '). If this is a CORS error, paste the CSV text instead.');
+  }finally{
+    setSourceBusy(false);
+  }
+}
+
+function loadFromPasteText(text){
+  setSourceError('');
+  try{
+    const { fields, rows } = parseCsvText(text);
+    applyLoadedData(fields, rows, { kind: 'paste', value: null, fetchedAt: Date.now() });
+  }catch(e){
+    setSourceError(e.message);
+  }
+}
+
+function loadFromFile(file){
+  setSourceError('');
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const { fields, rows } = parseCsvText(reader.result);
+      applyLoadedData(fields, rows, { kind: 'file', value: file.name, fetchedAt: Date.now() });
+    }catch(e){
+      setSourceError(e.message);
+    }
+  };
+  reader.onerror = () => setSourceError('Could not read that file.');
+  reader.readAsText(file);
+}
+
+function setSourceError(msg){
+  const el = document.getElementById('sourceError');
+  if(el) el.textContent = msg;
+}
+function setSourceBusy(b){
+  const el = document.getElementById('fetchUrlBtn');
+  if(el) el.disabled = b;
+  if(el) el.textContent = b ? 'Fetching…' : 'Fetch';
+}
+
+// ---------------------------------------------------------------------------
+// editing
+// ---------------------------------------------------------------------------
+function commitEdit(name, col, newVal){
+  const trimmed = newVal.trim();
+  const orig = originalValue(name, col);
+  const k = key(name, col);
+  if(trimmed === orig){
+    if(k in edits){ delete edits[k]; scheduleSaveEdits(); }
+  }else{
+    edits[k] = trimmed;
+    scheduleSaveEdits();
+  }
+  renderTable();
+  renderToolbar();
+}
+
+function revertCell(name, col){
+  const k = key(name, col);
+  if(k in edits){
+    delete edits[k];
+    scheduleSaveEdits();
+    renderTable();
+    renderToolbar();
+  }
+}
+
+async function resetAllEdits(){
+  if(!confirm('Discard every saved edit? This cannot be undone.')) return;
+  edits = {};
+  try{ await window.storage.set(STORAGE_EDITS_KEY, JSON.stringify(edits), false); }catch(e){}
+  renderTable();
+  renderToolbar();
+}
+
+async function forgetSource(){
+  if(!confirm('Clear the loaded sheet and all edits from this browser?')) return;
+  headers = []; otherLangs = []; originalMap = {}; rowOrder = []; edits = {}; sourceMeta = null;
+  try{
+    await window.storage.delete(STORAGE_SOURCE_KEY, false);
+    await window.storage.delete(STORAGE_EDITS_KEY, false);
+  }catch(e){}
+  renderAll();
+}
+
+// ---------------------------------------------------------------------------
+// export
+// ---------------------------------------------------------------------------
+function downloadText(filename, text){
+  const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function exportLang(lang){
+  const rows = rowOrder.map(name => ({
+    name,
+    en: currentValue(name, 'en'),
+    [lang]: currentValue(name, lang)
+  }));
+  const csv = Papa.unparse(rows, { columns: ['name', 'en', lang] });
+  downloadText(`parkour-${lang}.csv`, csv);
+}
+
+// ---------------------------------------------------------------------------
+// rendering: source panel
+// ---------------------------------------------------------------------------
+function renderSourcePanel(){
+  const el = document.getElementById('sourcePanel');
+  const loadedBar = sourceMeta ? `
+    <div class="tw-loaded-bar">
+      <span>Source: <b>${escapeHtml(sourceMeta.kind === 'url' ? sourceMeta.value : (sourceMeta.kind === 'file' ? sourceMeta.value : 'pasted text'))}</b></span>
+      <span><b>${rowOrder.length}</b> rows · <b>${otherLangs.length}</b> language column(s)</span>
+      ${sourceMeta.kind === 'url' ? `<button id="refetchBtn">Refetch</button>` : ''}
+      <button class="danger" id="forgetBtn">Clear sheet &amp; edits</button>
+    </div>` : '';
+
+  el.innerHTML = `
+    <div class="tw-tabs">
+      <div class="tw-tab ${activeTab==='url'?'active':''}" data-tab="url">Fetch URL</div>
+      <div class="tw-tab ${activeTab==='paste'?'active':''}" data-tab="paste">Paste CSV</div>
+      <div class="tw-tab ${activeTab==='upload'?'active':''}" data-tab="upload">Upload file</div>
+    </div>
+    <div class="tw-pane" id="tabPane"></div>
+    <div class="tw-error" id="sourceError"></div>
+    ${loadedBar}
+  `;
+
+  el.querySelectorAll('.tw-tab').forEach(t => t.addEventListener('click', () => {
+    activeTab = t.dataset.tab;
+    renderSourcePanel();
+  }));
+
+  const pane = document.getElementById('tabPane');
+  if(activeTab === 'url'){
+    pane.innerHTML = `
+      <input type="url" id="urlInput" placeholder="https://example.com/translations.csv" value="${sourceMeta && sourceMeta.kind==='url' ? escapeHtml(sourceMeta.value) : ''}">
+      <button class="primary" id="fetchUrlBtn">Fetch</button>
+    `;
+    document.getElementById('fetchUrlBtn').addEventListener('click', () => {
+      const u = document.getElementById('urlInput').value.trim();
+      if(u) loadFromUrl(u);
+    });
+  }else if(activeTab === 'paste'){
+    pane.innerHTML = `
+      <textarea id="pasteInput" placeholder="name,en,tr&#10;jump,Jump,Zıpla"></textarea>
+      <button class="primary" id="loadPasteBtn">Load</button>
+    `;
+    document.getElementById('loadPasteBtn').addEventListener('click', () => {
+      const t = document.getElementById('pasteInput').value;
+      if(t.trim()) loadFromPasteText(t);
+    });
+  }else{
+    pane.innerHTML = `<input type="file" id="fileInput" accept=".csv,text/csv">`;
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      if(e.target.files[0]) loadFromFile(e.target.files[0]);
+    });
+  }
+
+  const refetchBtn = document.getElementById('refetchBtn');
+  if(refetchBtn) refetchBtn.addEventListener('click', () => loadFromUrl(sourceMeta.value));
+  const forgetBtn = document.getElementById('forgetBtn');
+  if(forgetBtn) forgetBtn.addEventListener('click', forgetSource);
+}
+
+// ---------------------------------------------------------------------------
+// rendering: toolbar
+// ---------------------------------------------------------------------------
+function computeStats(){
+  const stats = {};
+  otherLangs.concat(['en']).forEach(l => stats[l] = { empty: 0, edited: 0 });
+  rowOrder.forEach(name => {
+    otherLangs.concat(['en']).forEach(l => {
+      const v = currentValue(name, l);
+      if(!v) stats[l].empty++;
+      if(isEdited(name, l)) stats[l].edited++;
+    });
+  });
+  return stats;
+}
+
+function renderToolbar(){
+  const el = document.getElementById('toolbar');
+  if(!headers.length){ el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+
+  const stats = computeStats();
+  const langOptions = ['all', ...otherLangs].map(l =>
+    `<option value="${escapeHtml(l)}" ${l===filterLang?'selected':''}>${l==='all' ? 'All languages' : l}</option>`
+  ).join('');
+
+  const statBits = filterLang === 'all'
+    ? otherLangs.map(l => `<span><b>${l}</b> <span class="tw-stat-empty">${stats[l].empty} empty</span> · <span class="tw-stat-edited">${stats[l].edited} edited</span></span>`).join('')
+    : `<span><span class="tw-stat-empty">${stats[filterLang].empty} empty</span> · <span class="tw-stat-edited">${stats[filterLang].edited} edited</span> of ${rowOrder.length} rows</span>`;
+
+  el.innerHTML = `
+    <select id="langFilter">${langOptions}</select>
+    <input type="text" class="grow" id="searchInput" placeholder="Filter by name…" value="${escapeHtml(searchText)}">
+    <label class="tw-check"><input type="checkbox" id="emptyOnly" ${emptyOnly?'checked':''}> empty only</label>
+    <label class="tw-check"><input type="checkbox" id="editedOnly" ${editedOnly?'checked':''}> edited only</label>
+    <label class="tw-check"><input type="checkbox" id="diffView" ${diffView?'checked':''}> diff view</label>
+    <div class="tw-stats">${statBits}</div>
+  `;
+
+  document.getElementById('langFilter').addEventListener('change', e => { filterLang = e.target.value; renderTable(); renderToolbar(); renderFooter(); });
+  document.getElementById('searchInput').addEventListener('input', e => { searchText = e.target.value; renderTable(); });
+  document.getElementById('emptyOnly').addEventListener('change', e => { emptyOnly = e.target.checked; renderTable(); });
+  document.getElementById('editedOnly').addEventListener('change', e => { editedOnly = e.target.checked; renderTable(); });
+  document.getElementById('diffView').addEventListener('change', e => { diffView = e.target.checked; renderTable(); });
+}
+
+// ---------------------------------------------------------------------------
+// rendering: table
+// ---------------------------------------------------------------------------
+function rowMatchesFilters(name){
+  if(searchText && !name.toLowerCase().includes(searchText.toLowerCase())) return false;
+  const cols = filterLang === 'all' ? otherLangs : [filterLang];
+  if(emptyOnly && !cols.some(c => !currentValue(name, c))) return false;
+  if(editedOnly && !cols.some(c => isEdited(name, c)) && !isEdited(name, 'en')) return false;
+  return true;
+}
+
+function cellHtml(name, col, readonly){
+  const val = currentValue(name, col);
+  const empty = !val;
+  const edited = isEdited(name, col);
+  const classes = ['cell'];
+  if(empty) classes.push('empty');
+  if(edited) classes.push('edited');
+
+  let inner;
+  if(empty){
+    inner = `<span class="empty-label">— empty —</span>`;
+  }else if(edited && diffView){
+    inner = `<div class="diff-stack"><span class="diff-old">${highlightTags(originalValue(name,col))}</span><span class="diff-new">${highlightTags(val)}</span></div>`;
+  }else{
+    inner = highlightTags(val);
+  }
+  if(edited){
+    inner += `<button class="revert-btn" data-revert="${escapeHtml(name)}|${escapeHtml(col)}">revert</button>`;
+  }
+  return `<td class="${classes.join(' ')}" data-name="${escapeHtml(name)}" data-col="${escapeHtml(col)}" ${readonly?'':'tabindex="0"'}>${inner}</td>`;
+}
+
+function renderTable(){
+  const wrap = document.getElementById('tableWrap');
+  if(!headers.length){
+    wrap.innerHTML = `<div class="empty-state"><div class="big">No data loaded yet</div>Fetch a CSV by URL, paste it, or upload a file above.</div>`;
+    return;
+  }
+
+  const cols = filterLang === 'all' ? otherLangs : [filterLang];
+  const visibleNames = rowOrder.filter(rowMatchesFilters);
+
+  let head = `<th class="col-name">name</th><th class="col-ref">en</th>` + cols.map(c => `<th>${escapeHtml(c)}</th>`).join('');
+  let body = visibleNames.map(name => {
+    let tds = `<td class="col-name">${escapeHtml(name)}</td>`;
+    tds += cellHtml(name, 'en', false).replace('class="cell', 'class="cell col-ref');
+    cols.forEach(c => { tds += cellHtml(name, c, false); });
+    return `<tr>${tds}</tr>`;
+  }).join('');
+
+  if(!visibleNames.length){
+    body = `<tr><td colspan="${2+cols.length}"><div class="empty-state">No rows match the current filters.</div></td></tr>`;
+  }
+
+  wrap.innerHTML = `<table class="tw-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+
+  wrap.querySelectorAll('td.cell').forEach(td => {
+    td.addEventListener('click', (e) => {
+      if(e.target.closest('.revert-btn')) return;
+      startEditing(td);
+    });
+  });
+  wrap.querySelectorAll('[data-revert]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const [name, col] = btn.dataset.revert.split('|');
+      revertCell(name, col);
+    });
+  });
+}
+
+function startEditing(td){
+  if(td.querySelector('textarea')) return; // already editing
+  const name = td.dataset.name, col = td.dataset.col;
+  const val = currentValue(name, col);
+  td.innerHTML = `<textarea class="cell-edit-input">${escapeHtml(val)}</textarea>`;
+  const ta = td.querySelector('textarea');
+  ta.style.height = Math.max(30, ta.scrollHeight) + 'px';
+  ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+  ta.focus();
+  ta.select();
+
+  let committed = false;
+  function commit(){
+    if(committed) return;
+    committed = true;
+    commitEdit(name, col, ta.value);
+  }
+  ta.addEventListener('blur', commit);
+  ta.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); ta.blur(); }
+    if(e.key === 'Escape'){ committed = true; renderTable(); }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// rendering: footer / export bar
+// ---------------------------------------------------------------------------
+function renderFooter(){
+  const el = document.getElementById('footer');
+  if(!headers.length){ el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  const exportOptions = otherLangs.map(l => `<option value="${escapeHtml(l)}" ${l===filterLang?'selected':''}>${l}</option>`).join('');
+  el.innerHTML = `
+    <select id="exportLang">${exportOptions}</select>
+    <button class="primary" id="exportBtn">Download CSV</button>
+    <button class="danger ghost" id="resetEditsBtn">Reset all edits</button>
+    <div class="spacer"></div>
+    <span class="save-status" id="saveStatus"></span>
+  `;
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const sel = document.getElementById('exportLang').value;
+    if(sel) exportLang(sel);
+  });
+  document.getElementById('resetEditsBtn').addEventListener('click', resetAllEdits);
+}
+
+// ---------------------------------------------------------------------------
+function renderAll(){
+  renderSourcePanel();
+  renderToolbar();
+  renderTable();
+  renderFooter();
+}
+
+loadFromStorage();
+})();
+</script>
