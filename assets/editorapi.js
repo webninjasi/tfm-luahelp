@@ -572,7 +572,7 @@
 
       let imageURL;
 
-      if (imageId.startsWith('http')) {
+      if (imageId.startsWith('http') || imageId.startsWith('data:')) {
         imageURL = imageId;
       }
       else if (imageId.length == 15) {
@@ -793,6 +793,10 @@
 
   stageContainer.tabIndex = 1;
   stageContainer.addEventListener('keydown', function (event) {
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     if (event.keyCode === 37) {
       stageEmitter.emit('key', 'left');
     } else if (event.keyCode === 38) {
@@ -801,6 +805,8 @@
       stageEmitter.emit('key', 'right');
     } else if (event.keyCode === 40) {
       stageEmitter.emit('key', 'down');
+    } else if (event.keyCode === 46) {
+      stageEmitter.emit('key', 'delete');
     } else {
       return;
     }

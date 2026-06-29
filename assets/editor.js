@@ -71,7 +71,15 @@
 
       imgCount ++;
       obj = images[key];
-      lines.push(`tfm.exec.addImage("${escapeLuaString(obj.imageId)}", "${escapeLuaString(obj.target)}", ${obj.x}, ${obj.y}, targetPlayer, ${obj.scaleX}, ${obj.scaleY}, ${(obj.rotation / 180 * Math.PI).toFixed(2)}, ${obj.alpha}, ${obj.anchorX}, ${obj.anchorY}, ${obj.fadeIn})`);
+      let idStr = obj.imageId;
+      if (idStr.startsWith('data:')) {
+        if (obj.fileName) {
+          idStr = `<uploaded_${obj.fileName}>`;
+        } else {
+          idStr = `<uploaded_${obj._id}>`;
+        }
+      }
+      lines.push(`tfm.exec.addImage("${escapeLuaString(idStr)}", "${escapeLuaString(obj.target)}", ${obj.x}, ${obj.y}, targetPlayer, ${obj.scaleX}, ${obj.scaleY}, ${(obj.rotation / 180 * Math.PI).toFixed(2)}, ${obj.alpha}, ${obj.anchorX}, ${obj.anchorY}, ${obj.fadeIn})`);
     }
 
     output.innerHTML = lines.join('\n');
@@ -104,6 +112,18 @@
     text: "Add Image",
   }).on('click', function() {
     newImage();
+  });
+  editorAPI.controls.addButton({
+    id: "upload_image",
+    x: 20,
+    y: 420 + 30 * 3,
+    width: 180,
+    text: "Upload Image",
+  }).on('click', function() {
+    const fileInput = id('image_upload');
+    if (fileInput) {
+      fileInput.click();
+    }
   });
 
   editorAPI.controls.addSeparator({
@@ -154,6 +174,21 @@
 
   function onStageKey(key) {
     if (selectedId == null) {
+      return;
+    }
+
+    if (key == 'delete') {
+      if (selectType == 'textarea') {
+        delete textareas[selectedId];
+        editorAPI.lua.removeTextArea(selectedId);
+      }
+      else if (selectType == 'image') {
+        delete images[selectedId];
+        editorAPI.lua.removeImage(selectedId);
+      }
+
+      updateOutput();
+      onUnselect();
       return;
     }
 
@@ -354,7 +389,7 @@
       y,
       width: 180,
       label: 'Image',
-      text: img.imageId,
+      text: img.imageId.startsWith('data:') ? '[Uploaded Image]' : img.imageId,
     }).on('click', () => {
       editorAPI.edit({
         name: "Image",
@@ -365,7 +400,7 @@
           img.imageId = val;
           editorAPI.controls.updateTextEdit({
             id: 'ui_image_id',
-            text: val,
+            text: val.startsWith('data:') ? '[Uploaded Image]' : val,
           });
           updateImage(img);
         }
@@ -1101,4 +1136,92 @@
 
     return '0x' + number.toString(16).toUpperCase();
   }
+
+  // Image Upload and Drag & Drop Handlers
+  function handleImageFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const dataURL = event.target.result;
+      newImage({
+        _id: images._lastId ++,
+        imageId: dataURL,
+        fileName: file.name,
+        target: '!0',
+        x: 0,
+        y: 0,
+        targetPlayer: null,
+        scaleX: 1,
+        scaleY: 1,
+        rotation: 0,
+        alpha: 1,
+        anchorX: 0,
+        anchorY: 0,
+        fadeIn: false,
+      });
+    };
+    reader.onerror = function(err) {
+      errorSet("Failed to read file: " + err);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const fileInput = id('image_upload');
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (this.files && this.files.length > 0) {
+        Array.from(this.files).forEach(file => {
+          if (file.type.startsWith('image/')) {
+            handleImageFile(file);
+          }
+        });
+        this.value = '';
+      }
+    });
+  }
+
+  const dropOverlay = id('drop-overlay');
+  let dragCounter = 0;
+
+  window.addEventListener('dragenter', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter++;
+    if (dropOverlay) {
+      dropOverlay.classList.add('active');
+    }
+  });
+
+  window.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      if (dropOverlay) {
+        dropOverlay.classList.remove('active');
+      }
+    }
+  });
+
+  window.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  window.addEventListener('drop', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter = 0;
+    if (dropOverlay) {
+      dropOverlay.classList.remove('active');
+    }
+
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      Array.from(e.dataTransfer.files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+          handleImageFile(file);
+        }
+      });
+    }
+  });
 })();

@@ -17,12 +17,17 @@
         <a href="./index.html"><button>Homepage</button></a>
         <button onclick="toggleGameUI()">Toggle Game UI</button>
         <button onclick="toggleCode()">Toggle Code</button>
+        <input type="file" id="image_upload" accept="image/*" multiple style="display: none;" />
         <label for="property_value" id="property_name"><i>Property:</i></label>
         <input type="text" id="property_value" />
         <span id="error"></span>
       </div>
 
       <div id="ui-wrapper" class="TFMBG">
+        <div id="drop-overlay">
+          <div class="drop-message">Drop image files here!</div>
+        </div>
+
         <div id="scene"></div>
 
         <div class="ui-editor-text">
