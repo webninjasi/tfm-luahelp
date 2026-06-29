@@ -17,6 +17,9 @@
         <a href="./index.html"><button>Homepage</button></a>
         <button onclick="toggleGameUI()">Toggle Game UI</button>
         <button onclick="toggleCode()">Toggle Code</button>
+        <button onclick="exportJSON()">Export JSON</button>
+        <button onclick="document.getElementById('json_import_input').click()">Import JSON</button>
+        <input type="file" id="json_import_input" accept=".json" style="display: none;" />
         <input type="file" id="image_upload" accept="image/*" multiple style="display: none;" />
         <label for="property_value" id="property_name"><i>Property:</i></label>
         <input type="text" id="property_value" />

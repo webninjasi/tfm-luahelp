@@ -1224,4 +1224,87 @@
       });
     }
   });
+
+  // Export/Import State via JSON
+  window.exportJSON = function() {
+    const state = { textareas, images };
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.href = url;
+    downloadAnchor.download = "tfm_lua_ui.json";
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  function clearEditor() {
+    onUnselect();
+    
+    // Clear textareas
+    for (let key in textareas) {
+      if (key !== '_lastId') {
+        editorAPI.lua.removeTextArea(key);
+        delete textareas[key];
+      }
+    }
+    textareas._lastId = 0;
+    
+    // Clear images
+    for (let key in images) {
+      if (key !== '_lastId') {
+        editorAPI.lua.removeImage(key);
+        delete images[key];
+      }
+    }
+    images._lastId = 0;
+    
+    updateOutput();
+  }
+
+  function importState(state) {
+    clearEditor();
+    
+    if (state.textareas) {
+      textareas._lastId = state.textareas._lastId || 0;
+      for (let key in state.textareas) {
+        if (key === '_lastId') continue;
+        const ta = state.textareas[key];
+        newTextArea(ta);
+      }
+    }
+    
+    if (state.images) {
+      images._lastId = state.images._lastId || 0;
+      for (let key in state.images) {
+        if (key === '_lastId') continue;
+        const img = state.images[key];
+        newImage(img);
+      }
+    }
+    
+    onUnselect();
+    updateOutput();
+  }
+
+  const jsonImportInput = id('json_import_input');
+  if (jsonImportInput) {
+    jsonImportInput.addEventListener('change', function(e) {
+      if (this.files && this.files.length > 0) {
+        const file = this.files[0];
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          try {
+            const state = JSON.parse(event.target.result);
+            importState(state);
+          } catch (err) {
+            errorSet("Failed to parse JSON file: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+        this.value = '';
+      }
+    });
+  }
 })();
