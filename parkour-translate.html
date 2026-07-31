@@ -72,15 +72,15 @@ select{font-family:var(--sans);}
 
 /* ---------- table ---------- */
 .tw-table-wrap{flex:1;overflow:auto;position:relative;}
-table.tw-table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;font-family:var(--mono);}
-table.tw-table thead th{position:sticky;top:0;background:var(--surface-2);border-bottom:1px solid var(--border);text-align:left;padding:9px 12px;font-family:var(--sans);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);z-index:2;white-space:nowrap;}
+table.tw-table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;font-family:var(--mono);table-layout:fixed;}
+table.tw-table thead th{position:sticky;top:0;background:var(--surface-2);border-bottom:1px solid var(--border);text-align:left;padding:9px 16px 9px 12px;font-family:var(--sans);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);z-index:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;}
 table.tw-table thead th.col-name{position:sticky;left:0;z-index:3;}
-table.tw-table tbody td{border-bottom:1px solid var(--border);padding:8px 12px;vertical-align:top;max-width:340px;}
+table.tw-table tbody td{border-bottom:1px solid var(--border);padding:8px 12px;vertical-align:top;}
 table.tw-table tbody tr:hover td{background:#161b2466;}
-td.col-name{position:sticky;left:0;background:var(--bg);font-weight:600;color:var(--text);z-index:1;border-right:1px solid var(--border);white-space:nowrap;}
+td.col-name{position:sticky;left:0;background:var(--bg);font-weight:600;color:var(--text);z-index:1;border-right:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 tbody tr:hover td.col-name{background:#1a212c;}
 td.col-ref{color:var(--text-muted);}
-td.cell{cursor:text;position:relative;white-space:pre-wrap;word-break:break-word;line-height:1.5;}
+td.cell{cursor:text;position:relative;white-space:pre-wrap;word-break:break-word;line-height:1.5;overflow:hidden;}
 td.cell:hover{outline:1px solid var(--border);outline-offset:-1px;}
 td.cell.empty{background:var(--empty-bg);}
 td.cell.empty .empty-label{color:var(--empty);font-style:italic;font-size:12px;}
@@ -95,6 +95,11 @@ td.cell.edited::before{content:'';position:absolute;top:6px;right:6px;width:6px;
 .revert-btn:hover{color:var(--empty);}
 .empty-state{padding:60px 24px;text-align:center;color:var(--text-muted);}
 .empty-state .big{font-family:var(--mono);font-size:14px;color:var(--text);margin-bottom:6px;}
+
+/* ---------- column resize handles ---------- */
+.col-resize-handle{position:absolute;top:0;right:0;width:8px;height:100%;cursor:col-resize;user-select:none;touch-action:none;z-index:4;}
+.col-resize-handle::after{content:'';position:absolute;top:0;right:3px;width:2px;height:100%;background:transparent;}
+.col-resize-handle:hover::after,.col-resize-handle.resizing::after{background:var(--accent);}
 
 /* ---------- footer / export ---------- */
 .tw-footer{display:flex;align-items:center;gap:10px;padding:12px 22px;border-top:1px solid var(--border);flex:0 0 auto;background:var(--surface);flex-wrap:wrap;}
@@ -126,6 +131,7 @@ let otherLangs = [];       // headers minus name/en
 let originalMap = {};      // { name: { col: value } }
 let rowOrder = [];         // array of names, preserves CSV order
 let edits = {};            // { "name||col": value }
+let columnWidths = {};     // { colKey: widthPx }
 let sourceMeta = {
   "kind": "url",
   "value": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRknFKm8_SxH0eIFVpHXs9T42h4itEqXKq4x319dX7njhSvVLqHsarZF0PfPnZXPpTvtBSxWyEPtbfL/pub?gid=1657710783&single=true&output=csv",
@@ -141,6 +147,12 @@ let saveTimer = null;
 
 const STORAGE_SOURCE_KEY = 'csv-source';
 const STORAGE_EDITS_KEY = 'csv-edits';
+const STORAGE_COLWIDTHS_KEY = 'csv-colwidths';
+
+const DEFAULT_NAME_WIDTH = 100;
+const DEFAULT_COL_WIDTH = 180;
+const MIN_NAME_WIDTH = 50;
+const MIN_COL_WIDTH = 70;
 
 // ---------------------------------------------------------------------------
 // helpers
@@ -180,6 +192,15 @@ function isEdited(name, col){
   return Object.prototype.hasOwnProperty.call(edits, key(name, col));
 }
 
+function getColWidth(colKey){
+  if(columnWidths[colKey]) return columnWidths[colKey];
+  return colKey === 'name' ? DEFAULT_NAME_WIDTH : DEFAULT_COL_WIDTH;
+}
+
+function minWidthFor(colKey){
+  return colKey === 'name' ? MIN_NAME_WIDTH : MIN_COL_WIDTH;
+}
+
 // ---------------------------------------------------------------------------
 // storage (persists across sessions for this artifact)
 // ---------------------------------------------------------------------------
@@ -210,6 +231,11 @@ function setSaveStatus(text){
   if(el) el.textContent = text;
 }
 
+async function persistColumnWidths(){
+  try{ await window.storage.set(STORAGE_COLWIDTHS_KEY, JSON.stringify(columnWidths), false); }
+  catch(e){ console.error('storage set colwidths failed', e); }
+}
+
 async function loadFromStorage(){
   try{
     const src = await window.storage.get(STORAGE_SOURCE_KEY, false);
@@ -226,6 +252,10 @@ async function loadFromStorage(){
     const ed = await window.storage.get(STORAGE_EDITS_KEY, false);
     if(ed && ed.value) edits = JSON.parse(ed.value);
   }catch(e){ /* no saved edits yet */ }
+  try{
+    const cw = await window.storage.get(STORAGE_COLWIDTHS_KEY, false);
+    if(cw && cw.value) columnWidths = JSON.parse(cw.value);
+  }catch(e){ /* no saved widths yet */ }
 
   if(headers.length){
     renderAll();
@@ -482,7 +512,7 @@ function renderToolbar(){
   el.innerHTML = `
     <select id="langFilter">${langOptions}</select>
     <input type="text" class="grow" id="searchInput" placeholder="Filter by name…" value="${escapeHtml(searchText)}">
-    <label class="tw-check"><input type="checkbox" id="emptyOnly" ${emptyOnly?'checked':''}> empty only</label>
+    <label class="tw-check" title="Shows rows that started blank in the source, even after you fill them in. They drop off this view only on the next fetch/refetch."><input type="checkbox" id="emptyOnly" ${emptyOnly?'checked':''}> empty only</label>
     <label class="tw-check"><input type="checkbox" id="editedOnly" ${editedOnly?'checked':''}> edited only</label>
     <label class="tw-check"><input type="checkbox" id="diffView" ${diffView?'checked':''}> diff view</label>
     <div class="tw-stats">${statBits}</div>
@@ -501,7 +531,10 @@ function renderToolbar(){
 function rowMatchesFilters(name){
   if(searchText && !name.toLowerCase().includes(searchText.toLowerCase())) return false;
   const cols = filterLang === 'all' ? otherLangs : [filterLang];
-  if(emptyOnly && !cols.some(c => !currentValue(name, c))) return false;
+  // "empty only" is based on the ORIGINAL source value, not the live/edited value,
+  // so a row doesn't vanish from this filter the moment you type a fix in — it
+  // stays put until the underlying source data is reloaded.
+  if(emptyOnly && !cols.some(c => !originalValue(name, c))) return false;
   if(editedOnly && !cols.some(c => isEdited(name, c)) && !isEdited(name, 'en')) return false;
   return true;
 }
@@ -536,9 +569,19 @@ function renderTable(){
   }
 
   const cols = filterLang === 'all' ? otherLangs : [filterLang];
+  const colKeys = ['name', 'en', ...cols];
   const visibleNames = rowOrder.filter(rowMatchesFilters);
 
-  let head = `<th class="col-name">name</th><th class="col-ref">en</th>` + cols.map(c => `<th>${escapeHtml(c)}</th>`).join('');
+  const colgroupHtml = `<colgroup>${colKeys.map(k =>
+    `<col data-colkey="${escapeHtml(k)}" style="width:${getColWidth(k)}px">`
+  ).join('')}</colgroup>`;
+
+  const head = colKeys.map(k => {
+    const label = k === 'name' ? 'name' : k;
+    const thClass = k === 'name' ? 'col-name' : (k === 'en' ? 'col-ref' : '');
+    return `<th class="${thClass}" data-colkey="${escapeHtml(k)}">${escapeHtml(label)}<div class="col-resize-handle" data-col="${escapeHtml(k)}"></div></th>`;
+  }).join('');
+
   let body = visibleNames.map(name => {
     let tds = `<td class="col-name">${escapeHtml(name)}</td>`;
     tds += cellHtml(name, 'en', false).replace('class="cell', 'class="cell col-ref');
@@ -547,10 +590,10 @@ function renderTable(){
   }).join('');
 
   if(!visibleNames.length){
-    body = `<tr><td colspan="${2+cols.length}"><div class="empty-state">No rows match the current filters.</div></td></tr>`;
+    body = `<tr><td colspan="${colKeys.length}"><div class="empty-state">No rows match the current filters.</div></td></tr>`;
   }
 
-  wrap.innerHTML = `<table class="tw-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  wrap.innerHTML = `<table class="tw-table">${colgroupHtml}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 
   wrap.querySelectorAll('td.cell').forEach(td => {
     td.addEventListener('click', (e) => {
@@ -564,6 +607,70 @@ function renderTable(){
       const [name, col] = btn.dataset.revert.split('|');
       revertCell(name, col);
     });
+  });
+
+  attachResizeHandlers();
+}
+
+function updateColWidths(){
+  const wrap = document.getElementById('tableWrap');
+  const colgroupEl = wrap.querySelector('colgroup');
+  if(!colgroupEl) return;
+  colgroupEl.querySelectorAll('col').forEach(c => {
+    c.style.width = getColWidth(c.dataset.colkey) + 'px';
+  });
+}
+
+function attachResizeHandlers(){
+  const wrap = document.getElementById('tableWrap');
+  wrap.querySelectorAll('.col-resize-handle').forEach(handle => {
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const colKey = handle.dataset.col;
+      const startX = e.clientX;
+      const startWidth = getColWidth(colKey);
+      handle.classList.add('resizing');
+
+      function onMove(e2){
+        const delta = e2.clientX - startX;
+        const newWidth = Math.max(minWidthFor(colKey), Math.round(startWidth + delta));
+        columnWidths[colKey] = newWidth;
+        updateColWidths();
+      }
+      function onUp(){
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        handle.classList.remove('resizing');
+        persistColumnWidths();
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+
+    // touch support
+    handle.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      const colKey = handle.dataset.col;
+      const startX = e.touches[0].clientX;
+      const startWidth = getColWidth(colKey);
+      handle.classList.add('resizing');
+
+      function onMove(e2){
+        const delta = e2.touches[0].clientX - startX;
+        const newWidth = Math.max(minWidthFor(colKey), Math.round(startWidth + delta));
+        columnWidths[colKey] = newWidth;
+        updateColWidths();
+      }
+      function onEnd(){
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        handle.classList.remove('resizing');
+        persistColumnWidths();
+      }
+      document.addEventListener('touchmove', onMove, { passive: true });
+      document.addEventListener('touchend', onEnd);
+    }, { passive: true });
   });
 }
 
