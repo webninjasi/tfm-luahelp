@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TFM Lua Help - Assets</title>
+<style>
+:root{--bg:#1E3D42;--panel:#172f33;--panel2:#111;--line:#445257;--text:#C2C2DA;--muted:#9292AA;--blue:#6C77C1;--green:#2ECF73;--yellow:#E9E654;--orange:#F79337;--red:#CB546B;--cyan:#8FE2D1;--cream:#F0D3AD}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:12px Verdana,Arial,sans-serif}a{color:var(--text);text-decoration:none}a:hover{color:var(--green)}button,input,select{font:inherit;background:#111;color:var(--blue);border:1px solid #444;padding:.42em .55em;min-width:0}button{cursor:pointer;font-weight:bold}button:hover{border-color:#6A7495;color:#98E2EB}button.active{background:#353a51;color:#fff;border-color:#6C77C1}.app{min-height:100vh;display:flex;flex-direction:column}.top{padding:12px;border-bottom:1px solid #315359;background:#19373b;position:sticky;top:0;z-index:5}.title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.title{font-size:18px;color:var(--cream);font-weight:bold}.spacer{flex:1}.status{color:var(--muted)}.status.error{color:var(--red)}.search-row{display:grid;grid-template-columns:minmax(220px,1fr) minmax(160px,.45fr) auto;gap:8px;margin-top:10px}.search-row input{width:100%}.filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}.field{display:flex;flex-direction:column;gap:3px;min-width:0}.field label{color:var(--muted);font-size:11px}.field input,.field select{width:100%;min-width:0}.range{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px;min-width:0}.range input{width:100%;min-width:0}.tabs{display:flex;gap:4px;margin-top:10px;border-bottom:1px solid #365056;padding-bottom:0}.tabs button{border-bottom:0;padding:7px 18px}.tabs button.active{background:#111;color:#fff;border-color:#6C77C1;position:relative;top:1px}.segments{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}.segments .label{align-self:center;color:var(--muted);margin-right:2px}.tab-only[hidden]{display:none!important}.summary-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px}.summary{color:var(--cyan);font-weight:bold}.audio-dock{position:fixed;right:12px;bottom:12px;z-index:20;width:min(360px,calc(100vw - 24px));border:1px solid #496066;background:#142c30;box-shadow:0 3px 12px rgba(0,0,0,.45);padding:7px}.audio-dock-row{display:flex;align-items:center;gap:6px;min-width:0}.audio-dock-row+.audio-dock-row{margin-top:6px;padding-top:6px;border-top:1px solid #314b50}.audio-dock strong{color:var(--yellow);font-size:10px}.now-playing-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--cyan)}.audio-idle{color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}[hidden]{display:none!important}.main{padding:10px;flex:1}.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}.card{border:1px solid #34494d;background:rgba(17,17,17,.42);padding:8px;min-width:0}.card:hover{border-color:#6A7495}.preview{height:150px;background-color:#23363a;background-image:linear-gradient(45deg,#293f43 25%,transparent 25%),linear-gradient(-45deg,#293f43 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#293f43 75%),linear-gradient(-45deg,transparent 75%,#293f43 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}.preview img{max-width:100%;max-height:100%;object-fit:contain}.audio-preview{height:92px;background:#172f33;display:flex;align-items:center;justify-content:center}.audio-glyph{font-size:30px;color:var(--blue)}.card-head{display:flex;justify-content:space-between;gap:6px;align-items:center;margin-top:7px}.asset-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#F0D3AD;font-weight:bold}.badges{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}.badge{font-size:10px;border:1px solid #46545a;padding:2px 4px;color:#98E2EB}.badge.compat{color:#E9E654}.meta{color:var(--muted);font-size:11px;min-height:14px}.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;min-height:20px}.tag{font-size:10px;background:#111;border:1px solid #3d474b;padding:2px 4px;color:#A4CF9E;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-weight:normal;cursor:pointer}.tag.curated{color:#F1C4F6}.card-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.card-actions button{font-size:10px;padding:3px 5px}.pagination{display:flex;justify-content:center;gap:4px;flex-wrap:wrap;padding:14px 4px}.pagination button[disabled]{opacity:.4;cursor:default}.empty{padding:40px;text-align:center;color:var(--muted)}dialog{width:min(860px,94vw);max-height:92vh;background:var(--bg);color:var(--text);border:2px solid #111;padding:0}dialog::backdrop{background:rgba(0,0,0,.72)}.modal-head{display:flex;align-items:center;padding:10px;border-bottom:1px solid #365056}.modal-head strong{font-size:14px;color:var(--cream);overflow:hidden;text-overflow:ellipsis}.modal-body{display:grid;grid-template-columns:minmax(240px,1fr) minmax(300px,1fr);gap:14px;padding:12px;overflow:auto}.modal-preview{min-height:260px;max-height:520px;background:#23363a;display:flex;align-items:center;justify-content:center;overflow:auto}.modal-preview img{max-width:100%;max-height:500px;object-fit:contain}.details{min-width:0}.detail-row{border-bottom:1px solid #315057;padding:7px 0}.detail-label{display:block;color:var(--muted);font-size:10px;margin-bottom:3px}.copy-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px}.copy-line input{width:100%;color:#C2C2DA}.codebox{white-space:pre-wrap;word-break:break-all;background:#111;border:1px solid #444;padding:7px;color:#C2C2DA}.audio-player{width:100%;margin-top:12px}.tag.local{color:var(--orange);border-color:#76502f}.small-dialog{width:min(680px,94vw)}.panel-body{padding:14px}.panel-note{margin:0 0 12px;color:var(--muted);line-height:1.5}.panel-form label{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}.submit-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}.submit-line input{width:100%}.panel-status{margin-top:10px;color:var(--cyan);white-space:pre-wrap}.panel-status.error{color:var(--red)}.submit-result{margin-top:12px;border:1px solid #365056;background:#142c30;padding:10px}.submit-result-preview{height:180px;display:flex;align-items:center;justify-content:center;background:#23363a;margin-bottom:8px;overflow:hidden}.submit-result-preview img{max-width:100%;max-height:100%;object-fit:contain}.panel-footer{margin-top:12px}.panel-footer a{color:var(--blue);text-decoration:underline}.panel-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.danger-button{color:var(--red)}.curator-button{color:var(--orange)!important}.curator-button.active{color:#ffd0a6!important;border-color:#a86b31}.curator-pending{color:var(--orange)!important;border-color:#76502f!important}.curator-pending-list{display:flex;flex-direction:column;gap:7px;margin-top:8px;max-height:320px;overflow:auto}.curator-pending-item{border:1px solid #3d4d51;background:#142c30;padding:7px}.curator-pending-title{display:flex;gap:6px;align-items:center;min-width:0}.curator-pending-title strong{color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.curator-pending-tags{color:#F1C4F6;margin-top:5px;word-break:break-word}.curator-empty{color:var(--muted);padding:8px 0}.local-tag-editor{display:flex;gap:5px;flex-wrap:wrap;align-items:center}.local-tag-editor input{flex:1 1 180px}.local-tag-list{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}.local-tag-remove{color:var(--orange);font-size:10px;padding:2px 5px}.loading{padding:36px;text-align:center;color:var(--blue)}@media(max-width:900px){.filter-grid{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}}@media(max-width:650px){.search-row{grid-template-columns:1fr}.filter-grid{grid-template-columns:1fr 1fr}.modal-body{grid-template-columns:1fr}.top{position:static}.cards{grid-template-columns:repeat(auto-fill,minmax(155px,1fr))}.preview{height:125px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="title-row">
+      <div class="title">TFM Asset Browser</div>
+      <span class="status" id="loadStatus">Loading image database…</span>
+      <span class="spacer"></span>
+      <button type="button" id="addAssetOpen">Add asset</button>
+      <button type="button" id="localTagsOpen">Local tags</button>
+      <button type="button" id="curatorOpen" class="curator-button">Curator</button>
+      <a href="./index.html"><button type="button">Homepage</button></a>
+    </div>
+    <div class="tabs" id="assetTabs"></div>
+    <div class="search-row">
+      <input id="search" type="search" placeholder="Search ID, path, tags, source, format, dimensions…" autocomplete="off">
+      <input id="tagFilter" type="search" placeholder="Filter tags (comma separated)" autocomplete="off">
+      <button id="reset" type="button">Reset</button>
+    </div>
+    <div class="filter-grid">
+      <div class="field" id="sourceField"><label for="source">Source</label><select id="source"><option value="all">All sources</option><option value="forum">Forum images</option><option value="module">Module images</option><option value="transformice">Transformice assets</option></select></div>
+      <div class="field" id="usageField"><label for="usage">Use in</label><select id="usage"><option value="all">All</option><option value="lua">Lua</option><option value="xml">XML</option></select></div>
+      <div class="field image-field"><label for="format">Image format</label><select id="format"><option value="all">All formats</option></select></div>
+      <div class="field image-field"><label>Width</label><div class="range"><input id="minWidth" type="number" min="0" placeholder="min"><input id="maxWidth" type="number" min="0" placeholder="max"></div></div>
+      <div class="field image-field"><label>Height</label><div class="range"><input id="minHeight" type="number" min="0" placeholder="min"><input id="maxHeight" type="number" min="0" placeholder="max"></div></div>
+      <div class="field image-field"><label>File size (KB)</label><div class="range"><input id="minBytes" type="number" min="0" placeholder="min"><input id="maxBytes" type="number" min="0" placeholder="max"></div></div>
+      <div class="field image-field"><label for="orientation">Orientation</label><select id="orientation"><option value="any">Any</option><option value="square">Square</option><option value="landscape">Landscape</option><option value="portrait">Portrait</option></select></div>
+      <div class="field"><label for="sort">Sort</label><select id="sort"><option value="relevance">Relevance</option><option value="timestamp">Date</option><option value="width">Width</option><option value="height">Height</option><option value="area">Pixel area</option><option value="bytes">File size</option><option value="name">ID / name</option><option value="source">Source</option></select></div>
+      <div class="field"><label for="direction">Direction</label><select id="direction"><option value="desc">Descending</option><option value="asc">Ascending</option></select></div>
+      <div class="field"><label for="pageSize">Per page</label><select id="pageSize"><option>30</option><option selected>60</option><option>120</option></select></div>
+    </div>
+    <div class="summary-row"><span class="summary" id="summary">0 assets</span><span class="status" id="filterHint"></span></div>
+  </header>
+  <main class="main">
+    <div id="paginationTop" class="pagination"></div>
+    <div id="cards" class="cards"><div class="loading">Loading…</div></div>
+    <div id="paginationBottom" class="pagination"></div>
+  </main>
+</div>
+<aside class="audio-dock" id="audioDock" hidden>
+  <div class="audio-dock-row"><strong>Audio</strong><span class="audio-idle" id="audioDockStatus">Ready</span><button type="button" id="refreshAudio">Refresh</button></div>
+  <div class="audio-dock-row"><strong>Now playing</strong><span class="now-playing-name" id="nowPlayingName">Nothing</span><button type="button" id="stopAudio" disabled>Stop</button></div>
+</aside>
+<dialog id="detailsDialog">
+  <div class="modal-head"><strong id="dialogTitle"></strong><span class="spacer"></span><button type="button" id="dialogClose">Close</button></div>
+  <div class="modal-body">
+    <div class="modal-preview" id="dialogPreview"></div>
+    <div class="details" id="dialogDetails"></div>
+  </div>
+</dialog>
+<dialog id="addAssetDialog" class="small-dialog">
+  <div class="modal-head"><strong>Add image asset</strong><span class="spacer"></span><button type="button" id="addAssetClose">Close</button></div>
+  <div class="panel-body">
+    <p class="panel-note">Submit an existing asset as a full URL, <code>img@hex</code>, bare Forum reference such as <code>hex.png</code>, or Transformice/XML path such as <code>x_transformice/...</code> or <code>../wp-content/...</code>. The backend API validates it before adding it to the shared Hugging Face dataset.</p>
+    <form id="addAssetForm" class="panel-form">
+      <label for="addAssetUrl">Image URL / reference / path</label>
+      <div class="submit-line"><input id="addAssetUrl" type="text" required placeholder="img@hex · hex.png · x_transformice/... · ../wp-content/... · http://..." autocomplete="off"><button id="addAssetSubmit" type="submit">Validate &amp; add</button></div>
+    </form>
+    <div id="addAssetStatus" class="panel-status"></div>
+    <div id="addAssetResult" class="submit-result" hidden></div>
+    <div class="panel-footer"><a id="openApiLink" href="#" target="_blank" rel="noopener">Open backend API status</a></div>
+  </div>
+</dialog>
+<dialog id="localTagsDialog" class="small-dialog">
+  <div class="modal-head"><strong>Local tags</strong><span class="spacer"></span><button type="button" id="localTagsClose">Close</button></div>
+  <div class="panel-body">
+    <p class="panel-note">Local tags are private to this browser. They are included in search and tag filters, but are never uploaded to the shared dataset.</p>
+    <div id="localTagsStats" class="panel-status"></div>
+    <div class="panel-actions">
+      <button type="button" id="exportLocalTags">Export JSON</button>
+      <button type="button" id="importLocalTags">Import JSON</button>
+      <button type="button" id="clearLocalTags" class="danger-button">Clear all</button>
+      <input id="importLocalTagsFile" type="file" accept="application/json,.json" hidden>
+    </div>
+    <div id="localTagsManagerStatus" class="panel-status"></div>
+  </div>
+</dialog>
+<dialog id="curatorDialog" class="small-dialog">
+  <div class="modal-head"><strong>Curator</strong><span class="spacer"></span><button type="button" id="curatorClose">Close</button></div>
+  <div class="panel-body">
+    <p class="panel-note">Save the curator token in this browser to enable shared curated-tag editing in image Details. Changes are queued locally first, then committed together with Batch save.</p>
+    <div class="panel-form">
+      <label for="curatorToken">Curator token</label>
+      <div class="submit-line"><input id="curatorToken" type="password" autocomplete="off" placeholder="CURATOR_TOKEN"><button type="button" id="saveCuratorToken">Save token</button></div>
+    </div>
+    <div class="panel-actions"><button type="button" id="clearCuratorToken" class="danger-button">Clear saved token</button></div>
+    <div class="detail-row">
+      <span class="detail-label">Pending curated-tag edits</span>
+      <div id="curatorPendingSummary" class="status"></div>
+      <div id="curatorPendingList" class="curator-pending-list"></div>
+    </div>
+    <div class="panel-actions">
+      <button type="button" id="saveCuratorBatch" class="curator-button">Batch save</button>
+      <button type="button" id="discardCuratorBatch" class="danger-button">Discard pending</button>
+    </div>
+    <div id="curatorStatus" class="panel-status"></div>
+  </div>
+</dialog>
+<script>
+(() => {
+'use strict';
+
+const HF_DATA_URL = 'https://huggingface.co/datasets/webninjasi/tfm-images/resolve/main/dist/images.min.json';
+const IMAGE_CDN = 'https://wsrv.nl/?url=';
+const AUDIO_LIST_URL = 'https://audio.atelier801.com/sounds.html';
+const AUDIO_BASE = 'https://audio.atelier801.com/';
+const AUDIO_CACHE_KEY = 'tfm_asset_browser_audio_v3';
+const AUDIO_CACHE_TTL = 24 * 60 * 60 * 1000;
+const LOCAL_TAGS_KEY = 'tfm_asset_browser_local_tags_v1';
+const CURATOR_TOKEN_KEY = 'tfm_asset_browser_curator_token_v1';
+const CURATOR_PENDING_KEY = 'tfm_asset_browser_curator_pending_v1';
+const API_BASE_KEY = 'tfm_asset_browser_api_base_v1';
+const DEFAULT_API_BASE = 'https://tfm-images-monorepo.vercel.app';
+const LEGACY_API_BASE = 'https://tfm-asset-api.vercel.app';
+const queryParams = new URLSearchParams(location.search);
+const apiOverride = queryParams.get('api');
+let storedApiBase = localStorage.getItem(API_BASE_KEY)||'';
+if(storedApiBase.replace(/\/$/,'')===LEGACY_API_BASE){storedApiBase=DEFAULT_API_BASE;localStorage.setItem(API_BASE_KEY,DEFAULT_API_BASE);}
+if(apiOverride){storedApiBase=apiOverride.replace(/\/$/,'');localStorage.setItem(API_BASE_KEY,storedApiBase);}
+const API_BASE_URL = (storedApiBase || DEFAULT_API_BASE).replace(/\/$/,'');
+const SOURCE_LABEL = {forum:'Forum', module:'Module', transformice:'Transformice', audio:'Audio'};
+const AUDIO_ALIASES = {amb:['ambiance'], attaque:['attack'], mort:['death','kill'], musique:['music'], voix:['voice'], tfmadv:['transformice','adventure']};
+const CUSTOM_AUDIO_TAGS = {
+  'cite18/voix/tr/marion-bonjour-1':['hoşgeldin','hosgeldin'],
+  'cite18/voix/tr/marion-bonjour-2':['hey','heey'],
+  'cite18/voix/tr/marion-bonjour-3':['hey','heeey'],
+  'cite18/voix/tr/marion-bonjour-4':['merhaba']
+};
+const $ = id => document.getElementById(id);
+const requestedType = new URLSearchParams(location.search).get('type');
+const initialTab = requestedType === 'audio' ? 'audio' : 'image';
+const state = {
+  images: [], audio: [], tab: initialTab, page: 0, pageSize: 60,
+  filtered: [], query: '', tagQuery: '', audioLoading: false, audioLoaded: false,
+  localTags: loadLocalTagStore(), pendingCurated: loadPendingCuratedStore()
+};
+const playback = {audio:null, asset:null};
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function button(text, onClick, cls) {
+  const b = el('button', cls, text);
+  b.type = 'button';
+  if (onClick) b.addEventListener('click', onClick);
+  return b;
+}
+function loadLocalTagStore() {
+  try {
+    const value=JSON.parse(localStorage.getItem(LOCAL_TAGS_KEY)||'{}');
+    if(value&&typeof value==='object'&&!Array.isArray(value))return value;
+  } catch {}
+  return {};
+}
+function loadCuratorToken() { try { return localStorage.getItem(CURATOR_TOKEN_KEY)||''; } catch { return ''; } }
+function saveCuratorTokenValue(value) { try { if(value)localStorage.setItem(CURATOR_TOKEN_KEY,value);else localStorage.removeItem(CURATOR_TOKEN_KEY); } catch {} }
+function loadPendingCuratedStore() {
+  try {
+    const value=JSON.parse(localStorage.getItem(CURATOR_PENDING_KEY)||'{}');
+    if(value&&typeof value==='object'&&!Array.isArray(value))return value;
+  } catch {}
+  return {};
+}
+function savePendingCuratedStore() {
+  try {
+    if(Object.keys(state.pendingCurated).length)localStorage.setItem(CURATOR_PENDING_KEY,JSON.stringify(state.pendingCurated));
+    else localStorage.removeItem(CURATOR_PENDING_KEY);
+  } catch {}
+  updateCuratorPanel();
+}
+function parseCuratedInput(value) {
+  const out=[],seen=new Set();
+  for(const raw of String(value||'').split(/[,;\n]+/)){const tag=raw.trim().replace(/\s+/g,' ').toLowerCase();if(!tag||seen.has(tag))continue;seen.add(tag);out.push(tag);}
+  return out;
+}
+function sameTagList(a,b){return JSON.stringify(a||[])===JSON.stringify(b||[]);}
+function effectiveCuratedTags(a){return Array.isArray(state.pendingCurated[a.id])?state.pendingCurated[a.id]:(a.tags?.curated||[]);}
+function stageCuratedTags(a,tags){
+  const cleaned=parseCuratedInput(Array.isArray(tags)?tags.join(','):tags);
+  if(sameTagList(cleaned,a.tags?.curated||[]))delete state.pendingCurated[a.id];else state.pendingCurated[a.id]=cleaned;
+  savePendingCuratedStore();apply();
+}
+function discardPendingCurated(assetId){delete state.pendingCurated[assetId];savePendingCuratedStore();apply();}
+function cleanLocalTag(value) { return String(value||'').trim().replace(/\s+/g,' ').slice(0,64); }
+function localTagsFor(a) { return Array.isArray(state.localTags[a.id]) ? state.localTags[a.id] : []; }
+function saveLocalTagStore() {
+  try { localStorage.setItem(LOCAL_TAGS_KEY,JSON.stringify(state.localTags)); } catch {}
+  updateLocalTagsManager();
+}
+function setLocalTags(assetId,tags) {
+  const out=[];
+  for(const raw of tags){const t=cleanLocalTag(raw);if(t&&!out.some(x=>x.toLowerCase()===t.toLowerCase()))out.push(t);}
+  if(out.length)state.localTags[assetId]=out;else delete state.localTags[assetId];
+  saveLocalTagStore(); state.page=0; apply();
+}
+function addLocalTag(a,value) { const t=cleanLocalTag(value);if(!t)return;setLocalTags(a.id,[...localTagsFor(a),t]); }
+function removeLocalTag(a,value) { setLocalTags(a.id,localTagsFor(a).filter(x=>x.toLowerCase()!==String(value).toLowerCase())); }
+
+function compatibility(a) {
+  if (a.lua && a.xml) return 'lua+xml';
+  if (a.lua) return 'lua';
+  if (a.xml) return 'xml';
+  return 'none';
+}
+function compatLabel(a) {
+  const c = compatibility(a);
+  return c === 'lua+xml' ? 'Lua + XML' : c === 'lua' ? 'Lua only' : c === 'xml' ? 'XML only' : 'No code';
+}
+function nameOf(a) {
+  if (a.kind === 'audio') return a.name || a.id;
+  return a.lua || a.xml || a.id.replace(/^[^:]+:/, '');
+}
+function fmtBytes(n) {
+  if (n == null) return 'unknown';
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(1) + ' MB';
+}
+function fmtDate(ms) { return ms == null ? 'unknown' : new Date(ms).toLocaleString(); }
+function searchable(a) {
+  return [a.id,a.name,a.url,a.lua,a.xml,a.source,a.mime,a.width&&a.height?`${a.width}x${a.height}`:'',...effectiveCuratedTags(a),...(a.tags?.derived||[]),...localTagsFor(a)]
+    .filter(Boolean).join(' ').toLowerCase();
+}
+function tokenList(s) { return s.trim().toLowerCase().split(/\s+/).filter(Boolean); }
+function tagTerms(s) { return s.split(',').map(x => x.trim().toLowerCase()).filter(Boolean); }
+function relevance(a,tokens) {
+  if (!tokens.length) return 0;
+  const id=(a.id||'').toLowerCase(), name=nameOf(a).toLowerCase(), cur=effectiveCuratedTags(a).join(' ').toLowerCase(), der=(a.tags?.derived||[]).join(' ').toLowerCase(), loc=localTagsFor(a).join(' ').toLowerCase(), path=((a.xml||a.url||'')).toLowerCase();
+  let score=0;
+  for(const q of tokens){
+    if(id===q||name===q)score+=100; else if(id.includes(q)||name.includes(q))score+=35;
+    if(cur.includes(q))score+=20; if(loc.includes(q))score+=18; if(der.includes(q))score+=12; if(path.includes(q))score+=5;
+  }
+  return score;
+}
+function unpack(payload) {
+  const f=payload.fields;
+  return payload.images.map(row=>{
+    const o={kind:'image',tags:{curated:[],derived:[]}};
+    f.forEach((k,i)=>{ if(k==='curated')o.tags.curated=row[i]||[]; else if(k==='derived')o.tags.derived=row[i]||[]; else o[k]=row[i]; });
+    return o;
+  });
+}
+
+// Canonical image URLs use the historical HTTP endpoints. Preview bytes still go through
+// the same wsrv.nl CDN family used by the original Lua Help image page.
+function httpOriginUrl(url) {
+  try { const u=new URL(url, location.href); u.protocol='http:'; return u.href; }
+  catch { return String(url).replace(/^https:/i,'http:'); }
+}
+function imagePreviewUrl(a) { return IMAGE_CDN + encodeURIComponent(httpOriginUrl(a.url)); }
+
+async function fetchImageData() {
+  const override=new URLSearchParams(location.search).get('data');
+  const urls=[override,'./images.min.json',HF_DATA_URL].filter(Boolean);
+  let lastErr;
+  for(const url of urls){
+    try{
+      const r=await fetch(url,{cache:'no-cache'});
+      if(!r.ok)throw new Error(`${r.status} ${r.statusText}`);
+      state.images=unpack(await r.json());
+      $('loadStatus').classList.remove('error');
+      $('loadStatus').textContent=`${state.images.length.toLocaleString()} images loaded`;
+      populateFormats(); apply(); return;
+    }catch(e){lastErr=e;}
+  }
+  throw lastErr;
+}
+function populateFormats(rebuild=false){
+  if(rebuild){while($('format').options.length>1)$('format').remove(1);}
+  const existing=new Set([...$('format').options].map(o=>o.value));
+  const formats=[...new Set(state.images.map(x=>x.mime).filter(Boolean))].sort();
+  for(const f of formats){if(existing.has(f))continue;const o=el('option',null,f.replace('image/','').toUpperCase());o.value=f;$('format').appendChild(o);}
+}
+function parseAudioHtml(html){
+  const doc=new DOMParser().parseFromString(html,'text/html'), seen=new Set(), out=[];
+  for(const a of doc.querySelectorAll('a[href]')){
+    let href=a.getAttribute('href')||'';
+    if(!/\.mp3(?:$|\?)/i.test(href))continue;
+    href=href.replace(/^\.\//,'').replace(/^\//,'').split('?')[0];
+    const id=href.replace(/\.mp3$/i,''); if(seen.has(id))continue; seen.add(id);
+    const derived=[];
+    for(const part of id.split('/').filter(Boolean)){
+      const p=decodeURIComponent(part).toLowerCase(); derived.push(p);
+      for(const x of AUDIO_ALIASES[p]||[])derived.push(x);
+    }
+    for(const x of CUSTOM_AUDIO_TAGS[id]||[])derived.push(x);
+    out.push({id:`audio:${id}`,kind:'audio',source:'audio',name:(a.textContent||id.split('/').pop()).replace(/\.mp3$/i,''),url:AUDIO_BASE+href,lua:id,xml:null,mime:'audio/mpeg',width:null,height:null,bytes:null,timestamp:null,timestampSource:null,animated:null,frames:null,tags:{curated:[],derived:[...new Set(derived)]}});
+  }
+  return out;
+}
+function loadAudioCache(){
+  try{
+    const c=JSON.parse(localStorage.getItem(AUDIO_CACHE_KEY)||'null');
+    if(c&&Array.isArray(c.items)){state.audio=c.items;state.audioLoaded=true;return Date.now()-c.savedAt<AUDIO_CACHE_TTL;}
+  }catch{}
+  return false;
+}
+async function refreshAudio(force=false){
+  if(state.audioLoading)return;
+  state.audioLoading=true; $('refreshAudio').disabled=true; syncPlaybackUI();
+  try{
+    if(!force&&loadAudioCache()){
+      $('loadStatus').classList.remove('error');
+      $('loadStatus').textContent=`${state.audio.length.toLocaleString()} cached sounds loaded`;
+      apply(); return;
+    }
+    $('loadStatus').classList.remove('error'); $('loadStatus').textContent='Loading audio list…';
+    const r=await fetch(AUDIO_LIST_URL,{cache:'no-cache'}); if(!r.ok)throw new Error(`${r.status} ${r.statusText}`);
+    state.audio=parseAudioHtml(await r.text()); state.audioLoaded=true;
+    localStorage.setItem(AUDIO_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items:state.audio}));
+    $('loadStatus').classList.remove('error'); $('loadStatus').textContent=`${state.audio.length.toLocaleString()} sounds loaded`; apply();
+  }catch(e){
+    loadAudioCache(); $('loadStatus').textContent=`Audio unavailable: ${e.message}`; $('loadStatus').classList.add('error'); apply();
+  }finally{ state.audioLoading=false; $('refreshAudio').disabled=false; syncPlaybackUI(); }
+}
+function valueNum(id){const v=$(id).value.trim();return v===''?null:Number(v);}
+function filterAssets(){
+  const all=state.tab==='audio'?state.audio:state.images;
+  const q=tokenList(state.query),tagQ=tagTerms(state.tagQuery),source=$('source').value,usage=$('usage').value,format=$('format').value,minW=valueNum('minWidth'),maxW=valueNum('maxWidth'),minH=valueNum('minHeight'),maxH=valueNum('maxHeight'),minB=valueNum('minBytes'),maxB=valueNum('maxBytes'),orientation=$('orientation').value;
+  let arr=all.filter(a=>{
+    if(state.tab==='image'&&usage==='lua'&&!a.lua)return false;
+    if(state.tab==='image'&&usage==='xml'&&!a.xml)return false;
+    if(state.tab==='image'&&source!=='all'&&a.source!==source)return false;
+    const hay=searchable(a); if(q.length&&!q.every(t=>hay.includes(t)))return false;
+    const tagHay=[...effectiveCuratedTags(a),...(a.tags?.derived||[]),...localTagsFor(a)].join(' ').toLowerCase(); if(tagQ.length&&!tagQ.every(t=>tagHay.includes(t)))return false;
+    if(state.tab==='image'){
+      if(format!=='all'&&a.mime!==format)return false;
+      if(minW!=null&&(a.width==null||a.width<minW))return false; if(maxW!=null&&(a.width==null||a.width>maxW))return false;
+      if(minH!=null&&(a.height==null||a.height<minH))return false; if(maxH!=null&&(a.height==null||a.height>maxH))return false;
+      if(minB!=null&&(a.bytes==null||a.bytes<minB*1024))return false; if(maxB!=null&&(a.bytes==null||a.bytes>maxB*1024))return false;
+      if(orientation!=='any'){
+        if(a.width==null||a.height==null)return false;
+        if(orientation==='square'&&a.width!==a.height)return false;
+        if(orientation==='landscape'&&a.width<=a.height)return false;
+        if(orientation==='portrait'&&a.height<=a.width)return false;
+      }
+    }
+    return true;
+  });
+  const sort=$('sort').value, dir=$('direction').value==='asc'?1:-1;
+  arr.sort((a,b)=>{
+    let av,bv;
+    if(sort==='relevance'){av=relevance(a,q);bv=relevance(b,q);}
+    else if(sort==='timestamp'){av=a.timestamp;bv=b.timestamp;}
+    else if(sort==='width'){av=a.width;bv=b.width;}
+    else if(sort==='height'){av=a.height;bv=b.height;}
+    else if(sort==='area'){av=a.width!=null&&a.height!=null?a.width*a.height:null;bv=b.width!=null&&b.height!=null?b.width*b.height:null;}
+    else if(sort==='bytes'){av=a.bytes;bv=b.bytes;}
+    else if(sort==='source'){av=a.source;bv=b.source;}
+    else{av=nameOf(a).toLowerCase();bv=nameOf(b).toLowerCase();}
+    if(av==null&&bv==null)return nameOf(a).localeCompare(nameOf(b)); if(av==null)return 1; if(bv==null)return-1;
+    if(typeof av==='string')return av.localeCompare(bv)*dir; if(av===bv)return nameOf(a).localeCompare(nameOf(b)); return(av-bv)*dir;
+  });
+  return arr;
+}
+function apply(){
+  state.pageSize=Number($('pageSize').value); updateTabUI(); updateSortAvailability(); state.filtered=filterAssets();
+  const pages=Math.max(1,Math.ceil(state.filtered.length/state.pageSize)); if(state.page>=pages)state.page=pages-1;if(state.page<0)state.page=0;
+  const label=state.tab==='audio'?'sound':'image'; $('summary').textContent=`${state.filtered.length.toLocaleString()} matching ${label}${state.filtered.length===1?'':'s'}`;
+  const missing=state.tab==='image'&&state.images.length&&state.images.every(x=>x.width==null); $('filterHint').textContent=missing?'Dimension/size metadata is not enriched yet in this package.':'';
+  render();
+}
+function render(){
+  const cards=$('cards'); cards.replaceChildren();
+  if(!state.filtered.length){cards.appendChild(el('div','empty',state.tab==='audio'&&!state.audioLoaded?'Open the Audio tab to load sounds.':'No assets match these filters.'));$('paginationTop').replaceChildren();$('paginationBottom').replaceChildren();syncPlaybackUI();return;}
+  const start=state.page*state.pageSize; for(const a of state.filtered.slice(start,start+state.pageSize))cards.appendChild(renderCard(a)); renderPagination(); syncPlaybackUI();
+}
+function addTagFilter(tag){
+  const input=$('tagFilter'),existing=tagTerms(input.value); if(!existing.includes(tag.toLowerCase()))existing.push(tag.toLowerCase());
+  input.value=existing.join(', ');state.tagQuery=input.value;state.page=0;apply();
+}
+function renderCard(a){
+  const card=el('article','card'),preview=el('div',a.kind==='image'?'preview':'audio-preview');
+  if(a.kind==='image'){
+    const img=document.createElement('img');img.loading='lazy';img.alt=nameOf(a);img.src=imagePreviewUrl(a);
+    img.addEventListener('error',()=>{img.remove();preview.appendChild(el('span','status','Preview unavailable'));});
+    preview.appendChild(img);preview.addEventListener('click',()=>openDetails(a));
+  }else{
+    preview.appendChild(el('span','audio-glyph','♪'));preview.addEventListener('click',()=>openDetails(a));
+  }
+  card.appendChild(preview);
+  const head=el('div','card-head');head.appendChild(el('div','asset-name',nameOf(a)));card.appendChild(head);
+  const badges=el('div','badges');badges.appendChild(el('span','badge',SOURCE_LABEL[a.source]||a.source));badges.appendChild(el('span','badge compat',compatLabel(a)));if(state.pendingCurated[a.id])badges.appendChild(el('span','badge curator-pending','Curator edit queued'));card.appendChild(badges);
+  const meta=[];if(a.width!=null&&a.height!=null)meta.push(`${a.width}×${a.height}`);if(a.bytes!=null)meta.push(fmtBytes(a.bytes));if(a.mime)meta.push(a.mime.replace(/^image\//,'').replace(/^audio\//,''));card.appendChild(el('div','meta',meta.join(' · ')||(a.kind==='image'?'metadata pending':'audio')));
+  const tags=el('div','tags');
+  for(const t of effectiveCuratedTags(a).slice(0,2)){const chip=button(t,()=>addTagFilter(t),'tag curated');chip.title='Filter by tag';tags.appendChild(chip);}
+  for(const t of localTagsFor(a).slice(0,2)){const chip=button(t,()=>addTagFilter(t),'tag local');chip.title='Local tag · filter by tag';tags.appendChild(chip);}
+  for(const t of(a.tags?.derived||[]).slice(0,3)){const chip=button(t,()=>addTagFilter(t),'tag');chip.title='Filter by tag';tags.appendChild(chip);}
+  card.appendChild(tags);
+  const actions=el('div','card-actions');actions.appendChild(button('Details',()=>openDetails(a)));
+  if(a.kind==='audio'){const play=button('Play',()=>toggleAudio(a));play.dataset.audioId=a.id;play.setAttribute('aria-pressed','false');actions.appendChild(play);}
+  if(a.lua)actions.appendChild(button('Copy Lua',()=>copyText(luaOutput(a))));if(a.xml)actions.appendChild(button('Copy XML',()=>copyText(a.xml)));card.appendChild(actions);return card;
+}
+function isPlaying(){return!!(playback.audio&&playback.asset&&!playback.audio.paused&&!playback.audio.ended);}
+function syncPlaybackUI(){
+  const activeId=isPlaying()?playback.asset.id:null;
+  for(const b of document.querySelectorAll('button[data-audio-id]')){const active=b.dataset.audioId===activeId;b.textContent=active?'Stop':'Play';b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));}
+  $('nowPlayingName').textContent=activeId?nameOf(playback.asset):'Nothing';
+  $('stopAudio').disabled=!activeId;
+  $('audioDockStatus').textContent=state.audioLoading?'Loading list…':state.audioLoaded?`${state.audio.length.toLocaleString()} sounds`:'Ready';
+  $('audioDock').hidden=state.tab!=='audio'&&!activeId;
+}
+function clearPlayback(audio){if(audio&&playback.audio!==audio)return;playback.audio=null;playback.asset=null;syncPlaybackUI();}
+function stopPlayback(){const audio=playback.audio;playback.audio=null;playback.asset=null;if(audio){try{audio.pause();}catch{}try{audio.currentTime=0;}catch{}}syncPlaybackUI();}
+function bindPlaybackLifecycle(audio){
+  if(audio.dataset?.tfmPlaybackBound==='1')return;if(audio.dataset)audio.dataset.tfmPlaybackBound='1';
+  audio.addEventListener('play',()=>{if(playback.audio===audio)syncPlaybackUI();});
+  audio.addEventListener('ended',()=>clearPlayback(audio));audio.addEventListener('error',()=>clearPlayback(audio));
+  audio.addEventListener('pause',()=>{if(playback.audio===audio&&!audio.ended)clearPlayback(audio);});
+}
+function adoptPlayback(a,audio){if(playback.audio!==audio)stopPlayback();playback.audio=audio;playback.asset=a;bindPlaybackLifecycle(audio);syncPlaybackUI();}
+function startAudio(a){stopPlayback();const audio=new Audio(a.url);audio.preload='none';adoptPlayback(a,audio);const p=audio.play();if(p&&typeof p.catch==='function')p.catch(()=>clearPlayback(audio));}
+function toggleAudio(a){if(isPlaying()&&playback.asset?.id===a.id)stopPlayback();else startAudio(a);}
+function renderPagination(){
+  const targets=[$('paginationTop'),$('paginationBottom')];for(const p of targets)p.replaceChildren();
+  const pages=Math.max(1,Math.ceil(state.filtered.length/state.pageSize));if(pages<=1)return;
+  const go=n=>{state.page=Math.max(0,Math.min(pages-1,n));render();$('paginationTop').scrollIntoView({behavior:'smooth',block:'start'});};
+  const wanted=new Set([0,pages-1,state.page-2,state.page-1,state.page,state.page+1,state.page+2].filter(x=>x>=0&&x<pages));
+  for(const p of targets){
+    const prev=button('‹',()=>go(state.page-1));prev.disabled=state.page===0;p.appendChild(prev);
+    let last=-2;
+    for(const n of[...wanted].sort((a,b)=>a-b)){if(n-last>1)p.appendChild(el('span','status','…'));const b=button(String(n+1),()=>go(n),n===state.page?'active':'');p.appendChild(b);last=n;}
+    const next=button('›',()=>go(state.page+1));next.disabled=state.page===pages-1;p.appendChild(next);
+  }
+}
+function luaOutput(a){if(!a.lua)return'';return a.kind==='audio'?`tfm.exec.playSound('${a.lua}', 100, nil, nil, nil)`:`tfm.exec.addImage("${a.lua}", "!1", 0, 30, nil, 1, 1, 0, 1, 0, 0, false)`;}
+function detailRow(parent,label,value,copy=false){
+  if(value==null||value==='')return;const row=el('div','detail-row');row.appendChild(el('span','detail-label',label));
+  if(copy){const line=el('div','copy-line'),input=document.createElement('input');input.readOnly=true;input.value=String(value);line.appendChild(input);line.appendChild(button('Copy',()=>copyText(String(value))));row.appendChild(line);}else row.appendChild(el('div',null,String(value)));parent.appendChild(row);
+}
+function renderLocalTagEditor(parent,a){
+  const row=el('div','detail-row');row.appendChild(el('span','detail-label','Local tags (this browser)'));
+  const list=el('div','local-tag-list');
+  for(const tag of localTagsFor(a)){const b=button(`${tag} ×`,()=>{removeLocalTag(a,tag);renderLocalTagEditorInto(row,a);},'tag local local-tag-remove');b.title='Remove local tag';list.appendChild(b);}
+  if(!list.childNodes.length)list.appendChild(el('span','status','None'));
+  row.appendChild(list);
+  const editor=el('div','local-tag-editor'),input=document.createElement('input');input.type='text';input.maxLength=64;input.placeholder='Add private tag…';
+  const add=()=>{const value=input.value;if(!cleanLocalTag(value))return;addLocalTag(a,value);input.value='';renderLocalTagEditorInto(row,a);};
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();add();}});editor.appendChild(input);editor.appendChild(button('Add',add));row.appendChild(editor);parent.appendChild(row);
+}
+function renderLocalTagEditorInto(row,a){const parent=row.parentNode;if(!parent)return;const marker=row.nextSibling;row.remove();const temp=el('div');renderLocalTagEditor(temp,a);parent.insertBefore(temp.firstChild,marker);}
+
+function renderCuratedTagEditor(parent,a){
+  if(a.kind!=='image')return;
+  const token=loadCuratorToken();
+  if(!token){detailRow(parent,'Curated tags (shared)',(a.tags?.curated||[]).join(' · ')||'None');return;}
+  const row=el('div','detail-row');row.appendChild(el('span','detail-label','Curated tags (shared · curator)'));
+  const input=document.createElement('input');input.type='text';input.value=effectiveCuratedTags(a).join(', ');input.placeholder='comma-separated curated tags';input.style.width='100%';
+  row.appendChild(input);
+  const actions=el('div','panel-actions'),status=el('span','status');
+  const stage=button(state.pendingCurated[a.id]?'Update queued edit':'Queue edit',()=>{
+    stageCuratedTags(a,input.value);
+    const queued=state.pendingCurated[a.id];
+    input.value=effectiveCuratedTags(a).join(', ');
+    stage.textContent=queued?'Update queued edit':'Queue edit';
+    status.textContent=queued?'Queued for batch save.':'Matches saved tags; pending edit removed.';
+  },'curator-button');
+  actions.appendChild(stage);
+  if(state.pendingCurated[a.id])actions.appendChild(button('Discard queued edit',()=>{discardPendingCurated(a.id);input.value=(a.tags?.curated||[]).join(', ');stage.textContent='Queue edit';status.textContent='Pending edit discarded.';},'danger-button'));
+  actions.appendChild(status);row.appendChild(actions);parent.appendChild(row);
+}
+
+function openDetails(a){
+  $('dialogTitle').textContent=nameOf(a);const pv=$('dialogPreview');pv.replaceChildren();
+  if(a.kind==='image'){const img=document.createElement('img');img.src=imagePreviewUrl(a);img.alt=nameOf(a);pv.appendChild(img);}
+  else{const wrap=el('div');wrap.style.width='90%';wrap.appendChild(el('div','audio-glyph','♪'));const audio=document.createElement('audio');audio.controls=true;audio.preload='none';audio.src=a.url;audio.className='audio-player';audio.addEventListener('play',()=>adoptPlayback(a,audio));wrap.appendChild(audio);pv.appendChild(wrap);}
+  const d=$('dialogDetails');d.replaceChildren();detailRow(d,'Source',SOURCE_LABEL[a.source]||a.source);detailRow(d,'Compatibility',compatLabel(a));if(a.width!=null&&a.height!=null)detailRow(d,'Dimensions',`${a.width} × ${a.height}`);detailRow(d,'Format',a.mime);detailRow(d,'File size',a.bytes==null?null:fmtBytes(a.bytes));detailRow(d,a.timestampSource==='last-modified'?'Last modified':'Date',a.timestamp==null?null:fmtDate(a.timestamp));if(a.timestampSource)detailRow(d,'Date source',a.timestampSource);detailRow(d,'Asset ID',a.id,true);detailRow(d,'Lua reference',a.lua,true);detailRow(d,'XML reference',a.xml,true);
+  if(a.lua){const row=el('div','detail-row');row.appendChild(el('span','detail-label','Lua code'));row.appendChild(el('div','codebox',luaOutput(a)));row.appendChild(button('Copy code',()=>copyText(luaOutput(a))));d.appendChild(row);}
+  detailRow(d,'Original URL',a.url,true);renderCuratedTagEditor(d,a);detailRow(d,'Derived tags',(a.tags?.derived||[]).join(' · '));renderLocalTagEditor(d,a);$('detailsDialog').showModal();
+}
+function normalizeApiRecord(record){
+  if(!record||typeof record!=='object')return null;
+  return {...record,kind:'image',tags:{curated:record.tags?.curated||[],derived:record.tags?.derived||[]}};
+}
+async function callBackend(path,payload){
+  const response=await fetch(`${API_BASE_URL}${path}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  let data=null;
+  try{data=await response.json();}catch{}
+  if(!response.ok)throw new Error(data?.detail||data?.message||`Backend API ${response.status} ${response.statusText}`);
+  return data||{};
+}
+async function callBackendSubmit(value){return callBackend('/api/add-asset',{asset:value});}
+async function callBackendUpdateCurated(assetId,tags,token){return callBackend('/api/update-curated-tags',{asset_id:assetId,tags,token});}
+async function callBackendUpdateCuratedBatch(updates,token){return callBackend('/api/update-curated-tags-batch',{updates,token});}
+
+function plainStatus(value){return String(value||'').replace(/\*\*/g,'').replace(/`/g,'').replace(/ {2}\n/g,'\n').trim();}
+function showAddResult(record){
+  const box=$('addAssetResult');box.replaceChildren();
+  const preview=el('div','submit-result-preview'),img=document.createElement('img');img.src=imagePreviewUrl(record);img.alt=nameOf(record);preview.appendChild(img);box.appendChild(preview);
+  const lines=[nameOf(record),record.source,record.width!=null&&record.height!=null?`${record.width}×${record.height}`:null,record.bytes!=null?fmtBytes(record.bytes):null,record.mime].filter(Boolean);
+  box.appendChild(el('div','meta',lines.join(' · ')));box.hidden=false;
+}
+async function submitAssetFromPage(event){
+  event.preventDefault();const url=$('addAssetUrl').value.trim(),status=$('addAssetStatus'),submit=$('addAssetSubmit');
+  if(!url)return;submit.disabled=true;status.classList.remove('error');status.textContent='Validating and adding…';$('addAssetResult').hidden=true;
+  try{
+    const data=await callBackendSubmit(url),message=plainStatus(data?.message),record=normalizeApiRecord(data?.record);
+    if(!record)throw new Error(message||'The backend rejected this asset.');
+    status.textContent=message||`Added ${record.id}`;showAddResult(record);
+    if(!state.images.some(x=>x.id===record.id)){state.images.push(record);populateFormats(true);if(state.tab==='image'){state.page=0;apply();}}
+  }catch(err){status.textContent=`Could not add asset: ${err.message}\nCheck the backend API URL/status below.`;status.classList.add('error');}
+  finally{submit.disabled=false;}
+}
+function updateLocalTagsManager(){
+  const entries=Object.entries(state.localTags).filter(([,tags])=>Array.isArray(tags)&&tags.length),assets=entries.length,total=entries.reduce((n,[,tags])=>n+tags.length,0);
+  const node=$('localTagsStats');if(node)node.textContent=`${assets.toLocaleString()} tagged asset${assets===1?'':'s'} · ${total.toLocaleString()} local tag${total===1?'':'s'}`;
+}
+function exportLocalTags(){
+  const payload={version:1,exportedAt:new Date().toISOString(),tags:state.localTags},blob=new Blob([JSON.stringify(payload,null,2)+'\n'],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='tfm-local-tags.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function importLocalTagsFile(file){
+  const status=$('localTagsManagerStatus');status.classList.remove('error');
+  try{
+    const payload=JSON.parse(await file.text()),incoming=payload?.tags&&typeof payload.tags==='object'?payload.tags:payload;if(!incoming||typeof incoming!=='object'||Array.isArray(incoming))throw new Error('Invalid local tag file.');
+    let merged=0;
+    for(const[id,tags]of Object.entries(incoming)){if(!Array.isArray(tags))continue;const before=localTagsFor({id});const next=[...before,...tags];const cleaned=[];for(const raw of next){const t=cleanLocalTag(raw);if(t&&!cleaned.some(x=>x.toLowerCase()===t.toLowerCase()))cleaned.push(t);}if(cleaned.length){state.localTags[id]=cleaned;merged++;}}
+    saveLocalTagStore();apply();status.textContent=`Imported / merged tags for ${merged.toLocaleString()} asset${merged===1?'':'s'}.`;
+  }catch(err){status.textContent=`Import failed: ${err.message}`;status.classList.add('error');}
+}
+function clearAllLocalTags(){if(!confirm('Clear all local tags stored in this browser?'))return;state.localTags={};saveLocalTagStore();apply();$('localTagsManagerStatus').textContent='All local tags cleared.';}
+
+function updateCuratorButton(){
+  const token=loadCuratorToken(),count=Object.keys(state.pendingCurated).length,b=$('curatorOpen');
+  b.classList.toggle('active',!!token);b.textContent=count?`Curator (${count})`:'Curator';b.title=token?'Curator token saved':'Open curator panel';
+}
+function updateCuratorPanel(){
+  const list=$('curatorPendingList'),summary=$('curatorPendingSummary');if(!list||!summary)return;
+  const entries=Object.entries(state.pendingCurated);summary.textContent=entries.length?`${entries.length} pending edit${entries.length===1?'':'s'}`:'No pending edits.';list.replaceChildren();
+  if(!entries.length)list.appendChild(el('div','curator-empty','Open an image Details view and queue curated-tag edits.'));
+  for(const[id,tags]of entries){
+    const a=state.images.find(x=>x.id===id),item=el('div','curator-pending-item'),title=el('div','curator-pending-title');title.appendChild(el('strong',null,a?nameOf(a):id));title.appendChild(el('span','spacer'));if(a)title.appendChild(button('Open',()=>{if($('curatorDialog').open)$('curatorDialog').close();openDetails(a);}));title.appendChild(button('Discard',()=>discardPendingCurated(id),'danger-button'));item.appendChild(title);item.appendChild(el('div','curator-pending-tags',tags.length?tags.join(' · '):'(no curated tags)'));list.appendChild(item);
+  }
+  $('saveCuratorBatch').disabled=!entries.length||!loadCuratorToken();$('discardCuratorBatch').disabled=!entries.length;updateCuratorButton();
+}
+async function saveCuratorBatch(){
+  const token=loadCuratorToken(),entries=Object.entries(state.pendingCurated),status=$('curatorStatus'),save=$('saveCuratorBatch');
+  if(!token){status.textContent='Save the CURATOR_TOKEN first.';status.classList.add('error');return;}if(!entries.length){status.textContent='There are no pending edits.';return;}
+  save.disabled=true;status.classList.remove('error');status.textContent=`Saving ${entries.length} curated-tag edit${entries.length===1?'':'s'}…`;
+  const updates=entries.map(([asset_id,tags])=>({asset_id,tags}));
+  try{
+    let data;
+    try{data=await callBackendUpdateCuratedBatch(updates,token);}catch(batchErr){
+      if(!/404|405|not found/i.test(String(batchErr.message||batchErr)))throw batchErr;
+      const records=[];for(const item of updates){const one=await callBackendUpdateCurated(item.asset_id,item.tags,token);if(one.record)records.push(one.record);}data={message:`Saved ${records.length} edit${records.length===1?'':'s'} using the legacy endpoint.`,records};
+    }
+    const records=Array.isArray(data.records)?data.records:[];
+    for(const record of records){const normalized=normalizeApiRecord(record),stored=normalized&&state.images.find(x=>x.id===normalized.id);if(stored)stored.tags.curated=[...(normalized.tags.curated||[])];}
+    for(const[asset_id,tags]of entries){const stored=state.images.find(x=>x.id===asset_id);if(stored&&!records.some(r=>r.id===asset_id))stored.tags.curated=[...tags];delete state.pendingCurated[asset_id];}
+    savePendingCuratedStore();apply();status.textContent=plainStatus(data.message)||`Saved ${entries.length} curated-tag edits.`;
+  }catch(err){status.textContent=`Batch save failed: ${err.message}`;status.classList.add('error');}
+  finally{save.disabled=false;updateCuratorPanel();}
+}
+function discardAllCuratorEdits(){if(!Object.keys(state.pendingCurated).length)return;if(!confirm('Discard all pending curated-tag edits?'))return;state.pendingCurated={};savePendingCuratedStore();apply();$('curatorStatus').textContent='Pending curated-tag edits discarded.';}
+
+async function copyText(text){
+  try{await navigator.clipboard.writeText(text);}catch{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  const old=$('loadStatus').textContent;$('loadStatus').textContent='Copied';setTimeout(()=>{$('loadStatus').textContent=old;},700);
+}
+function updateTabUI(){
+  for(const b of $('assetTabs').querySelectorAll('button'))b.classList.toggle('active',b.dataset.value===state.tab);
+  const audio=state.tab==='audio';$('sourceField').hidden=audio;$('usageField').hidden=audio;
+  for(const f of document.querySelectorAll('.image-field'))f.hidden=audio;
+  syncPlaybackUI();
+  $('search').placeholder=audio?'Search sound ID, path, tags…':'Search ID, path, tags, source, format, dimensions…';
+}
+function updateSortAvailability(){
+  const audio=state.tab==='audio';
+  for(const o of $('sort').options){if(['timestamp','width','height','area','bytes','source'].includes(o.value))o.disabled=audio;}
+  if($('sort').selectedOptions[0]?.disabled)$('sort').value=state.query?'relevance':'name';
+}
+function makeSegments(container,items,current,setter){
+  for(const[value,label]of items){const b=button(label,()=>{setter(value);for(const x of container.querySelectorAll('button'))x.classList.toggle('active',x.dataset.value===value);state.page=0;apply();});b.dataset.value=value;b.classList.toggle('active',value===current);container.appendChild(b);}
+}
+function switchTab(tab){
+  if(tab===state.tab)return;state.tab=tab;state.page=0;
+  if(tab==='audio'){if($('source').value==='audio')$('source').value='all';if(!state.audioLoaded)refreshAudio(false);}
+  else{$('source').value='all';}
+  apply();
+  const u=new URL(location.href);u.searchParams.set('type',tab);history.replaceState(null,'',u);
+}
+function reset(){
+  state.page=0;$('search').value='';$('tagFilter').value='';$('source').value='all';$('usage').value='all';$('format').value='all';
+  for(const id of['minWidth','maxWidth','minHeight','maxHeight','minBytes','maxBytes'])$(id).value='';$('orientation').value='any';$('sort').value='relevance';$('direction').value='desc';state.query='';state.tagQuery='';
+  apply();
+}
+makeSegments($('assetTabs'),[['image','Images'],['audio','Audio']],state.tab,switchTab);
+let debounce;
+function changed(){clearTimeout(debounce);debounce=setTimeout(()=>{state.query=$('search').value.trim();state.tagQuery=$('tagFilter').value.trim();state.page=0;apply();},120);}
+for(const id of['search','tagFilter','source','usage','format','minWidth','maxWidth','minHeight','maxHeight','minBytes','maxBytes','orientation','sort','direction','pageSize'])$(id).addEventListener(id==='search'||id==='tagFilter'?'input':'change',changed);
+$('reset').addEventListener('click',reset);$('refreshAudio').addEventListener('click',()=>refreshAudio(true));$('stopAudio').addEventListener('click',stopPlayback);$('dialogClose').addEventListener('click',()=>$('detailsDialog').close());
+$('addAssetOpen').addEventListener('click',()=>{$('addAssetStatus').textContent='';$('addAssetStatus').classList.remove('error');$('addAssetResult').hidden=true;$('addAssetDialog').showModal();setTimeout(()=>$('addAssetUrl').focus(),0);});
+$('addAssetClose').addEventListener('click',()=>$('addAssetDialog').close());$('addAssetForm').addEventListener('submit',submitAssetFromPage);$('openApiLink').href=`${API_BASE_URL}/api`;
+$('localTagsOpen').addEventListener('click',()=>{updateLocalTagsManager();$('localTagsManagerStatus').textContent='';$('localTagsDialog').showModal();});$('localTagsClose').addEventListener('click',()=>$('localTagsDialog').close());
+$('curatorOpen').addEventListener('click',()=>{$('curatorToken').value=loadCuratorToken();$('curatorStatus').classList.remove('error');$('curatorStatus').textContent=loadCuratorToken()?'A curator token is saved in this browser.':'No curator token is saved.';updateCuratorPanel();$('curatorDialog').showModal();});$('curatorClose').addEventListener('click',()=>$('curatorDialog').close());
+$('saveCuratorToken').addEventListener('click',()=>{const value=$('curatorToken').value.trim();if(!value){$('curatorStatus').textContent='Enter a token first.';return;}saveCuratorTokenValue(value);$('curatorStatus').classList.remove('error');$('curatorStatus').textContent='Curator token saved. Curated-tag editors are now enabled in image Details.';updateCuratorPanel();apply();});$('clearCuratorToken').addEventListener('click',()=>{saveCuratorTokenValue('');$('curatorToken').value='';$('curatorStatus').textContent='Saved curator token cleared. Pending edits were kept.';updateCuratorPanel();apply();});
+$('saveCuratorBatch').addEventListener('click',saveCuratorBatch);$('discardCuratorBatch').addEventListener('click',discardAllCuratorEdits);
+$('exportLocalTags').addEventListener('click',exportLocalTags);$('importLocalTags').addEventListener('click',()=>$('importLocalTagsFile').click());$('importLocalTagsFile').addEventListener('change',e=>{const file=e.target.files?.[0];if(file)importLocalTagsFile(file);e.target.value='';});$('clearLocalTags').addEventListener('click',clearAllLocalTags);
+$('detailsDialog').addEventListener('click',e=>{if(e.target===$('detailsDialog'))$('detailsDialog').close();});
+for(const id of['addAssetDialog','localTagsDialog','curatorDialog'])$(id).addEventListener('click',e=>{if(e.target===$(id))$(id).close();});
+$('detailsDialog').addEventListener('close',()=>{const a=$('dialogPreview').querySelector('audio');if(a&&playback.audio===a)stopPlayback();else if(a)a.pause();});
+updateTabUI();updateCuratorPanel();
+fetchImageData().catch(e=>{$('cards').replaceChildren(el('div','empty','Could not load image data: '+e.message));$('loadStatus').textContent='Image database failed to load';$('loadStatus').classList.add('error');});
+if(state.tab==='audio')refreshAudio(false);
+})();
+</script>
+</body>
+</html>
