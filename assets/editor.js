@@ -164,7 +164,25 @@
     }
   }
 
+  // Autosave to localStorage so work survives page refreshes
+  const STORAGE_KEY = 'tfm_luahelp_ui_editor';
+  let saveTimer = null;
+  let restoring = false;
+
+  function saveState() {
+    if (restoring || saveTimer) return;
+    saveTimer = setTimeout(() => {
+      saveTimer = null;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ textareas, images, objectOrder }));
+      } catch (err) {
+        // storage full or unavailable; ignore
+      }
+    }, 200);
+  }
+
   function updateOutput() {
+    saveState();
     const output = id('output');
     const lines = [];
     let obj;
@@ -321,6 +339,7 @@
   id('sidebar-close').addEventListener('click', () => toggleSidebar(false));
 
   function refreshSidebar() {
+    saveState();
     if (!objectList) return;
 
     objectList.innerHTML = '';
@@ -1194,6 +1213,23 @@
         this.value = '';
       }
     });
+  }
+
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  } catch (err) {
+    saved = null;
+  }
+
+  if (saved) {
+    restoring = true;
+    try {
+      importState(saved);
+    } catch (err) {
+      errorSet("Failed to restore saved state: " + err.message);
+    }
+    restoring = false;
   }
 
   refreshSidebar();
