@@ -264,6 +264,38 @@
   rescaleStage();
   window.addEventListener('resize', rescaleStage);
 
+  // Zoom
+  const MIN_ZOOM = 0.25;
+  const MAX_ZOOM = 4;
+
+  function getZoom() {
+    return stage.scaleX();
+  }
+
+  function setZoom(zoom) {
+    zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
+    inplace.close();
+    stage.scale({ x: zoom, y: zoom });
+    centerLayer();
+
+    const label = document.getElementById('zoom-level');
+    if (label) {
+      label.textContent = Math.round(zoom * 100) + '%';
+    }
+  }
+
+  function zoomBy(factor) {
+    setZoom(getZoom() * factor);
+  }
+
+  window.addEventListener('wheel', function(evt) {
+    if (!evt.ctrlKey) {
+      return;
+    }
+    evt.preventDefault();
+    zoomBy(evt.deltaY < 0 ? 1.1 : 1 / 1.1);
+  }, { passive: false });
+
   // EventEmitter
   const EventEmitter = (function() {
     const callbackMapping = {};
@@ -1102,6 +1134,7 @@
       updateHeader: updateBarText,
     },
     stage: stageEmitter,
+    zoom: { get: getZoom, set: setZoom, by: zoomBy },
     sortLuaLayer,
   };
 
