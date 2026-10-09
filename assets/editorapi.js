@@ -232,11 +232,14 @@
   }
 
   // Scaling
+  let panX = 0;
+  let panY = 0;
+
   function centerLayer() {
     const containerWidth = window.innerWidth;
     const containerHeight = window.innerHeight;
-    const offX = -(containerWidth / 2) / stage.scaleX() + 800 / 2;
-    const offY = -(containerHeight / 2)  / stage.scaleY() + 600 / 2;
+    const offX = -(containerWidth / 2) / stage.scaleX() + 800 / 2 - panX / stage.scaleX();
+    const offY = -(containerHeight / 2)  / stage.scaleY() + 600 / 2 - panY / stage.scaleY();
 
     luaLayer.offsetX(offX);
     luaLayer.offsetY(offY);
@@ -287,6 +290,72 @@
   function zoomBy(factor) {
     setZoom(getZoom() * factor);
   }
+
+  // Pan while holding space
+  let spaceHeld = false;
+  let panning = null;
+  const sceneContainer = stage.container();
+
+  function isTyping() {
+    const el = document.activeElement;
+    return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+  }
+
+  function setSpaceHeld(held) {
+    spaceHeld = held;
+    sceneContainer.style.cursor = held ? (panning ? 'grabbing' : 'grab') : '';
+  }
+
+  window.addEventListener('keydown', function(evt) {
+    if (evt.code !== 'Space' || isTyping()) {
+      return;
+    }
+    evt.preventDefault();
+    if (!spaceHeld) {
+      setSpaceHeld(true);
+    }
+  });
+
+  window.addEventListener('keyup', function(evt) {
+    if (evt.code === 'Space') {
+      panning = null;
+      setSpaceHeld(false);
+    }
+  });
+
+  window.addEventListener('blur', function() {
+    panning = null;
+    setSpaceHeld(false);
+  });
+
+  // Capture phase so Konva never sees the press (no dragging/selecting while panning)
+  sceneContainer.addEventListener('mousedown', function(evt) {
+    if (!spaceHeld) {
+      return;
+    }
+    evt.preventDefault();
+    evt.stopPropagation();
+    inplace.close();
+    panning = { x: evt.clientX, y: evt.clientY };
+    setSpaceHeld(true);
+  }, true);
+
+  window.addEventListener('mousemove', function(evt) {
+    if (!panning) {
+      return;
+    }
+    panX += evt.clientX - panning.x;
+    panY += evt.clientY - panning.y;
+    panning = { x: evt.clientX, y: evt.clientY };
+    centerLayer();
+  });
+
+  window.addEventListener('mouseup', function() {
+    if (panning) {
+      panning = null;
+      setSpaceHeld(spaceHeld);
+    }
+  });
 
   window.addEventListener('wheel', function(evt) {
     if (!evt.ctrlKey) {
@@ -1135,6 +1204,7 @@
     },
     stage: stageEmitter,
     zoom: { get: getZoom, set: setZoom, by: zoomBy },
+    resetPan() { panX = 0; panY = 0; centerLayer(); },
     sortLuaLayer,
   };
 

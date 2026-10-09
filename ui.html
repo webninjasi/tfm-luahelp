@@ -19,7 +19,7 @@
         <button onclick="toggleCode()">Toggle Code</button>
         <button id="sidebar-toggle" type="button">Objects</button>
         <button onclick="editorAPI.zoom.by(1 / 1.25)" title="Zoom out">-</button>
-        <button onclick="editorAPI.zoom.set(1)" title="Reset zoom" id="zoom-level">100%</button>
+        <button onclick="editorAPI.zoom.set(1); editorAPI.resetPan()" title="Reset zoom and pan" id="zoom-level">100%</button>
         <button onclick="editorAPI.zoom.by(1.25)" title="Zoom in">+</button>
         <button onclick="exportJSON()">Export JSON</button>
         <button onclick="document.getElementById('json_import_input').click()">Import JSON</button>
