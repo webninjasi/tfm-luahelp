@@ -285,8 +285,8 @@ button {
   top: 0;
   width: 260px;
   height: 100%;
-  background: rgba(17, 17, 17, 0.95);
-  border-right: 1px solid #444444;
+  background: #1E3D42;
+  border-right: 1px solid #2c565d;
   z-index: 5000;
   display: none;
   flex-direction: column;
@@ -302,8 +302,8 @@ button {
   justify-content: space-between;
   align-items: center;
   padding: 0.6em 0.8em;
-  border-bottom: 1px solid #444444;
-  color: #C2C2DA;
+  border-bottom: 1px solid #2c565d;
+  color: #6C77C1;
   font-weight: bold;
 }
 
@@ -325,17 +325,17 @@ button {
   align-items: center;
   gap: 0.25em;
   padding: 0.35em 0.5em;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid #2c565d;
   cursor: pointer;
-  color: #b0b8ca;
+  color: #C2C2DA;
 }
 
 .ui-object-item:hover {
-  background: #2a3a40;
+  background: #285058;
 }
 
 .ui-object-item.selected {
-  background: #1a4a52;
+  background: #111111;
   color: #2ECF73;
 }
 

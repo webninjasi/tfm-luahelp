@@ -181,6 +181,7 @@
     y: 0,
     width: 800,
     height: 21,
+    listening: false,
     cornerRadius: 6,
     fill: '#324650',
     shadowEnabled: true,
@@ -225,6 +226,7 @@
     gameuiBarText.setAttrs({
       x: 10,
       y: 5,
+      listening: false,
     });
     gameuiLayer.add(gameuiBarText);
   }
@@ -505,6 +507,8 @@
       y = ((parseInt(y) || 0) % 65536);
       width = parseInt(width);
       height = parseInt(height);
+      if (isNaN(width)) width = null;
+      if (isNaN(height)) height = null;
       bg = parseInt(bg) || 0;
       br = parseInt(br) || 0;
 
@@ -602,6 +606,13 @@
         else if (width) {
           textfield.setAttrs({
             width,
+            height: 'auto',
+          });
+        }
+        else {
+          textfield.setAttrs({
+            width: 'auto',
+            height: 'auto',
           });
         }
 
@@ -947,21 +958,22 @@
       panel.style.left = rect.left + 'px';
       panel.style.top = rect.top + 'px';
 
-      const apply = (num) => {
+      // Sync the other inputs but never rewrite the one being typed in.
+      const apply = (num, source) => {
         if (isNaN(num)) {
           return;
         }
-        hexInput.value = colorToHex(num);
-        intInput.value = num;
-        picker.value = colorToHex(num);
+        if (source !== hexInput) hexInput.value = colorToHex(num);
+        if (source !== intInput) intInput.value = num;
+        if (source !== picker && num >= 0 && num <= 0xFFFFFF) picker.value = colorToHex(num);
         onChange && onChange(num);
       };
 
-      hexInput.addEventListener('input', () => apply(parseColorValue(hexInput.value)));
-      intInput.addEventListener('input', () => apply(parseInt(intInput.value, 10)));
-      picker.addEventListener('input', () => apply(parseColorValue(picker.value)));
+      hexInput.addEventListener('input', () => apply(parseColorValue(hexInput.value), hexInput));
+      intInput.addEventListener('input', () => apply(parseInt(intInput.value, 10), intInput));
+      picker.addEventListener('input', () => apply(parseColorValue(picker.value), picker));
 
-      const commit = () => {
+      const finish = () => {
         const num = parseColorValue(hexInput.value);
         if (!isNaN(num) && onDone) {
           onDone(num);
@@ -969,8 +981,9 @@
         close();
       };
 
-      hexInput.addEventListener('change', commit);
-      intInput.addEventListener('change', commit);
+      [hexInput, intInput].forEach(input => input.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Enter') finish();
+      }));
       hexInput.focus();
       hexInput.select();
       bindDismiss(hexInput);

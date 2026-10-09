@@ -13,6 +13,29 @@
     });
   };
 
+  // Lua-style number handling: fields keep the raw text the user typed,
+  // rendering uses the parsed number (or a default when it can't be parsed).
+  const LUA_DEC = /^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/;
+  const LUA_HEX = /^([-+]?)0[xX]([0-9a-fA-F]+)$/;
+
+  function toNum(v, def) {
+    if (typeof v === 'number') return isFinite(v) ? v : def;
+    if (typeof v !== 'string') return def;
+    const t = v.trim();
+    let m = LUA_HEX.exec(t);
+    if (m) return (m[1] === '-' ? -1 : 1) * parseInt(m[2], 16);
+    if (LUA_DEC.test(t)) return parseFloat(t);
+    return def;
+  }
+
+  function fmtLua(v) {
+    if (typeof v === 'string') {
+      const t = v.trim();
+      return t === '' ? 'nil' : t;
+    }
+    return v == null ? 'nil' : v;
+  }
+
   const textareas = { _lastId: 0 };
   const images = { _lastId: 0 };
   const objectOrder = [];
@@ -148,23 +171,26 @@
     let taCount = 0;
     let imgCount = 0;
 
-    for (let key in textareas) {
-      if (key == '_lastId') continue;
-      taCount++;
-      obj = textareas[key];
-      lines.push(`ui.addTextArea(${obj.id}, "${escapeLuaString(obj.text)}", targetPlayer, ${obj.x}, ${obj.y}, ${obj.width || 'nil'}, ${obj.height || 'nil'}, ${decimalToHex(obj.bg)}, ${decimalToHex(obj.br)}, ${obj.alpha}, ${obj.fixed})`);
-    }
+    objectOrder.forEach(key => {
+      const { type, id: objId } = parseKey(key);
+      obj = getObject(type, objId);
+      if (!obj) return;
 
-    for (let key in images) {
-      if (key == '_lastId') continue;
+      if (type === 'textarea') {
+        taCount++;
+        lines.push(`ui.addTextArea(${obj.id}, "${escapeLuaString(obj.text)}", targetPlayer, ${fmtLua(obj.x)}, ${fmtLua(obj.y)}, ${fmtLua(obj.width)}, ${fmtLua(obj.height)}, ${decimalToHex(obj.bg)}, ${decimalToHex(obj.br)}, ${fmtLua(obj.alpha)}, ${obj.fixed})`);
+        return;
+      }
+
       imgCount++;
-      obj = images[key];
       let idStr = obj.imageId;
       if (idStr.startsWith('data:')) {
         idStr = obj.fileName ? `<uploaded_${obj.fileName}>` : `<uploaded_${obj._id}>`;
       }
-      lines.push(`tfm.exec.addImage("${escapeLuaString(idStr)}", "${escapeLuaString(obj.target)}", ${obj.x}, ${obj.y}, targetPlayer, ${obj.scaleX}, ${obj.scaleY}, ${(obj.rotation / 180 * Math.PI).toFixed(2)}, ${obj.alpha}, ${obj.anchorX}, ${obj.anchorY}, ${obj.fadeIn})`);
-    }
+      let rot = toNum(obj.rotation, null);
+      rot = rot == null ? fmtLua(obj.rotation) : (rot / 180 * Math.PI).toFixed(2);
+      lines.push(`tfm.exec.addImage("${escapeLuaString(idStr)}", "${escapeLuaString(obj.target)}", ${fmtLua(obj.x)}, ${fmtLua(obj.y)}, targetPlayer, ${fmtLua(obj.scaleX)}, ${fmtLua(obj.scaleY)}, ${rot}, ${fmtLua(obj.alpha)}, ${fmtLua(obj.anchorX)}, ${fmtLua(obj.anchorY)}, ${obj.fadeIn})`);
+    });
 
     output.innerHTML = lines.join('\n');
 
@@ -436,19 +462,17 @@
     return y + 15;
   }
 
-  function editNumber(konvaNode, label, value, opts, applyAll) {
+  // Free-form text editing of a Lua number; the raw text is stored as typed.
+  function editNumber(konvaNode, label, value, ctrlId, applyAll) {
     editorAPI.edit({
       konvaNode,
       name: label,
-      type: 'number',
+      type: 'text',
       value,
-      min: opts.min,
-      max: opts.max,
-      step: opts.step,
       callback(val) {
-        val = opts.parse(val);
-        if (isNaN(val)) return;
         applyAll(val);
+        editorAPI.controls.updateTextEdit({ id: ctrlId, text: val });
+        updateOutput();
       }
     });
   }
@@ -480,49 +504,6 @@
 
     y += 15;
 
-    const xs = selected.map(s => s.obj.x);
-    const ys = selected.map(s => s.obj.y);
-    const alphas = selected.map(s => s.obj.alpha);
-
-    y = addPropField({
-      id: 'ui_x', x, y, width: 180, label: 'X', text: mixedValue(xs),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'X', mixedValue(xs), {
-        parse: v => parseInt(v, 10),
-      }, (val) => {
-        selected.forEach(s => {
-          s.obj.x = val;
-          updateObjectVisual(s.type, s);
-        });
-        refreshPropertyPanel();
-      }),
-    });
-
-    y = addPropField({
-      id: 'ui_y', x, y, width: 180, label: 'Y', text: mixedValue(ys),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Y', mixedValue(ys), {
-        parse: v => parseInt(v, 10),
-      }, (val) => {
-        selected.forEach(s => {
-          s.obj.y = val;
-          updateObjectVisual(s.type, s);
-        });
-        refreshPropertyPanel();
-      }),
-    });
-
-    y = addPropField({
-      id: 'ui_alpha', x, y, width: 180, label: 'Alpha', text: mixedValue(alphas),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Alpha', mixedValue(alphas), {
-        parse: v => parseFloat(v), min: 0, max: 1, step: 0.1,
-      }, (val) => {
-        selected.forEach(s => {
-          s.obj.alpha = val;
-          updateObjectVisual(s.type, s);
-        });
-        refreshPropertyPanel();
-      }),
-    });
-
     if (selected.length === 1) {
       const { type, obj } = selected[0];
       if (type === 'textarea') {
@@ -537,33 +518,74 @@
         showImageGroupProperties(x, y, selected);
       } else if (allTextareas) {
         showTextAreaGroupProperties(x, y, selected);
+      } else {
+        y = addXYFields(x, y, selected);
+        addAlphaField(x, y, selected);
       }
     }
   }
 
+  function addXYFields(x, y, selected) {
+    const xs = selected.map(s => s.obj.x);
+    const ys = selected.map(s => s.obj.y);
+
+    y = addPropField({
+      id: 'ui_x', x, y, width: 180, label: 'X', text: mixedValue(xs),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'X', mixedValue(xs), 'ui_x', (val) => {
+        selected.forEach(s => {
+          s.obj.x = val;
+          updateObjectVisual(s.type, s);
+        });
+      }),
+    });
+
+    y = addPropField({
+      id: 'ui_y', x, y, width: 180, label: 'Y', text: mixedValue(ys),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Y', mixedValue(ys), 'ui_y', (val) => {
+        selected.forEach(s => {
+          s.obj.y = val;
+          updateObjectVisual(s.type, s);
+        });
+      }),
+    });
+
+    return y;
+  }
+
+  function addAlphaField(x, y, selected) {
+    const alphas = selected.map(s => s.obj.alpha);
+
+    y = addPropField({
+      id: 'ui_alpha', x, y, width: 180, label: 'Alpha', text: mixedValue(alphas),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Alpha', mixedValue(alphas), 'ui_alpha', (val) => {
+        selected.forEach(s => {
+          s.obj.alpha = val;
+          updateObjectVisual(s.type, s);
+        });
+      }),
+    });
+
+    return y;
+  }
+
   function showTextAreaGroupProperties(x, startY, selected) {
-    const ta = selected[0].obj;
-    let y = startY;
+    let y = addXYFields(x, startY, selected);
 
     y = addPropField({
       id: 'ui_width', x, y, width: 180, label: 'Width', text: mixedValue(selected.map(s => s.obj.width)),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Width', mixedValue(selected.map(s => s.obj.width)), {
-        parse: v => parseInt(v, 10),
-      }, (val) => {
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Width', mixedValue(selected.map(s => s.obj.width)), 'ui_width', (val) => {
         selected.forEach(s => { s.obj.width = val; updateTextArea(s.obj); });
-        refreshPropertyPanel();
       }),
     });
 
     y = addPropField({
       id: 'ui_height', x, y, width: 180, label: 'Height', text: mixedValue(selected.map(s => s.obj.height)),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Height', mixedValue(selected.map(s => s.obj.height)), {
-        parse: v => parseInt(v, 10),
-      }, (val) => {
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Height', mixedValue(selected.map(s => s.obj.height)), 'ui_height', (val) => {
         selected.forEach(s => { s.obj.height = val; updateTextArea(s.obj); });
-        refreshPropertyPanel();
       }),
     });
+
+    y = addAlphaField(x, y, selected);
 
     addPropField({
       id: 'ui_fixed', x, y, width: 180, label: 'Fixed', text: mixedValue(selected.map(s => s.obj.fixed)),
@@ -606,11 +628,11 @@
       },
     });
 
+    y = addXYFields(x, y, [{ type: 'textarea', obj: ta }]);
+
     y = addPropField({
       id: 'ui_width', x, y, width: 180, label: 'Width', text: ta.width,
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Width', ta.width, {
-        parse: v => parseInt(v, 10),
-      }, (val) => {
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Width', ta.width, 'ui_width', (val) => {
         ta.width = val;
         editorAPI.controls.updateTextEdit({ id: 'ui_width', text: val });
         updateTextArea(ta);
@@ -619,9 +641,7 @@
 
     y = addPropField({
       id: 'ui_height', x, y, width: 180, label: 'Height', text: ta.height,
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Height', ta.height, {
-        parse: v => parseInt(v, 10),
-      }, (val) => {
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Height', ta.height, 'ui_height', (val) => {
         ta.height = val;
         editorAPI.controls.updateTextEdit({ id: 'ui_height', text: val });
         updateTextArea(ta);
@@ -629,7 +649,7 @@
     });
 
     y = addPropField({
-      id: 'ui_bgcolor', x, y, width: 180, label: 'BG Color', text: '#' + ta.bg.toString(16).padStart(6, '0'),
+      id: 'ui_bgcolor', x, y, width: 180, label: 'Background Color', text: '#' + ta.bg.toString(16).padStart(6, '0'),
       onClick: (_id, _text, konvaNode) => {
         editorAPI.inplace.showColor({
           konvaNode,
@@ -655,7 +675,7 @@
     });
 
     y = addPropField({
-      id: 'ui_brcolor', x, y, width: 180, label: 'Border', text: '#' + ta.br.toString(16).padStart(6, '0'),
+      id: 'ui_brcolor', x, y, width: 180, label: 'Border Color', text: '#' + ta.br.toString(16).padStart(6, '0'),
       onClick: (_id, _text, konvaNode) => {
         editorAPI.inplace.showColor({
           konvaNode,
@@ -679,6 +699,8 @@
         });
       },
     });
+
+    y = addAlphaField(x, y, [{ type: 'textarea', obj: ta }]);
 
     addPropField({
       id: 'ui_fixed', x, y, width: 180, label: 'Fixed', text: Boolean(ta.fixed),
@@ -737,12 +759,14 @@
       },
     });
 
+    y = addXYFields(x, y, [{ type: 'image', obj: img }]);
     y = addImageScaleAnchorFields(x, y, img);
   }
 
   function showImageGroupProperties(x, startY, selected) {
     const img = selected[0].obj;
-    addImageScaleAnchorFields(x, startY, img, selected);
+    const y = addXYFields(x, startY, selected);
+    addImageScaleAnchorFields(x, y, img, selected);
   }
 
   function addImageScaleAnchorFields(x, startY, img, selected) {
@@ -751,15 +775,13 @@
 
     y = addPropField({
       id: 'ui_scale_x', x, y, width: 80, label: 'Scale X', text: mixedValue(targets.map(t => t.obj.scaleX)),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Scale X', img.scaleX, {
-        parse: v => parseFloat(v), step: 0.1, min: -1, max: 1,
-      }, (val) => {
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Scale X', img.scaleX, 'ui_scale_x', (val) => {
         targets.forEach(t => {
           t.obj.scaleX = val;
           if (scaleLinked) t.obj.scaleY = val;
           updateImage(t.obj);
         });
-        refreshPropertyPanel();
+        if (scaleLinked) editorAPI.controls.updateTextEdit({ id: 'ui_scale_y', text: val });
       }),
     });
 
@@ -772,15 +794,13 @@
 
     y = addPropField({
       id: 'ui_scale_y', x: x + 110, y: y - 15, width: 70, label: 'Y', text: mixedValue(targets.map(t => t.obj.scaleY)),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Scale Y', img.scaleY, {
-        parse: v => parseFloat(v), step: 0.1, min: -1, max: 1,
-      }, (val) => {
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Scale Y', img.scaleY, 'ui_scale_y', (val) => {
         targets.forEach(t => {
           t.obj.scaleY = val;
           if (scaleLinked) t.obj.scaleX = val;
           updateImage(t.obj);
         });
-        refreshPropertyPanel();
+        if (scaleLinked) editorAPI.controls.updateTextEdit({ id: 'ui_scale_x', text: val });
       }),
     });
 
@@ -788,28 +808,25 @@
 
     y = addPropField({
       id: 'ui_rotation', x, y, width: 180, label: 'Rotation', text: mixedValue(targets.map(t => t.obj.rotation)),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Rotation', img.rotation, {
-        parse: v => parseInt(v, 10),
-      }, (val) => {
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Rotation', img.rotation, 'ui_rotation', (val) => {
         targets.forEach(t => {
           t.obj.rotation = val;
           updateImage(t.obj);
         });
-        refreshPropertyPanel();
       }),
     });
 
+    y = addAlphaField(x, y, targets);
+
     y = addPropField({
       id: 'ui_anchor_x', x, y, width: 80, label: 'Anchor X', text: mixedValue(targets.map(t => t.obj.anchorX)),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Anchor X', img.anchorX, {
-        parse: v => parseFloat(v), step: 0.1, min: -1, max: 1,
-      }, (val) => {
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Anchor X', img.anchorX, 'ui_anchor_x', (val) => {
         targets.forEach(t => {
           t.obj.anchorX = val;
           if (anchorLinked) t.obj.anchorY = val;
           updateImage(t.obj);
         });
-        refreshPropertyPanel();
+        if (anchorLinked) editorAPI.controls.updateTextEdit({ id: 'ui_anchor_y', text: val });
       }),
     });
 
@@ -822,15 +839,13 @@
 
     addPropField({
       id: 'ui_anchor_y', x: x + 110, y: y - 15, width: 70, label: 'Y', text: mixedValue(targets.map(t => t.obj.anchorY)),
-      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Anchor Y', img.anchorY, {
-        parse: v => parseFloat(v), step: 0.1, min: -1, max: 1,
-      }, (val) => {
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Anchor Y', img.anchorY, 'ui_anchor_y', (val) => {
         targets.forEach(t => {
           t.obj.anchorY = val;
           if (anchorLinked) t.obj.anchorX = val;
           updateImage(t.obj);
         });
-        refreshPropertyPanel();
+        if (anchorLinked) editorAPI.controls.updateTextEdit({ id: 'ui_anchor_x', text: val });
       }),
     });
   }
@@ -884,8 +899,8 @@
 
   function moveSelected(dx, dy) {
     getSelectedObjects().forEach(({ type, obj }) => {
-      obj.x += dx;
-      obj.y += dy;
+      obj.x = toNum(obj.x, 0) + dx;
+      obj.y = toNum(obj.y, 0) + dy;
       updateObjectVisual(type, { obj });
     });
     refreshPropertyPanel();
@@ -916,9 +931,9 @@
     images[img._id] = img;
     updateOutput();
     return editorAPI.lua.addImage(
-      img._id, img.imageId, img.target, img.x, img.y, img.targetPlayer,
-      img.scaleX, img.scaleY, img.rotation / 180 * Math.PI,
-      img.alpha, img.anchorX, img.anchorY, img.fadeIn
+      img._id, img.imageId, img.target, toNum(img.x, 0), toNum(img.y, 0), img.targetPlayer,
+      toNum(img.scaleX, 1), toNum(img.scaleY, 1), toNum(img.rotation, 0) / 180 * Math.PI,
+      toNum(img.alpha, 1), toNum(img.anchorX, 0), toNum(img.anchorY, 0), img.fadeIn
     );
   }
 
@@ -969,8 +984,8 @@
     textareas[ta.id] = ta;
     updateOutput();
     return editorAPI.lua.addTextArea(
-      ta.id, ta.text, ta.target, ta.x, ta.y,
-      ta.width, ta.height, ta.bg, ta.br, ta.alpha, ta.fixed
+      ta.id, ta.text, ta.target, toNum(ta.x, 50), toNum(ta.y, 50),
+      toNum(ta.width, null), toNum(ta.height, null), ta.bg, ta.br, toNum(ta.alpha, 1), ta.fixed
     );
   }
 
