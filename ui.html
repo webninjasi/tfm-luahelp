@@ -18,17 +18,19 @@
         <button onclick="toggleGameUI()">Toggle Game UI</button>
         <button onclick="toggleCode()">Toggle Code</button>
         <button id="sidebar-toggle" type="button">Objects</button>
-        <button onclick="editorAPI.zoom.by(1 / 1.25)" title="Zoom out">-</button>
-        <button onclick="editorAPI.zoom.set(1); editorAPI.resetPan()" title="Reset zoom and pan" id="zoom-level">100%</button>
-        <button onclick="editorAPI.zoom.by(1.25)" title="Zoom in">+</button>
-        <span class="map-controls">
-          Map size
-          <input id="map-width" type="number" min="1" value="800" style="width: 5em;" title="Map width">
-          x
-          <input id="map-height" type="number" min="1" value="400" style="width: 5em;" title="Map height">
-          <input id="map-code" type="text" placeholder="Map code" style="width: 8em;">
-          <button id="map-load" type="button">Load Map</button>
-          <button id="map-clear" type="button">Clear Map</button>
+        <span class="tool-group" title="Zoom (Ctrl+scroll)">
+          <button onclick="editorAPI.zoom.by(1 / 1.25)" title="Zoom out">&minus;</button>
+          <button onclick="editorAPI.zoom.set(1); editorAPI.resetPan()" title="Reset zoom and pan (hold Space to pan)" id="zoom-level">100%</button>
+          <button onclick="editorAPI.zoom.by(1.25)" title="Zoom in">+</button>
+        </span>
+        <span class="tool-group" title="Map">
+          <span class="tool-label">Map</span>
+          <input id="map-width" type="number" min="1" value="800" title="Map width">
+          <span class="tool-label">&times;</span>
+          <input id="map-height" type="number" min="1" value="400" title="Map height">
+          <input id="map-code" type="text" placeholder="Code or @code" title="Map code, loads its image as background">
+          <button id="map-load" type="button">Load</button>
+          <button id="map-clear" type="button" title="Remove map background">Clear</button>
         </span>
         <button onclick="exportJSON()">Export JSON</button>
         <button onclick="document.getElementById('json_import_input').click()">Import JSON</button>

@@ -278,6 +278,51 @@ button {
   pointer-events: none;
 }
 
+/* UI Editor toolbar groups */
+.header .tool-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin: 0 0.3em;
+  padding: 0.15em 0.4em;
+  border: 1px solid #2c565d;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.header .tool-group button {
+  padding: 0.15em 0.5em;
+}
+
+.header .tool-group input {
+  padding: 0.15em 0.3em;
+  width: 4.5em;
+  box-sizing: border-box;
+}
+
+.header .tool-group input[type="text"] {
+  width: 8em;
+}
+
+.header .tool-group input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.header .tool-group input[type="number"]::-webkit-outer-spin-button,
+.header .tool-group input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.header .tool-label {
+  color: #C2C2DA;
+  font-size: 0.85em;
+}
+
+#zoom-level {
+  min-width: 4em;
+}
+
 /* UI Editor sidebar */
 .ui-sidebar {
   position: absolute;
