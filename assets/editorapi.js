@@ -13,10 +13,12 @@
   });
 
   // Create default layers
+  const bgLayer = new Konva.Layer({ draggable: false, listening: false });
   const luaLayer = new Konva.Layer({ draggable: false });
   const toolLayer = new Konva.Layer({ draggable: false });
   const gameuiLayer = new Konva.Layer({ draggable: false });
 
+  stage.add(bgLayer);
   stage.add(luaLayer);
   stage.add(toolLayer);
   stage.add(gameuiLayer);
@@ -241,6 +243,10 @@
     const offX = -(containerWidth / 2) / stage.scaleX() + 800 / 2 - panX / stage.scaleX();
     const offY = -(containerHeight / 2)  / stage.scaleY() + 600 / 2 - panY / stage.scaleY();
 
+    bgLayer.offsetX(offX);
+    bgLayer.offsetY(offY);
+    bgLayer.draw();
+
     luaLayer.offsetX(offX);
     luaLayer.offsetY(offY);
     luaLayer.draw();
@@ -266,6 +272,63 @@
 
   rescaleStage();
   window.addEventListener('resize', rescaleStage);
+
+  // Map size / background
+  let mapBg = null;
+  let mapLoadId = 0;
+
+  function setMapSize(width, height) {
+    width = Math.max(1, Math.round(width) || 800);
+    height = Math.max(1, Math.round(height) || 400);
+    innerBorder.size({ width, height });
+    luaLayer.draw();
+
+    const w = document.getElementById('map-width');
+    const h = document.getElementById('map-height');
+    if (w) w.value = width;
+    if (h) h.value = height;
+    return { width, height };
+  }
+
+  function clearMapBackground() {
+    mapLoadId++;
+    if (mapBg) {
+      mapBg.destroy();
+      mapBg = null;
+    }
+    bgLayer.draw();
+  }
+
+  // Resolves with the map size when the image loads, rejects when it doesn't
+  function loadMapBackground(code) {
+    code = String(code || '').trim().replace(/^@/, '');
+    const loadId = ++mapLoadId;
+
+    return new Promise((resolve, reject) => {
+      if (!/^\d+$/.test(code)) {
+        reject(new Error('Invalid map code, use a number or @number'));
+        return;
+      }
+
+      const img = new Image();
+      img.onload = function() {
+        if (loadId !== mapLoadId) {
+          reject(new Error('Superseded'));
+          return;
+        }
+        if (mapBg) {
+          mapBg.destroy();
+        }
+        mapBg = new Konva.Image({ x: 0, y: 0, image: img, listening: false });
+        bgLayer.add(mapBg);
+        resolve(setMapSize(img.naturalWidth, img.naturalHeight));
+      };
+      img.onerror = function() {
+        reject(new Error(`Could not load map ${code}`));
+      };
+      img.src = `https://ik.imagekit.io/tfmrecords/maps/${code}.webp`;
+    });
+  }
 
   // Zoom
   const MIN_ZOOM = 0.25;
@@ -1204,6 +1267,7 @@
     },
     stage: stageEmitter,
     zoom: { get: getZoom, set: setZoom, by: zoomBy },
+    map: { setSize: setMapSize, loadBackground: loadMapBackground, clearBackground: clearMapBackground },
     resetPan() { panX = 0; panY = 0; centerLayer(); },
     sortLuaLayer,
   };

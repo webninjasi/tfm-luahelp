@@ -166,6 +166,7 @@
 
   // Autosave to localStorage so work survives page refreshes
   const STORAGE_KEY = 'tfm_luahelp_ui_editor';
+  const mapState = { width: 800, height: 400, code: '' };
   let saveTimer = null;
   let restoring = false;
 
@@ -174,7 +175,7 @@
     saveTimer = setTimeout(() => {
       saveTimer = null;
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ textareas, images, objectOrder }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ textareas, images, objectOrder, map: mapState }));
       } catch (err) {
         // storage full or unavailable; ignore
       }
@@ -1126,9 +1127,55 @@
     }
   });
 
+  // Map size / background
+  const mapWidthInput = id('map-width');
+  const mapHeightInput = id('map-height');
+  const mapCodeInput = id('map-code');
+
+  function applyMapSize(width, height) {
+    const size = editorAPI.map.setSize(width, height);
+    mapState.width = size.width;
+    mapState.height = size.height;
+    saveState();
+  }
+
+  function loadMapCode(code) {
+    return editorAPI.map.loadBackground(code).then(size => {
+      mapState.code = code;
+      mapState.width = size.width;
+      mapState.height = size.height;
+      if (mapCodeInput) mapCodeInput.value = code;
+      errorSet('');
+      saveState();
+    }).catch(err => {
+      if (err.message !== 'Superseded') errorSet(err.message);
+    });
+  }
+
+  [mapWidthInput, mapHeightInput].forEach(input => input && input.addEventListener('change', () => {
+    applyMapSize(parseInt(mapWidthInput.value, 10), parseInt(mapHeightInput.value, 10));
+  }));
+
+  id('map-load').addEventListener('click', () => loadMapCode(mapCodeInput.value));
+  mapCodeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') loadMapCode(mapCodeInput.value);
+  });
+  id('map-clear').addEventListener('click', () => {
+    editorAPI.map.clearBackground();
+    mapState.code = '';
+    mapCodeInput.value = '';
+    saveState();
+  });
+
+  function restoreMap(map) {
+    if (!map) return;
+    applyMapSize(map.width, map.height);
+    if (map.code) loadMapCode(map.code);
+  }
+
   // Export/Import
   window.exportJSON = function() {
-    const state = { textareas, images, objectOrder };
+    const state = { textareas, images, objectOrder, map: mapState };
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1163,6 +1210,10 @@
 
   function importState(state) {
     clearEditor();
+    editorAPI.map.clearBackground();
+    mapState.code = '';
+    if (mapCodeInput) mapCodeInput.value = '';
+    restoreMap(state.map || { width: 800, height: 400 });
     if (state.textareas) {
       textareas._lastId = state.textareas._lastId || 0;
       for (let key in state.textareas) {
