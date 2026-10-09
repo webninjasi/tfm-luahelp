@@ -2,7 +2,6 @@
   const id = selector => document.getElementById(selector);
   const escapeLuaString = (str) => str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\t/g, '\\t');
 
-  // https://stackoverflow.com/a/13538245
   String.prototype.escape = function() {
     var tagsToReplace = {
       '&': '&amp;',
@@ -15,27 +14,122 @@
   };
 
   const textareas = { _lastId: 0 };
-  const images = { _lastId: 0  };
+  const images = { _lastId: 0 };
+  const objectOrder = [];
 
   let lastTACount;
   let lastImgCount;
 
-  let selectType;
-  let selectedId;
+  const selection = new Set();
+  let scaleLinked = true;
+  let anchorLinked = true;
+  let lastShiftAnchor = null;
 
   window.toggleGameUI = editorAPI.gameUI.toggle;
   window.copyText = (elm) => {
     elm.select();
     document.execCommand('copy');
-  }
+  };
   window.toggleCode = () => {
     const code = document.querySelector('.ui-editor-code');
-
     if (!code.style.display) {
       code.style.display = 'block';
     } else {
       code.style.display = null;
     }
+  };
+
+  function objectKey(type, objId) {
+    return type + ':' + objId;
+  }
+
+  function parseKey(key) {
+    const idx = key.indexOf(':');
+    return { type: key.slice(0, idx), id: parseInt(key.slice(idx + 1), 10) };
+  }
+
+  function getObject(type, objId) {
+    if (type === 'textarea') return textareas[objId];
+    if (type === 'image') return images[objId];
+    return null;
+  }
+
+  function objectLabel(type, obj) {
+    if (type === 'textarea') {
+      return 'TA #' + obj.id + ' "' + (obj.text || '').slice(0, 20) + '"';
+    }
+    const name = obj.imageId.startsWith('data:') ? (obj.fileName || 'uploaded') : obj.imageId;
+    return 'Img #' + obj._id + ' ' + name;
+  }
+
+  function ensureDefaults(obj, type) {
+    if (obj.locked == null) obj.locked = false;
+    if (obj.hidden == null) obj.hidden = false;
+    if (obj.editorOrder == null) {
+      obj.editorOrder = objectOrder.length;
+    }
+  }
+
+  function registerObject(type, obj) {
+    ensureDefaults(obj, type);
+    const key = objectKey(type, type === 'textarea' ? obj.id : obj._id);
+    if (!objectOrder.includes(key)) {
+      objectOrder.push(key);
+    }
+    applyObjectState(type, type === 'textarea' ? obj.id : obj._id);
+    syncEditorOrder();
+  }
+
+  function addObject(type, obj, select) {
+    if (type === 'textarea') {
+      const emitter = updateTextArea(obj);
+      registerObject('textarea', obj);
+      emitter.on('click', (objId, evt) => handleObjectClick('textarea', objId, evt))
+        .on('move', onMoveTextArea)
+        .on('update', onUpdateTextArea);
+      if (select !== false) {
+        setSelection([objectKey('textarea', obj.id)]);
+        refreshSidebar();
+      }
+      return emitter;
+    }
+
+    const emitter = updateImage(obj);
+    registerObject('image', obj);
+    emitter.on('click', (_id, evt) => handleObjectClick('image', _id, evt))
+      .on('move', onMoveImage)
+      .on('update', onUpdateImage)
+      .on('load', () => errorSet(''))
+      .on('loadfail', (_id, url) => errorSet(`Failed to load image for ${_id}: ${url.escape()}`));
+    if (select !== false) {
+      setSelection([objectKey('image', obj._id)]);
+      refreshSidebar();
+    }
+    return emitter;
+  }
+
+  function applyObjectState(type, objId) {
+    const obj = getObject(type, objId);
+    if (!obj) return;
+    editorAPI.selection.setState(type, objId, {
+      locked: obj.locked,
+      hidden: obj.hidden,
+    });
+  }
+
+  function syncEditorOrder() {
+    objectOrder.forEach((key, index) => {
+      const { type, id } = parseKey(key);
+      const obj = getObject(type, id);
+      if (obj) {
+        obj.editorOrder = index;
+        const entry = editorAPI.selection.getNode(type, id);
+        if (entry) {
+          entry.node.setAttr('editorOrder', index);
+        }
+      }
+    });
+    editorAPI.sortLuaLayer();
   }
 
   function errorSet(err) {
@@ -55,29 +149,19 @@
     let imgCount = 0;
 
     for (let key in textareas) {
-      if (key == '_lastId') {
-        continue;
-      }
-
-      taCount ++;
+      if (key == '_lastId') continue;
+      taCount++;
       obj = textareas[key];
       lines.push(`ui.addTextArea(${obj.id}, "${escapeLuaString(obj.text)}", targetPlayer, ${obj.x}, ${obj.y}, ${obj.width || 'nil'}, ${obj.height || 'nil'}, ${decimalToHex(obj.bg)}, ${decimalToHex(obj.br)}, ${obj.alpha}, ${obj.fixed})`);
     }
 
     for (let key in images) {
-      if (key == '_lastId') {
-        continue;
-      }
-
-      imgCount ++;
+      if (key == '_lastId') continue;
+      imgCount++;
       obj = images[key];
       let idStr = obj.imageId;
       if (idStr.startsWith('data:')) {
-        if (obj.fileName) {
-          idStr = `<uploaded_${obj.fileName}>`;
-        } else {
-          idStr = `<uploaded_${obj._id}>`;
-        }
+        idStr = obj.fileName ? `<uploaded_${obj.fileName}>` : `<uploaded_${obj._id}>`;
       }
       lines.push(`tfm.exec.addImage("${escapeLuaString(idStr)}", "${escapeLuaString(obj.target)}", ${obj.x}, ${obj.y}, targetPlayer, ${obj.scaleX}, ${obj.scaleY}, ${(obj.rotation / 180 * Math.PI).toFixed(2)}, ${obj.alpha}, ${obj.anchorX}, ${obj.anchorY}, ${obj.fadeIn})`);
     }
@@ -90,1073 +174,867 @@
 
     lastTACount = taCount;
     lastImgCount = imgCount;
-
     editorAPI.gameUI.updateHeader(`<V>Textareas <G>: <N>${taCount} <BL>| <V>Images <G>: <N>${imgCount}`);
   }
 
-  disableRemoveButton();
-  editorAPI.controls.addButton({
-    id: "add_textarea",
-    x: 20,
-    y: 420 + 30 * 1,
-    width: 180,
-    text: "Add Textarea",
-  }).on('click', function() {
-    newTextArea();
-  });
-  editorAPI.controls.addButton({
-    id: "add_image",
-    x: 20,
-    y: 420 + 30 * 2,
-    width: 180,
-    text: "Add Image",
-  }).on('click', function() {
-    newImage();
-  });
-  editorAPI.controls.addButton({
-    id: "upload_image",
-    x: 20,
-    y: 420 + 30 * 3,
-    width: 180,
-    text: "Upload Image",
-  }).on('click', function() {
-    const fileInput = id('image_upload');
-    if (fileInput) {
-      fileInput.click();
+  function getSelectedObjects() {
+    return Array.from(selection).map(key => {
+      const { type, id } = parseKey(key);
+      return { type, id, obj: getObject(type, id), key };
+    }).filter(x => x.obj);
+  }
+
+  function isSelected(type, objId) {
+    return selection.has(objectKey(type, objId));
+  }
+
+  function setSelection(keys) {
+    selection.clear();
+    keys.forEach(k => selection.add(k));
+    refreshSelection();
+  }
+
+  function toggleInSelection(key) {
+    if (selection.has(key)) {
+      selection.delete(key);
+    } else {
+      selection.add(key);
     }
-  });
+    refreshSelection();
+  }
 
-  editorAPI.controls.addSeparator({
-    id: "sep1",
-    x: 220,
-    y: 420,
-    height: 160
-  });
-  editorAPI.stage.on('click', onUnselect);
-  editorAPI.stage.on('key', onStageKey);
+  function rangeSelectTo(key) {
+    if (!lastShiftAnchor || !objectOrder.includes(lastShiftAnchor)) {
+      setSelection([key]);
+      return;
+    }
+    const a = objectOrder.indexOf(lastShiftAnchor);
+    const b = objectOrder.indexOf(key);
+    if (a === -1 || b === -1) {
+      setSelection([key]);
+      return;
+    }
+    const start = Math.min(a, b);
+    const end = Math.max(a, b);
+    setSelection(objectOrder.slice(start, end + 1));
+  }
 
-  function enableRemoveButton() {
-    editorAPI.controls.addButton({
-      id: "remove",
-      x: 20,
-      y: 420,
-      width: 180,
-      text: "Remove",
-    }).on('click', function() {
-      if (selectedId == null) {
-        return;
+  function handleObjectClick(type, objId, evt) {
+    const obj = getObject(type, objId);
+    if (!obj || obj.hidden || obj.locked) {
+      return;
+    }
+
+    const key = objectKey(type, objId);
+    const e = evt && evt.evt;
+
+    if (e && e.shiftKey) {
+      rangeSelectTo(key);
+    } else if (e && (e.ctrlKey || e.metaKey)) {
+      toggleInSelection(key);
+      lastShiftAnchor = key;
+    } else {
+      if (!selection.has(key)) {
+        setSelection([key]);
       }
+      lastShiftAnchor = key;
+    }
+  }
 
-      if (selectType == 'textarea') {
-        delete textareas[selectedId];
-        editorAPI.lua.removeTextArea(selectedId);
-      }
-      else if (selectType == 'image') {
-        delete images[selectedId];
-        editorAPI.lua.removeImage(selectedId);
-      }
+  function refreshSelection() {
+    refreshSidebar();
+    refreshPropertyPanel();
 
-      updateOutput();
-      onUnselect();
+    const nodes = getSelectedObjects()
+      .filter(x => !x.obj.hidden && !x.obj.locked)
+      .map(x => editorAPI.selection.getNode(x.type, x.id))
+      .filter(Boolean)
+      .map(x => x.node);
+
+    editorAPI.selection.attach(nodes);
+
+    if (selection.size === 0) {
+      disableRemoveButton();
+      editorAPI.edit();
+      editorAPI.editHTML();
+    } else {
+      enableRemoveButton();
+    }
+  }
+
+  function clearSelection() {
+    selection.clear();
+    editorAPI.selection.detach();
+    refreshSelection();
+  }
+
+  function selectAllObjects() {
+    const keys = objectOrder.filter(key => {
+      const { type, id } = parseKey(key);
+      const obj = getObject(type, id);
+      return obj && !obj.hidden && !obj.locked;
+    });
+    setSelection(keys);
+  }
+
+  // Sidebar
+  const sidebar = id('sidebar');
+  const objectList = id('object-list');
+
+  function toggleSidebar(show) {
+    if (show == null) {
+      sidebar.classList.toggle('open');
+    } else if (show) {
+      sidebar.classList.add('open');
+    } else {
+      sidebar.classList.remove('open');
+    }
+  }
+
+  id('sidebar-toggle').addEventListener('click', () => toggleSidebar());
+  id('sidebar-close').addEventListener('click', () => toggleSidebar(false));
+
+  function refreshSidebar() {
+    if (!objectList) return;
+
+    objectList.innerHTML = '';
+
+    for (let i = objectOrder.length - 1; i >= 0; i--) {
+      const key = objectOrder[i];
+      const { type, id } = parseKey(key);
+      const obj = getObject(type, id);
+      if (!obj) continue;
+
+      const li = document.createElement('li');
+      li.className = 'ui-object-item';
+      if (isSelected(type, id)) li.classList.add('selected');
+      if (obj.hidden) li.classList.add('hidden-item');
+      if (obj.locked) li.classList.add('locked-item');
+
+      const label = document.createElement('span');
+      label.className = 'ui-object-label';
+      label.textContent = objectLabel(type, obj);
+
+      const actions = document.createElement('div');
+      actions.className = 'ui-object-actions';
+
+      const upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.title = 'Move up';
+      upBtn.textContent = '↑';
+      upBtn.addEventListener('click', (e) => { e.stopPropagation(); moveObjectOrder(key, 1); });
+
+      const downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.title = 'Move down';
+      downBtn.textContent = '↓';
+      downBtn.addEventListener('click', (e) => { e.stopPropagation(); moveObjectOrder(key, -1); });
+
+      const lockBtn = document.createElement('button');
+      lockBtn.type = 'button';
+      lockBtn.title = 'Lock';
+      lockBtn.textContent = '🔒';
+      if (obj.locked) lockBtn.classList.add('active');
+      lockBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLock(type, id); });
+
+      const hideBtn = document.createElement('button');
+      hideBtn.type = 'button';
+      hideBtn.title = 'Hide';
+      hideBtn.textContent = '👁';
+      if (obj.hidden) hideBtn.classList.add('active');
+      hideBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleHide(type, id); });
+
+      actions.append(upBtn, downBtn, lockBtn, hideBtn);
+      li.append(label, actions);
+
+      li.addEventListener('click', (e) => {
+        const fakeEvt = { evt: e };
+        if (e.shiftKey) {
+          rangeSelectTo(key);
+        } else if (e.ctrlKey || e.metaKey) {
+          toggleInSelection(key);
+          lastShiftAnchor = key;
+        } else {
+          setSelection([key]);
+          lastShiftAnchor = key;
+        }
+      });
+
+      objectList.appendChild(li);
+    }
+  }
+
+  function moveObjectOrder(key, delta) {
+    const idx = objectOrder.indexOf(key);
+    if (idx === -1) return;
+    const newIdx = idx + delta;
+    if (newIdx < 0 || newIdx >= objectOrder.length) return;
+    objectOrder.splice(idx, 1);
+    objectOrder.splice(newIdx, 0, key);
+    syncEditorOrder();
+    refreshSidebar();
+    refreshPropertyPanel();
+  }
+
+  function moveSelectionOrder(delta) {
+    if (selection.size === 0) return;
+    const selected = Array.from(selection).sort((a, b) => objectOrder.indexOf(a) - objectOrder.indexOf(b));
+    if (delta > 0) {
+      selected.reverse();
+    }
+    selected.forEach(key => moveObjectOrder(key, delta));
+  }
+
+  function toggleLock(type, objId) {
+    const obj = getObject(type, objId);
+    if (!obj) return;
+    obj.locked = !obj.locked;
+    if (obj.locked) {
+      selection.delete(objectKey(type, objId));
+    }
+    applyObjectState(type, objId);
+    refreshSelection();
+  }
+
+  function toggleHide(type, objId) {
+    const obj = getObject(type, objId);
+    if (!obj) return;
+    obj.hidden = !obj.hidden;
+    if (obj.hidden) {
+      selection.delete(objectKey(type, objId));
+    }
+    applyObjectState(type, objId);
+    refreshSelection();
+  }
+
+  // Property panel helpers
+  function clearPropertyControls() {
+    [
+      'ui_id', 'ui_text', 'ui_x', 'ui_y', 'ui_width', 'ui_height',
+      'ui_bgcolor', 'ui_brcolor', 'ui_alpha', 'ui_fixed',
+      'ui_image_id', 'ui_target', 'ui_scale_x', 'ui_scale_y', 'ui_scale_link',
+      'ui_rotation', 'ui_anchor_x', 'ui_anchor_y', 'ui_anchor_link',
+      'ui_order_up', 'ui_order_down', 'ui_sel_count'
+    ].forEach(name => editorAPI.controls.remove(name));
+  }
+
+  function mixedValue(values) {
+    const first = values[0];
+    for (let i = 1; i < values.length; i++) {
+      if (values[i] !== first) return '';
+    }
+    return first;
+  }
+
+  function addPropField({ id: ctrlId, x, y, width, label, text, disabled, onClick }) {
+    const emitter = editorAPI.controls.addTextEdit({
+      id: ctrlId, x, y, width, label, text: text != null ? text : '', disabled,
+    });
+    if (onClick) {
+      emitter.on('click', onClick);
+    }
+    return y + 15;
+  }
+
+  function editNumber(konvaNode, label, value, opts, applyAll) {
+    editorAPI.edit({
+      konvaNode,
+      name: label,
+      type: 'number',
+      value,
+      min: opts.min,
+      max: opts.max,
+      step: opts.step,
+      callback(val) {
+        val = opts.parse(val);
+        if (isNaN(val)) return;
+        applyAll(val);
+      }
     });
   }
 
-  function disableRemoveButton() {
-    editorAPI.controls.addButton({
-      id: "remove",
-      x: 20,
-      y: 420,
-      width: 180,
-      disabled: true,
-      text: "Remove",
-    });
-  }
-
-  function onStageKey(key) {
-    if (selectedId == null) {
-      return;
-    }
-
-    if (key == 'delete') {
-      if (selectType == 'textarea') {
-        delete textareas[selectedId];
-        editorAPI.lua.removeTextArea(selectedId);
-      }
-      else if (selectType == 'image') {
-        delete images[selectedId];
-        editorAPI.lua.removeImage(selectedId);
-      }
-
-      updateOutput();
-      onUnselect();
-      return;
-    }
-
-    if (selectType == 'textarea') {
-      const ta = textareas[selectedId];
-  
-      if (!ta) {
-        return;
-      }
-  
-      if (key == 'left') {
-        ta.x --;
-      }
-      else if (key == 'up') {
-        ta.y --;
-      }
-      else if (key == 'right') {
-        ta.x ++;
-      }
-      else if (key == 'down') {
-        ta.y ++;
-      }
-      else {
-        return;
-      }
-  
-      editorAPI.controls.updateTextEdit({
-        id: 'ui_x',
-        text: ta.x,
-      });
-      editorAPI.controls.updateTextEdit({
-        id: 'ui_y',
-        text: ta.y,
-      });
-
-      updateTextArea(ta);
-    }
-    else if (selectType == 'image') {
-      const img = images[selectedId];
-
-      if (!img) {
-        return;
-      }
-  
-      if (key == 'left') {
-        img.x --;
-      }
-      else if (key == 'up') {
-        img.y --;
-      }
-      else if (key == 'right') {
-        img.x ++;
-      }
-      else if (key == 'down') {
-        img.y ++;
-      }
-      else {
-        return;
-      }
-
-      editorAPI.controls.updateTextEdit({
-        id: 'ui_x',
-        text: img.x,
-      });
-      editorAPI.controls.updateTextEdit({
-        id: 'ui_y',
-        text: img.y,
-      });
-
-      updateImage(img);
-    }
-  }
-
-  function onUnselect() {
-    if (selectedId == null) {
-      return;
-    }
-
-    selectedId = null;
-
-    disableRemoveButton();
+  function refreshPropertyPanel() {
+    clearPropertyControls();
     editorAPI.edit();
     editorAPI.editHTML();
 
-    if (selectType == 'textarea') {
-      editorAPI.controls.remove("ui_id");
-      editorAPI.controls.remove("ui_text");
-      editorAPI.controls.remove("ui_x");
-      editorAPI.controls.remove("ui_y");
-      editorAPI.controls.remove("ui_width");
-      editorAPI.controls.remove("ui_height");
-      editorAPI.controls.remove("ui_bgcolor");
-      editorAPI.controls.remove("ui_brcolor");
-      editorAPI.controls.remove("ui_alpha");
-      editorAPI.controls.remove("ui_fixed");
-    }
-    else if (selectType == 'image') {
-      editorAPI.controls.remove("ui_id");
-      editorAPI.controls.remove("ui_image_id");
-      editorAPI.controls.remove("ui_target");
-      editorAPI.controls.remove("ui_x");
-      editorAPI.controls.remove("ui_y");
-      editorAPI.controls.remove("ui_target_player");
-      editorAPI.controls.remove("ui_scale_x");
-      editorAPI.controls.remove("ui_scale_y");
-      editorAPI.controls.remove("ui_rotation");
-      editorAPI.controls.remove("ui_alpha");
-      editorAPI.controls.remove("ui_anchor_x");
-      editorAPI.controls.remove("ui_anchor_y");
-    }
-  }
-
-  // Create/Edit Image
-
-  function updateImage(img) {
-    images[img._id] = img;
-    updateOutput();
-
-    return editorAPI.lua.addImage(
-      img._id,
-      img.imageId,
-      img.target,
-      img.x,
-      img.y,
-      img.targetPlayer,
-      img.scaleX,
-      img.scaleY,
-      img.rotation / 180 * Math.PI, // convert to radian
-      img.alpha,
-      img.anchorX,
-      img.anchorY,
-      img.fadeIn
-    );
-  }
-
-  function newImage(img) {
-    img = img || {
-      _id: images._lastId ++,
-      imageId: 'PzeZAHw.png',
-      target: '!0',
-      x: 0,
-      y: 0,
-      targetPlayer: null,
-      scaleX: 1,
-      scaleY: 1,
-      rotation: 0,
-      alpha: 1,
-      anchorX: 0,
-      anchorY: 0,
-      fadeIn: false,
-    };
-  
-    const obj = updateImage(img);
-
-    obj.on('click', onSelectImage)
-      .on('move', onMoveImage)
-      .on('update', onUpdateImage)
-      .on('load', (_id, url) => {
-        errorSet('');
-      })
-      .on('loadfail', (_id, url) => {
-        errorSet(`Failed to load image for ${_id}: ${url.escape()}`);
-      });
-
-    onSelectImage(img._id);
-  }
-
-  function onSelectImage(_id) {
-    const img = images[_id];
-
-    if (!img) {
-      console.error("Invalid image selected:", _id);
-      return;
-    }
-
-    onUnselect();
-    selectType = 'image';
-    selectedId = _id;
-    enableRemoveButton();
+    const selected = getSelectedObjects();
+    if (selected.length === 0) return;
 
     let x = 240;
     let y = 420;
 
-    editorAPI.controls.addTextEdit({
-      id: "ui_id",
-      x,
-      y,
-      width: 180,
-      label: 'ID',
-      text: img._id,
-      disabled: true,
+    if (selected.length > 1) {
+      y = addPropField({
+        id: 'ui_sel_count', x, y, width: 180, label: 'Selected', text: selected.length, disabled: true,
+      });
+    }
+
+    y = addPropField({
+      id: 'ui_order_up', x, y, width: 85, label: 'Order', text: '↑ Up',
+      onClick: () => moveSelectionOrder(1),
     });
+    editorAPI.controls.addTextEdit({
+      id: 'ui_order_down', x: x + 95, y: y - 15, width: 85, label: '', text: '↓ Down',
+    }).on('click', () => moveSelectionOrder(-1));
 
     y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_image_id",
-      x,
-      y,
-      width: 180,
-      label: 'Image',
+
+    const xs = selected.map(s => s.obj.x);
+    const ys = selected.map(s => s.obj.y);
+    const alphas = selected.map(s => s.obj.alpha);
+
+    y = addPropField({
+      id: 'ui_x', x, y, width: 180, label: 'X', text: mixedValue(xs),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'X', mixedValue(xs), {
+        parse: v => parseInt(v, 10),
+      }, (val) => {
+        selected.forEach(s => {
+          s.obj.x = val;
+          updateObjectVisual(s.type, s);
+        });
+        refreshPropertyPanel();
+      }),
+    });
+
+    y = addPropField({
+      id: 'ui_y', x, y, width: 180, label: 'Y', text: mixedValue(ys),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Y', mixedValue(ys), {
+        parse: v => parseInt(v, 10),
+      }, (val) => {
+        selected.forEach(s => {
+          s.obj.y = val;
+          updateObjectVisual(s.type, s);
+        });
+        refreshPropertyPanel();
+      }),
+    });
+
+    y = addPropField({
+      id: 'ui_alpha', x, y, width: 180, label: 'Alpha', text: mixedValue(alphas),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Alpha', mixedValue(alphas), {
+        parse: v => parseFloat(v), min: 0, max: 1, step: 0.1,
+      }, (val) => {
+        selected.forEach(s => {
+          s.obj.alpha = val;
+          updateObjectVisual(s.type, s);
+        });
+        refreshPropertyPanel();
+      }),
+    });
+
+    if (selected.length === 1) {
+      const { type, obj } = selected[0];
+      if (type === 'textarea') {
+        showTextAreaProperties(x, y, obj);
+      } else {
+        showImageProperties(x, y, obj);
+      }
+    } else {
+      const allImages = selected.every(s => s.type === 'image');
+      const allTextareas = selected.every(s => s.type === 'textarea');
+      if (allImages) {
+        showImageGroupProperties(x, y, selected);
+      } else if (allTextareas) {
+        showTextAreaGroupProperties(x, y, selected);
+      }
+    }
+  }
+
+  function showTextAreaGroupProperties(x, startY, selected) {
+    const ta = selected[0].obj;
+    let y = startY;
+
+    y = addPropField({
+      id: 'ui_width', x, y, width: 180, label: 'Width', text: mixedValue(selected.map(s => s.obj.width)),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Width', mixedValue(selected.map(s => s.obj.width)), {
+        parse: v => parseInt(v, 10),
+      }, (val) => {
+        selected.forEach(s => { s.obj.width = val; updateTextArea(s.obj); });
+        refreshPropertyPanel();
+      }),
+    });
+
+    y = addPropField({
+      id: 'ui_height', x, y, width: 180, label: 'Height', text: mixedValue(selected.map(s => s.obj.height)),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Height', mixedValue(selected.map(s => s.obj.height)), {
+        parse: v => parseInt(v, 10),
+      }, (val) => {
+        selected.forEach(s => { s.obj.height = val; updateTextArea(s.obj); });
+        refreshPropertyPanel();
+      }),
+    });
+
+    addPropField({
+      id: 'ui_fixed', x, y, width: 180, label: 'Fixed', text: mixedValue(selected.map(s => s.obj.fixed)),
+      onClick: () => {
+        const next = !selected.every(s => s.obj.fixed);
+        selected.forEach(s => { s.obj.fixed = next; updateTextArea(s.obj); });
+        refreshPropertyPanel();
+      },
+    });
+  }
+
+  function updateObjectVisual(type, entry) {
+    const obj = entry.obj;
+    if (type === 'textarea') {
+      updateTextArea(obj);
+    } else {
+      updateImage(obj);
+    }
+  }
+
+  function showTextAreaProperties(x, startY, ta) {
+    let y = startY;
+
+    y = addPropField({
+      id: 'ui_id', x, y, width: 180, label: 'ID', text: ta.id, disabled: true,
+    });
+
+    y = addPropField({
+      id: 'ui_text', x, y, width: 180, label: 'Text', text: ta.text,
+      onClick: () => {
+        editorAPI.editHTML({
+          value: ta.text,
+          callback(val) {
+            ta.text = val.substr(0, 2000);
+            editorAPI.controls.updateTextEdit({ id: 'ui_text', text: ta.text });
+            updateTextArea(ta);
+            refreshSidebar();
+          }
+        });
+      },
+    });
+
+    y = addPropField({
+      id: 'ui_width', x, y, width: 180, label: 'Width', text: ta.width,
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Width', ta.width, {
+        parse: v => parseInt(v, 10),
+      }, (val) => {
+        ta.width = val;
+        editorAPI.controls.updateTextEdit({ id: 'ui_width', text: val });
+        updateTextArea(ta);
+      }),
+    });
+
+    y = addPropField({
+      id: 'ui_height', x, y, width: 180, label: 'Height', text: ta.height,
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Height', ta.height, {
+        parse: v => parseInt(v, 10),
+      }, (val) => {
+        ta.height = val;
+        editorAPI.controls.updateTextEdit({ id: 'ui_height', text: val });
+        updateTextArea(ta);
+      }),
+    });
+
+    y = addPropField({
+      id: 'ui_bgcolor', x, y, width: 180, label: 'BG Color', text: '#' + ta.bg.toString(16).padStart(6, '0'),
+      onClick: (_id, _text, konvaNode) => {
+        editorAPI.inplace.showColor({
+          konvaNode,
+          value: ta.bg,
+          onChange(num) {
+            ta.bg = num;
+            updateTextArea(ta);
+            editorAPI.controls.updateTextEdit({
+              id: 'ui_bgcolor',
+              text: '#' + num.toString(16).padStart(6, '0'),
+            });
+          },
+          onDone(num) {
+            ta.bg = num;
+            updateTextArea(ta);
+            editorAPI.controls.updateTextEdit({
+              id: 'ui_bgcolor',
+              text: '#' + num.toString(16).padStart(6, '0'),
+            });
+          },
+        });
+      },
+    });
+
+    y = addPropField({
+      id: 'ui_brcolor', x, y, width: 180, label: 'Border', text: '#' + ta.br.toString(16).padStart(6, '0'),
+      onClick: (_id, _text, konvaNode) => {
+        editorAPI.inplace.showColor({
+          konvaNode,
+          value: ta.br,
+          onChange(num) {
+            ta.br = num;
+            updateTextArea(ta);
+            editorAPI.controls.updateTextEdit({
+              id: 'ui_brcolor',
+              text: '#' + num.toString(16).padStart(6, '0'),
+            });
+          },
+          onDone(num) {
+            ta.br = num;
+            updateTextArea(ta);
+            editorAPI.controls.updateTextEdit({
+              id: 'ui_brcolor',
+              text: '#' + num.toString(16).padStart(6, '0'),
+            });
+          },
+        });
+      },
+    });
+
+    addPropField({
+      id: 'ui_fixed', x, y, width: 180, label: 'Fixed', text: Boolean(ta.fixed),
+      onClick: () => {
+        ta.fixed = !ta.fixed;
+        editorAPI.controls.updateTextEdit({ id: 'ui_fixed', text: Boolean(ta.fixed) });
+        updateTextArea(ta);
+      },
+    });
+  }
+
+  function showImageProperties(x, startY, img) {
+    let y = startY;
+
+    y = addPropField({
+      id: 'ui_id', x, y, width: 180, label: 'ID', text: img._id, disabled: true,
+    });
+
+    y = addPropField({
+      id: 'ui_image_id', x, y, width: 180, label: 'Image',
       text: img.imageId.startsWith('data:') ? '[Uploaded Image]' : img.imageId,
+      onClick: (_id, _text, konvaNode) => {
+        editorAPI.edit({
+          konvaNode,
+          name: 'Image',
+          type: 'text',
+          value: img.imageId,
+          waitChange: true,
+          callback(val) {
+            img.imageId = val;
+            editorAPI.controls.updateTextEdit({
+              id: 'ui_image_id',
+              text: val.startsWith('data:') ? '[Uploaded Image]' : val,
+            });
+            updateImage(img);
+            refreshSidebar();
+          },
+        });
+      },
+    });
+
+    y = addPropField({
+      id: 'ui_target', x, y, width: 180, label: 'Target', text: img.target,
+      onClick: (_id, _text, konvaNode) => {
+        editorAPI.edit({
+          konvaNode,
+          name: 'Target',
+          type: 'text',
+          value: img.target,
+          callback(val) {
+            img.target = val;
+            editorAPI.controls.updateTextEdit({ id: 'ui_target', text: val });
+            updateImage(img);
+          },
+        });
+      },
+    });
+
+    y = addImageScaleAnchorFields(x, y, img);
+  }
+
+  function showImageGroupProperties(x, startY, selected) {
+    const img = selected[0].obj;
+    addImageScaleAnchorFields(x, startY, img, selected);
+  }
+
+  function addImageScaleAnchorFields(x, startY, img, selected) {
+    const targets = selected || [{ type: 'image', obj: img }];
+    let y = startY;
+
+    y = addPropField({
+      id: 'ui_scale_x', x, y, width: 80, label: 'Scale X', text: mixedValue(targets.map(t => t.obj.scaleX)),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Scale X', img.scaleX, {
+        parse: v => parseFloat(v), step: 0.1, min: -1, max: 1,
+      }, (val) => {
+        targets.forEach(t => {
+          t.obj.scaleX = val;
+          if (scaleLinked) t.obj.scaleY = val;
+          updateImage(t.obj);
+        });
+        refreshPropertyPanel();
+      }),
+    });
+
+    editorAPI.controls.addTextEdit({
+      id: 'ui_scale_link', x: x + 85, y: y - 15, width: 20, label: '', text: scaleLinked ? '🔗' : '⛓',
     }).on('click', () => {
-      editorAPI.edit({
-        name: "Image",
-        type: 'text',
-        value: img.imageId,
-        waitChange: true,
-        callback: (val) => {
-          img.imageId = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_image_id',
-            text: val.startsWith('data:') ? '[Uploaded Image]' : val,
-          });
-          updateImage(img);
-        }
-      });
+      scaleLinked = !scaleLinked;
+      refreshPropertyPanel();
+    });
+
+    y = addPropField({
+      id: 'ui_scale_y', x: x + 110, y: y - 15, width: 70, label: 'Y', text: mixedValue(targets.map(t => t.obj.scaleY)),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Scale Y', img.scaleY, {
+        parse: v => parseFloat(v), step: 0.1, min: -1, max: 1,
+      }, (val) => {
+        targets.forEach(t => {
+          t.obj.scaleY = val;
+          if (scaleLinked) t.obj.scaleX = val;
+          updateImage(t.obj);
+        });
+        refreshPropertyPanel();
+      }),
     });
 
     y += 15;
+
+    y = addPropField({
+      id: 'ui_rotation', x, y, width: 180, label: 'Rotation', text: mixedValue(targets.map(t => t.obj.rotation)),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Rotation', img.rotation, {
+        parse: v => parseInt(v, 10),
+      }, (val) => {
+        targets.forEach(t => {
+          t.obj.rotation = val;
+          updateImage(t.obj);
+        });
+        refreshPropertyPanel();
+      }),
+    });
+
+    y = addPropField({
+      id: 'ui_anchor_x', x, y, width: 80, label: 'Anchor X', text: mixedValue(targets.map(t => t.obj.anchorX)),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Anchor X', img.anchorX, {
+        parse: v => parseFloat(v), step: 0.1, min: -1, max: 1,
+      }, (val) => {
+        targets.forEach(t => {
+          t.obj.anchorX = val;
+          if (anchorLinked) t.obj.anchorY = val;
+          updateImage(t.obj);
+        });
+        refreshPropertyPanel();
+      }),
+    });
+
     editorAPI.controls.addTextEdit({
-      id: "ui_target",
-      x,
-      y,
-      width: 180,
-      label: 'Target',
-      text: img.target,
+      id: 'ui_anchor_link', x: x + 85, y: y - 15, width: 20, label: '', text: anchorLinked ? '🔗' : '⛓',
     }).on('click', () => {
-      editorAPI.edit({
-        name: "Target",
-        type: 'text',
-        value: img.target,
-        callback: (val) => {
-          img.target = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_target',
-            text: val,
-          });
-          updateImage(img);
-        }
-      });
+      anchorLinked = !anchorLinked;
+      refreshPropertyPanel();
     });
 
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_x",
-      x,
-      y,
-      width: 180,
-      label: 'X',
-      text: img.x,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "X",
-        type: 'number',
-        value: img.x,
-        callback: function(val) {
-          val = parseInt(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
-
-          img.x = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_x',
-            text: val,
-          });
-          updateImage(img);
-        }
-      });
+    addPropField({
+      id: 'ui_anchor_y', x: x + 110, y: y - 15, width: 70, label: 'Y', text: mixedValue(targets.map(t => t.obj.anchorY)),
+      onClick: (_id, _text, konvaNode) => editNumber(konvaNode, 'Anchor Y', img.anchorY, {
+        parse: v => parseFloat(v), step: 0.1, min: -1, max: 1,
+      }, (val) => {
+        targets.forEach(t => {
+          t.obj.anchorY = val;
+          if (anchorLinked) t.obj.anchorX = val;
+          updateImage(t.obj);
+        });
+        refreshPropertyPanel();
+      }),
     });
+  }
 
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_y",
-      x,
-      y,
-      width: 180,
-      label: 'Y',
-      text: img.y,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Y",
-        type: 'number',
-        value: img.y,
-        callback: function(val) {
-          val = parseInt(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
+  // Toolbar buttons
+  disableRemoveButton();
+  editorAPI.controls.addButton({
+    id: "add_textarea", x: 20, y: 420 + 30 * 1, width: 180, text: "Add Textarea",
+  }).on('click', () => newTextArea());
 
-          img.y = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_y',
-            text: val,
-          });
-          updateImage(img);
-        }
-      });
+  editorAPI.controls.addButton({
+    id: "add_image", x: 20, y: 420 + 30 * 2, width: 180, text: "Add Image",
+  }).on('click', () => newImage());
+
+  editorAPI.controls.addButton({
+    id: "upload_image", x: 20, y: 420 + 30 * 3, width: 180, text: "Upload Image",
+  }).on('click', () => id('image_upload') && id('image_upload').click());
+
+  editorAPI.controls.addSeparator({ id: "sep1", x: 220, y: 420, height: 160 });
+  editorAPI.stage.on('click', clearSelection);
+  editorAPI.stage.on('key', onStageKey);
+
+  function enableRemoveButton() {
+    editorAPI.controls.addButton({
+      id: "remove", x: 20, y: 420, width: 180, text: "Remove",
+    }).on('click', removeSelected);
+  }
+
+  function disableRemoveButton() {
+    editorAPI.controls.addButton({
+      id: "remove", x: 20, y: 420, width: 180, disabled: true, text: "Remove",
     });
+  }
 
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_scale_x",
-      x,
-      y,
-      width: 180,
-      label: 'Scale X',
-      text: img.scaleX,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Scale X",
-        type: 'number',
-        step: 0.1,
-        min: -1,
-        max: 1,
-        value: img.scaleX,
-        callback: function(val) {
-          val = parseFloat(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
-
-          img.scaleX = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_scale_x',
-            text: val,
-          });
-          updateImage(img);
-        }
-      });
+  function removeSelected() {
+    getSelectedObjects().forEach(({ type, id: objId }) => {
+      if (type === 'textarea') {
+        delete textareas[objId];
+        editorAPI.lua.removeTextArea(objId);
+        objectOrder.splice(objectOrder.indexOf(objectKey(type, objId)), 1);
+      } else {
+        delete images[objId];
+        editorAPI.lua.removeImage(objId);
+        objectOrder.splice(objectOrder.indexOf(objectKey(type, objId)), 1);
+      }
     });
+    updateOutput();
+    clearSelection();
+    refreshSidebar();
+  }
 
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_scale_y",
-      x,
-      y,
-      width: 180,
-      label: 'Scale Y',
-      text: img.scaleY,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Scale Y",
-        type: 'number',
-        step: 0.1,
-        min: -1,
-        max: 1,
-        value: img.scaleY,
-        callback: function(val) {
-          val = parseFloat(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
-
-          img.scaleY = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_scale_y',
-            text: val,
-          });
-          updateImage(img);
-        }
-      });
+  function moveSelected(dx, dy) {
+    getSelectedObjects().forEach(({ type, obj }) => {
+      obj.x += dx;
+      obj.y += dy;
+      updateObjectVisual(type, { obj });
     });
+    refreshPropertyPanel();
+    updateOutput();
+  }
 
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_rotation",
-      x,
-      y,
-      width: 180,
-      label: 'Rotation',
-      text: img.rotation,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Rotation",
-        type: 'number',
-        value: img.rotation,
-        callback: function(val) {
-          val = parseInt(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
+  function onStageKey(key) {
+    if (key === 'selectAll') {
+      selectAllObjects();
+      return;
+    }
 
-          img.rotation = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_rotation',
-            text: val,
-          });
-          updateImage(img);
-        }
-      });
-    });
+    if (selection.size === 0) return;
 
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_alpha",
-      x,
-      y,
-      width: 180,
-      label: 'Alpha',
-      text: img.alpha,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Alpha",
-        type: 'number',
-        min: 0,
-        max: 1,
-        step: 0.1,
-        value: img.alpha,
-        callback: function(val) {
-          val = parseFloat(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
+    if (key === 'delete') {
+      removeSelected();
+      return;
+    }
 
-          img.alpha = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_alpha',
-            text: val,
-          });
-          updateImage(img);
-        }
-      });
-    });
+    if (key === 'left') moveSelected(-1, 0);
+    else if (key === 'up') moveSelected(0, -1);
+    else if (key === 'right') moveSelected(1, 0);
+    else if (key === 'down') moveSelected(0, 1);
+  }
 
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_anchor_x",
-      x,
-      y,
-      width: 180,
-      label: 'Anchor X',
-      text: img.anchorX,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Anchor X",
-        type: 'number',
-        step: 0.1,
-        min: -1,
-        max: 1,
-        value: img.anchorX,
-        callback: function(val) {
-          val = parseFloat(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
+  // Image CRUD
+  function updateImage(img) {
+    images[img._id] = img;
+    updateOutput();
+    return editorAPI.lua.addImage(
+      img._id, img.imageId, img.target, img.x, img.y, img.targetPlayer,
+      img.scaleX, img.scaleY, img.rotation / 180 * Math.PI,
+      img.alpha, img.anchorX, img.anchorY, img.fadeIn
+    );
+  }
 
-          img.anchorX = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_anchor_x',
-            text: val,
-          });
-          updateImage(img);
-        }
-      });
-    });
+  function newImage(img, select) {
+    img = img || {
+      _id: images._lastId++,
+      imageId: 'PzeZAHw.png',
+      target: '!0',
+      x: 0, y: 0,
+      targetPlayer: null,
+      scaleX: 1, scaleY: 1,
+      rotation: 0, alpha: 1,
+      anchorX: 0, anchorY: 0,
+      fadeIn: false,
+      locked: false, hidden: false,
+    };
 
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_anchor_y",
-      x,
-      y,
-      width: 180,
-      label: 'Anchor Y',
-      text: img.anchorY,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Anchor Y",
-        type: 'number',
-        step: 0.1,
-        min: -1,
-        max: 1,
-        value: img.anchorY,
-        callback: function(val) {
-          val = parseFloat(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
-
-          img.anchorY = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_anchor_y',
-            text: val,
-          });
-          updateImage(img);
-        }
-      });
-    });
+    images[img._id] = img;
+    return addObject('image', img, select);
   }
 
   function onMoveImage(_id, x, y) {
     const img = images[_id];
-
-    if (!img) {
-      console.error("Invalid image moved:", _id);
-      return;
-    }
+    if (!img) return;
 
     img.x = x;
     img.y = y;
-
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_x',
-      text: x,
-    });
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_y',
-      text: y,
-    });
-
+    refreshPropertyPanel();
     updateOutput();
   }
 
   function onUpdateImage(_id, x, y, scaleX, scaleY, rotation) {
     const img = images[_id];
-  
-    if (!img) {
-      console.error("Invalid image updated:", _id);
-      return;
-    }
+    if (!img) return;
 
     img.x = x;
     img.y = y;
     img.scaleX = scaleX;
     img.scaleY = scaleY;
-    img.rotation = rotation; // in degrees
+    img.rotation = rotation;
 
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_x',
-      text: x,
-    });
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_y',
-      text: y,
-    });
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_scale_x',
-      text: scaleX,
-    });
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_scale_y',
-      text: scaleY,
-    });
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_rotation',
-      text: rotation,
-    });
-
+    refreshPropertyPanel();
     updateOutput();
   }
 
-  // TextArea Create/Edit
-
+  // TextArea CRUD
   function updateTextArea(ta) {
     textareas[ta.id] = ta;
     updateOutput();
-
     return editorAPI.lua.addTextArea(
-      ta.id,
-      ta.text,
-      ta.target,
-      ta.x,
-      ta.y,
-      ta.width,
-      ta.height,
-      ta.bg,
-      ta.br,
-      ta.alpha,
-      ta.fixed
+      ta.id, ta.text, ta.target, ta.x, ta.y,
+      ta.width, ta.height, ta.bg, ta.br, ta.alpha, ta.fixed
     );
   }
 
-  function newTextArea(ta) {
+  function newTextArea(ta, select) {
     ta = ta || {
-      id: textareas._lastId ++,
+      id: textareas._lastId++,
       text: "ta" + (textareas._lastId - 1),
       target: null,
-      x: 50,
-      y: 50,
-      width: 100,
-      height: 100,
-      bg: 0xffffff,
-      br: 1,
-      alpha: 1,
-      fixed: false,
+      x: 50, y: 50,
+      width: 100, height: 100,
+      bg: 0xffffff, br: 1,
+      alpha: 1, fixed: false,
+      locked: false, hidden: false,
     };
 
-    const obj = updateTextArea(ta);
-
-    obj.on('click', onSelectTextArea)
-       .on('move', onMoveTextArea)
-       .on('update', onUpdateTextArea);
-
-    onSelectTextArea(ta.id);
+    textareas[ta.id] = ta;
+    return addObject('textarea', ta, select);
   }
 
-  function onSelectTextArea(id) {
-    const ta = textareas[id];
-
-    if (!ta) {
-      console.error("Invalid textarea selected:", id);
-      return;
-    }
-
-    onUnselect();
-    selectType = 'textarea';
-    selectedId = id;
-    enableRemoveButton();
-
-    let x = 240;
-    let y = 420;
-
-    editorAPI.controls.addTextEdit({
-      id: "ui_id",
-      x,
-      y,
-      width: 180,
-      label: 'ID',
-      text: ta.id,
-      disabled: true,
-    });
-
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_text",
-      x,
-      y,
-      width: 180,
-      label: 'Text',
-      text: ta.text,
-    }).on('click', function() {
-      editorAPI.editHTML({
-        value: ta.text,
-        callback: function(val) {
-          ta.text = val.substr(0, 2000);
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_text',
-            text: val,
-          });
-          updateTextArea(ta);
-        }
-      });
-    });
-
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_x",
-      x,
-      y,
-      width: 180,
-      label: 'X',
-      text: ta.x,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "X",
-        type: 'number',
-        value: ta.x,
-        callback: function(val) {
-          val = parseInt(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
-
-          ta.x = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_x',
-            text: val,
-          });
-          updateTextArea(ta);
-        }
-      });
-    });
-
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_y",
-      x,
-      y,
-      width: 180,
-      label: 'Y',
-      text: ta.y,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Y",
-        type: 'number',
-        value: ta.y,
-        callback: function(val) {
-          val = parseInt(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
-
-          ta.y = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_y',
-            text: val,
-          });
-          updateTextArea(ta);
-        }
-      });
-    });
-
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_width",
-      x,
-      y,
-      width: 180,
-      label: 'Width',
-      text: ta.width,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Width",
-        type: 'number',
-        value: ta.width,
-        callback: function(val) {
-          val = parseInt(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
-
-          ta.width = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_width',
-            text: val,
-          });
-          updateTextArea(ta);
-        }
-      });
-    });
-
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_height",
-      x,
-      y,
-      width: 180,
-      label: 'Height',
-      text: ta.height,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Height",
-        type: 'number',
-        value: ta.height,
-        callback: function(val) {
-          val = parseInt(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
-
-          ta.height = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_height',
-            text: val,
-          });
-          updateTextArea(ta);
-        }
-      });
-    });
-
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_bgcolor",
-      x,
-      y,
-      width: 180,
-      label: 'Background Color',
-      text: '#' + ta.bg.toString(16).padStart(6, '0'),
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Background Color",
-        type: 'color',
-        value: '#' + ta.bg.toString(16).padStart(6, '0'),
-        callback: function(val) {
-          val = parseInt(val.substr(1), 16);
-
-          if (isNaN(val)) {
-            return;
-          }
-
-          ta.bg = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_bgcolor',
-            text: val,
-          });
-          updateTextArea(ta);
-        }
-      });
-    });
-
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_brcolor",
-      x,
-      y,
-      width: 180,
-      label: 'Border Color',
-      text: '#' + ta.br.toString(16).padStart(6, '0'),
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Border Color",
-        type: 'color',
-        value: '#' + ta.br.toString(16).padStart(6, '0'),
-        callback: function(val) {
-          val = parseInt(val.substr(1), 16);
-
-          if (isNaN(val)) {
-            return;
-          }
-
-          ta.br = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_brcolor',
-            text: val,
-          });
-          updateTextArea(ta);
-        }
-      });
-    });
-
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_alpha",
-      x,
-      y,
-      width: 180,
-      label: 'Alpha',
-      text: ta.alpha,
-    }).on('click', function() {
-      editorAPI.edit({
-        name: "Alpha",
-        type: 'number',
-        min: 0,
-        max: 1,
-        step: 0.1,
-        value: ta.alpha,
-        callback: function(val) {
-          val = parseFloat(val);
-    
-          if (isNaN(val)) {
-            return;
-          }
-
-          ta.alpha = val;
-          editorAPI.controls.updateTextEdit({
-            id: 'ui_alpha',
-            text: val,
-          });
-          updateTextArea(ta);
-        }
-      });
-    });
-
-    y += 15;
-    editorAPI.controls.addTextEdit({
-      id: "ui_fixed",
-      x,
-      y,
-      width: 180,
-      label: 'Fixed',
-      text: Boolean(ta.fixed),
-    }).on('click', function() {
-      ta.fixed = !ta.fixed;
-      editorAPI.controls.updateTextEdit({
-        id: 'ui_fixed',
-        text: Boolean(ta.fixed),
-      });
-      updateTextArea(ta);
-    });
-  }
-
-  function onMoveTextArea(id, x, y) {
-    if (!textareas[id]) {
-      console.error("Invalid textarea moved:", id);
-      return;
-    }
-
-    const ta = textareas[id];
+  function onMoveTextArea(objId, x, y) {
+    const ta = textareas[objId];
+    if (!ta) return;
 
     ta.x = x;
     ta.y = y;
-
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_x',
-      text: x,
-    });
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_y',
-      text: y,
-    });
-
+    refreshPropertyPanel();
     updateOutput();
   }
 
-  function onUpdateTextArea(id, x, y, width, height) {
-    if (!textareas[id]) {
-      console.error("Invalid textarea updated:", id);
-      return;
-    }
-
-    const ta = textareas[id];
+  function onUpdateTextArea(objId, x, y, width, height) {
+    const ta = textareas[objId];
+    if (!ta) return;
 
     ta.x = x;
     ta.y = y;
     ta.width = width;
     ta.height = height;
-
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_x',
-      text: x,
-    });
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_y',
-      text: y,
-    });
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_width',
-      text: width,
-    });
-    editorAPI.controls.updateTextEdit({
-      id: 'ui_height',
-      text: height,
-    });
-
+    refreshPropertyPanel();
     updateOutput();
   }
 
-  // Helper Functions
   function decimalToHex(number) {
     if (number < 0) {
       number = 0xFFFFFFFF + number + 1;
     }
-
     return '0x' + number.toString(16).toUpperCase();
   }
 
-  // Image Upload and Drag & Drop Handlers
+  // Image upload
   function handleImageFile(file) {
     const reader = new FileReader();
     reader.onload = function(event) {
-      const dataURL = event.target.result;
       newImage({
-        _id: images._lastId ++,
-        imageId: dataURL,
+        _id: images._lastId++,
+        imageId: event.target.result,
         fileName: file.name,
         target: '!0',
-        x: 0,
-        y: 0,
+        x: 0, y: 0,
         targetPlayer: null,
-        scaleX: 1,
-        scaleY: 1,
-        rotation: 0,
-        alpha: 1,
-        anchorX: 0,
-        anchorY: 0,
+        scaleX: 1, scaleY: 1,
+        rotation: 0, alpha: 1,
+        anchorX: 0, anchorY: 0,
         fadeIn: false,
+        locked: false, hidden: false,
       });
     };
     reader.onerror = function(err) {
@@ -1167,12 +1045,10 @@
 
   const fileInput = id('image_upload');
   if (fileInput) {
-    fileInput.addEventListener('change', function(e) {
+    fileInput.addEventListener('change', function() {
       if (this.files && this.files.length > 0) {
         Array.from(this.files).forEach(file => {
-          if (file.type.startsWith('image/')) {
-            handleImageFile(file);
-          }
+          if (file.type.startsWith('image/')) handleImageFile(file);
         });
         this.value = '';
       }
@@ -1186,9 +1062,7 @@
     e.preventDefault();
     e.stopPropagation();
     dragCounter++;
-    if (dropOverlay) {
-      dropOverlay.classList.add('active');
-    }
+    if (dropOverlay) dropOverlay.classList.add('active');
   });
 
   window.addEventListener('dragleave', function(e) {
@@ -1197,9 +1071,7 @@
     dragCounter--;
     if (dragCounter <= 0) {
       dragCounter = 0;
-      if (dropOverlay) {
-        dropOverlay.classList.remove('active');
-      }
+      if (dropOverlay) dropOverlay.classList.remove('active');
     }
   });
 
@@ -1212,37 +1084,30 @@
     e.preventDefault();
     e.stopPropagation();
     dragCounter = 0;
-    if (dropOverlay) {
-      dropOverlay.classList.remove('active');
-    }
-
-    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (dropOverlay) dropOverlay.classList.remove('active');
+    if (e.dataTransfer && e.dataTransfer.files) {
       Array.from(e.dataTransfer.files).forEach(file => {
-        if (file.type.startsWith('image/')) {
-          handleImageFile(file);
-        }
+        if (file.type.startsWith('image/')) handleImageFile(file);
       });
     }
   });
 
-  // Export/Import State via JSON
+  // Export/Import
   window.exportJSON = function() {
-    const state = { textareas, images };
+    const state = { textareas, images, objectOrder };
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.href = url;
-    downloadAnchor.download = "tfm_lua_ui.json";
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "tfm_lua_ui.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     URL.revokeObjectURL(url);
   };
 
   function clearEditor() {
-    onUnselect();
-    
-    // Clear textareas
+    clearSelection();
     for (let key in textareas) {
       if (key !== '_lastId') {
         editorAPI.lua.removeTextArea(key);
@@ -1250,8 +1115,6 @@
       }
     }
     textareas._lastId = 0;
-    
-    // Clear images
     for (let key in images) {
       if (key !== '_lastId') {
         editorAPI.lua.removeImage(key);
@@ -1259,52 +1122,64 @@
       }
     }
     images._lastId = 0;
-    
+    objectOrder.length = 0;
     updateOutput();
+    refreshSidebar();
   }
 
   function importState(state) {
     clearEditor();
-    
     if (state.textareas) {
       textareas._lastId = state.textareas._lastId || 0;
       for (let key in state.textareas) {
         if (key === '_lastId') continue;
-        const ta = state.textareas[key];
-        newTextArea(ta);
+        newTextArea(state.textareas[key], false);
       }
     }
-    
     if (state.images) {
       images._lastId = state.images._lastId || 0;
       for (let key in state.images) {
         if (key === '_lastId') continue;
-        const img = state.images[key];
-        newImage(img);
+        newImage(state.images[key], false);
       }
     }
-    
-    onUnselect();
+    if (state.objectOrder && state.objectOrder.length) {
+      objectOrder.length = 0;
+      state.objectOrder.forEach(k => {
+        const { type, id: objId } = parseKey(k);
+        if (getObject(type, objId) && !objectOrder.includes(k)) {
+          objectOrder.push(k);
+        }
+      });
+      objectOrder.forEach((k, i) => {
+        const { type, id: objId } = parseKey(k);
+        const obj = getObject(type, objId);
+        if (obj) obj.editorOrder = i;
+      });
+      syncEditorOrder();
+    }
+    clearSelection();
     updateOutput();
+    refreshSidebar();
   }
 
   const jsonImportInput = id('json_import_input');
   if (jsonImportInput) {
-    jsonImportInput.addEventListener('change', function(e) {
+    jsonImportInput.addEventListener('change', function() {
       if (this.files && this.files.length > 0) {
-        const file = this.files[0];
         const reader = new FileReader();
         reader.onload = function(event) {
           try {
-            const state = JSON.parse(event.target.result);
-            importState(state);
+            importState(JSON.parse(event.target.result));
           } catch (err) {
             errorSet("Failed to parse JSON file: " + err.message);
           }
         };
-        reader.readAsText(file);
+        reader.readAsText(this.files[0]);
         this.value = '';
       }
     });
   }
+
+  refreshSidebar();
 })();

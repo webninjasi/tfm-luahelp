@@ -277,3 +277,158 @@ button {
   background: rgba(17, 17, 17, 0.8);
   pointer-events: none;
 }
+
+/* UI Editor sidebar */
+.ui-sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 260px;
+  height: 100%;
+  background: rgba(17, 17, 17, 0.95);
+  border-right: 1px solid #444444;
+  z-index: 5000;
+  display: none;
+  flex-direction: column;
+  font-size: 12px;
+}
+
+.ui-sidebar.open {
+  display: flex;
+}
+
+.ui-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6em 0.8em;
+  border-bottom: 1px solid #444444;
+  color: #C2C2DA;
+  font-weight: bold;
+}
+
+.ui-sidebar-header button {
+  padding: 0 0.4em;
+  line-height: 1.2;
+}
+
+.ui-object-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.ui-object-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  padding: 0.35em 0.5em;
+  border-bottom: 1px solid #2a2a2a;
+  cursor: pointer;
+  color: #b0b8ca;
+}
+
+.ui-object-item:hover {
+  background: #2a3a40;
+}
+
+.ui-object-item.selected {
+  background: #1a4a52;
+  color: #2ECF73;
+}
+
+.ui-object-item.hidden-item {
+  opacity: 0.45;
+}
+
+.ui-object-item.locked-item .ui-object-label::after {
+  content: " 🔒";
+}
+
+.ui-object-label {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-object-actions {
+  display: flex;
+  gap: 0.15em;
+  flex-shrink: 0;
+}
+
+.ui-object-actions button {
+  padding: 0.1em 0.35em;
+  font-size: 0.85em;
+  min-width: 1.6em;
+}
+
+.ui-object-actions button.active {
+  background-color: #444444;
+  color: #2ECF73;
+}
+
+/* In-place property editors on canvas */
+#inplace-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 9000;
+  pointer-events: none;
+}
+
+#inplace-overlay .inplace-panel {
+  position: fixed;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  background: rgba(17, 17, 17, 0.92);
+  border: 1px solid #009D9D;
+  padding: 0.15em 0.3em;
+  border-radius: 3px;
+}
+
+#inplace-overlay .inplace-input {
+  position: fixed;
+  pointer-events: auto;
+  font-family: Verdana, sans-serif;
+  font-size: 12px;
+  color: #009D9D;
+  background: rgba(17, 17, 17, 0.92);
+  border: 1px solid #009D9D;
+  padding: 0.1em 0.25em;
+  min-width: 3em;
+}
+
+#inplace-overlay input[type="color"] {
+  pointer-events: auto;
+  width: 1.6em;
+  height: 1.6em;
+  padding: 0;
+  border: 1px solid #444444;
+  cursor: pointer;
+}
+
+.ui-editor-text {
+  z-index: 4000;
+  max-width: 40vw;
+}
+
+.ui-editor-text label {
+  display: block;
+  color: #C2C2DA;
+  font-size: 0.85em;
+  margin-bottom: 0.3em;
+}
+
+.ui-editor-text #input {
+  width: 100%;
+  min-height: 8em;
+  box-sizing: border-box;
+}

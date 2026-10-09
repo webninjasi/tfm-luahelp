@@ -25,7 +25,14 @@
     const children = luaLayer.getChildren();
 
     children
-      .sort((a, b) => (a.getAttr("tfmPriority") || -1) - (b.getAttr("tfmPriority") || -1))
+      .sort((a, b) => {
+        const pa = a.getAttr("tfmPriority") || -1;
+        const pb = b.getAttr("tfmPriority") || -1;
+        if (pa !== pb) {
+          return pa - pb;
+        }
+        return (a.getAttr("editorOrder") || 0) - (b.getAttr("editorOrder") || 0);
+      })
       .map((x, i) => x.zIndex(i));
     luaLayer.draw();
   }
@@ -55,14 +62,102 @@
     boundBoxFunc,
   });
 
+  const multiTransformer = new Konva.Transformer({
+    nodes: [],
+    ignoreStroke: true,
+    rotateEnabled: true,
+    keepRatio: true,
+    padding: 10,
+    boundBoxFunc,
+  });
+
   toolLayer.add(taTransformer);
   toolLayer.add(imgTransformer);
+  toolLayer.add(multiTransformer);
 
   function detachTransformers() {
     taTransformer.nodes().map(elm => elm.draggable(false));
     imgTransformer.nodes().map(elm => elm.draggable(false));
+    multiTransformer.nodes().map(elm => elm.draggable(false));
     taTransformer.detach();
     imgTransformer.detach();
+    multiTransformer.detach();
+    toolLayer.draw();
+  }
+
+  function isTextAreaNode(node) {
+    return node.getClassName() === 'Group';
+  }
+
+  function getNodeEntry(type, id) {
+    if (type === 'textarea') {
+      const list = controls.get('textarea_' + id);
+      return list ? { node: list[3], type } : null;
+    }
+    if (type === 'image') {
+      const list = controls.get('image_' + id);
+      return list ? { node: list[0], type } : null;
+    }
+    return null;
+  }
+
+  function setNodeEditorState(type, id, { locked, hidden }) {
+    const entry = getNodeEntry(type, id);
+    if (!entry) {
+      return;
+    }
+
+    const { node } = entry;
+
+    if (locked != null) {
+      node.setAttr('editorLocked', locked);
+      if (locked) {
+        node.draggable(false);
+      }
+    }
+
+    if (hidden != null) {
+      node.setAttr('editorHidden', hidden);
+      node.visible(!hidden);
+      node.listening(!hidden && !node.getAttr('editorLocked'));
+    }
+
+    if (!hidden && !node.getAttr('editorLocked')) {
+      node.listening(true);
+    }
+
+    luaLayer.draw();
+  }
+
+  function attachSelection(nodes) {
+    detachTransformers();
+
+    if (!nodes.length) {
+      return;
+    }
+
+    const unlocked = nodes.filter(n => !n.getAttr('editorLocked') && !n.getAttr('editorHidden'));
+
+    if (!unlocked.length) {
+      return;
+    }
+
+    if (unlocked.length === 1) {
+      const node = unlocked[0];
+      node.draggable(true);
+      if (isTextAreaNode(node)) {
+        taTransformer.nodes([ node ]);
+      } else {
+        imgTransformer.nodes([ node ]);
+      }
+    } else {
+      const allImages = unlocked.every(n => !isTextAreaNode(n));
+      multiTransformer.rotateEnabled(allImages);
+      multiTransformer.keepRatio(true);
+      unlocked.forEach(n => n.draggable(true));
+      multiTransformer.nodes(unlocked);
+    }
+
     toolLayer.draw();
   }
 
@@ -355,7 +450,7 @@
       const emitter = EventEmitter();
 
       textValue.on('click', () => {
-        emitter.emit('click', id, text);
+        emitter.emit('click', id, text, textValue);
       });
 
       return emitter;
@@ -540,11 +635,11 @@
           Math.floor(group.x()), Math.floor(group.y())
         );
       });
-      group.on('click', () => {
-        detachTransformers();
-        group.draggable(true);
-        taTransformer.nodes([ group ]);
-        emitter.emit('click', id);
+      group.on('click', (evt) => {
+        if (group.getAttr('editorHidden') || group.getAttr('editorLocked')) {
+          return;
+        }
+        emitter.emit('click', id, evt);
       });
 
       return emitter;
@@ -659,11 +754,11 @@
           Math.floor(image.x()), Math.floor(image.y())
         );
       });
-      image.on('click', () => {
-        detachTransformers();
-        image.draggable(true);
-        imgTransformer.nodes([ image ]);
-        emitter.emit('click', _id);
+      image.on('click', (evt) => {
+        if (image.getAttr('editorHidden') || image.getAttr('editorLocked')) {
+          return;
+        }
+        emitter.emit('click', _id, evt);
       });
 
       imageObj.onload = function() {
@@ -709,45 +804,201 @@
     };
   })();
 
-  // Edit APIs
+  // In-place edit APIs
+  const inplace = (function() {
+    const overlay = document.getElementById('inplace-overlay');
+    let onClose = null;
+
+    function close() {
+      if (onClose) {
+        onClose();
+        onClose = null;
+      }
+      if (overlay) {
+        overlay.innerHTML = '';
+      }
+    }
+
+    function konvaToScreen(konvaNode) {
+      const stageRef = konvaNode.getStage();
+      const pos = konvaNode.getAbsolutePosition();
+      const container = stageRef.container().getBoundingClientRect();
+      return {
+        left: container.left + pos.x,
+        top: container.top + pos.y,
+        width: Math.max(konvaNode.width() || 0, 30),
+        height: Math.max(konvaNode.height() || 12, 14),
+      };
+    }
+
+    function positionElement(el, konvaNode, extraWidth) {
+      const rect = konvaToScreen(konvaNode);
+      el.style.left = rect.left + 'px';
+      el.style.top = rect.top + 'px';
+      if (extraWidth) {
+        el.style.minWidth = Math.max(rect.width, extraWidth) + 'px';
+      }
+    }
+
+    function bindDismiss(input) {
+      const dismiss = (evt) => {
+        if (evt.target.closest('#inplace-overlay')) {
+          return;
+        }
+        close();
+        document.removeEventListener('mousedown', dismiss);
+      };
+      setTimeout(() => document.addEventListener('mousedown', dismiss), 0);
+      input.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Escape') {
+          close();
+          document.removeEventListener('mousedown', dismiss);
+        } else if (evt.key === 'Enter') {
+          input.blur();
+        }
+      });
+    }
+
+    function showField({ konvaNode, value, type, min, max, step, live, onChange, onDone }) {
+      close();
+      if (!overlay || !konvaNode) {
+        return;
+      }
+
+      const input = document.createElement('input');
+      input.className = 'inplace-input';
+      input.type = type || 'text';
+      if (min != null) input.min = min;
+      if (max != null) input.max = max;
+      if (step != null) input.step = step;
+      input.value = value != null ? value : '';
+
+      overlay.appendChild(input);
+      positionElement(input, konvaNode);
+      input.focus();
+      input.select();
+
+      const commit = () => {
+        if (onDone) {
+          onDone(input.value);
+        }
+        close();
+      };
+
+      if (live) {
+        input.addEventListener('input', () => onChange && onChange(input.value));
+      }
+      input.addEventListener('change', commit);
+      input.addEventListener('blur', commit);
+      bindDismiss(input);
+    }
+
+    function parseColorValue(val) {
+      val = val.trim();
+      if (val.startsWith('#')) {
+        return parseInt(val.slice(1), 16);
+      }
+      if (val.startsWith('0x') || val.startsWith('0X')) {
+        return parseInt(val.slice(2), 16);
+      }
+      return parseInt(val, 10);
+    }
+
+    function colorToHex(num) {
+      if (num < 0) {
+        num = 0xFFFFFFFF + num + 1;
+      }
+      return '#' + num.toString(16).padStart(6, '0');
+    }
+
+    function showColor({ konvaNode, value, onChange, onDone }) {
+      close();
+      if (!overlay || !konvaNode) {
+        return;
+      }
+
+      const panel = document.createElement('div');
+      panel.className = 'inplace-panel';
+
+      const hexInput = document.createElement('input');
+      hexInput.className = 'inplace-input';
+      hexInput.type = 'text';
+      hexInput.value = colorToHex(value);
+      hexInput.style.position = 'static';
+      hexInput.style.minWidth = '5.5em';
+
+      const intInput = document.createElement('input');
+      intInput.className = 'inplace-input';
+      intInput.type = 'text';
+      intInput.value = value;
+      intInput.style.position = 'static';
+      intInput.style.minWidth = '4em';
+
+      const picker = document.createElement('input');
+      picker.type = 'color';
+      picker.value = colorToHex(value);
+
+      panel.appendChild(hexInput);
+      panel.appendChild(intInput);
+      panel.appendChild(picker);
+      overlay.appendChild(panel);
+
+      const rect = konvaToScreen(konvaNode);
+      panel.style.left = rect.left + 'px';
+      panel.style.top = rect.top + 'px';
+
+      const apply = (num) => {
+        if (isNaN(num)) {
+          return;
+        }
+        hexInput.value = colorToHex(num);
+        intInput.value = num;
+        picker.value = colorToHex(num);
+        onChange && onChange(num);
+      };
+
+      hexInput.addEventListener('input', () => apply(parseColorValue(hexInput.value)));
+      intInput.addEventListener('input', () => apply(parseInt(intInput.value, 10)));
+      picker.addEventListener('input', () => apply(parseColorValue(picker.value)));
+
+      const commit = () => {
+        const num = parseColorValue(hexInput.value);
+        if (!isNaN(num) && onDone) {
+          onDone(num);
+        }
+        close();
+      };
+
+      hexInput.addEventListener('change', commit);
+      intInput.addEventListener('change', commit);
+      hexInput.focus();
+      hexInput.select();
+      bindDismiss(hexInput);
+    }
+
+    return { showField, showColor, close, konvaToScreen };
+  })();
+
   const editText = (function() {
-    const nameElement = document.getElementById('property_name');
-    const valueElement = document.getElementById('property_value');
-
-    let callOnChange;
-    let callbackFunc;
-
-    valueElement.addEventListener("input", function() {
-      if (callbackFunc && !callOnChange) {
-        callbackFunc(valueElement.value);
-      }
-    });
-
-    valueElement.addEventListener("change", function() {
-      if (callbackFunc && callOnChange) {
-        callbackFunc(valueElement.value);
-      }
-    });
-
     function editFunc(options) {
-      if (options) {
-        const { name, type, min, max, step, value, callback, waitChange } = options;
-
-        callOnChange = waitChange;
-        callbackFunc = callback;
-        nameElement.innerHTML = name + ' : ';
-        valueElement.type = type;
-        valueElement.min = min;
-        valueElement.max = max;
-        valueElement.step = step;
-        valueElement.value = value != null ? value : '';
-        valueElement.focus();
-        valueElement.select();
-      } else {
-        callbackFunc = null;
-        nameElement.innerHTML = '<i>Property:</i>';
-        valueElement.value = '';
+      if (!options) {
+        inplace.close();
+        return;
       }
+
+      const { konvaNode, name, type, min, max, step, value, callback, waitChange } = options;
+
+      inplace.showField({
+        konvaNode,
+        value,
+        type,
+        min,
+        max,
+        step,
+        live: !waitChange,
+        onChange: callback,
+        onDone: callback,
+      });
     }
 
     return editFunc;
@@ -797,6 +1048,12 @@
       return;
     }
 
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+      stageEmitter.emit('key', 'selectAll');
+      event.preventDefault();
+      return;
+    }
+
     if (event.keyCode === 37) {
       stageEmitter.emit('key', 'left');
     } else if (event.keyCode === 38) {
@@ -820,11 +1077,19 @@
     lua,
     edit: editText,
     editHTML,
+    inplace,
+    selection: {
+      attach: attachSelection,
+      detach: detachTransformers,
+      getNode: getNodeEntry,
+      setState: setNodeEditorState,
+    },
     gameUI: {
       toggle: toggleGameUI,
       updateHeader: updateBarText,
     },
     stage: stageEmitter,
+    sortLuaLayer,
   };
 
   // Helper Functions
