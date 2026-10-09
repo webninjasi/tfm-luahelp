@@ -125,11 +125,10 @@
   <div class="layout">
     <aside class="sidebar" id="sidebar">
       <section class="side-section" id="collectionsSection">
-        <div class="side-head"><button type="button" id="collectionsCollapse" title="Collapse / expand">▾</button><strong>Collections</strong><span class="spacer"></span><button type="button" id="collectionAdd" title="New collection">+</button></div>
+        <div class="side-head"><button type="button" id="collectionsCollapse" title="Collapse / expand">▾</button><strong>Collections</strong><span class="spacer"></span><button type="button" id="collectionBatch" title="Batch add images to a collection">Batch</button><button type="button" id="collectionAdd" title="New collection">+</button></div>
         <div class="side-body">
           <form id="collectionForm" hidden><input id="collectionName" type="text" maxlength="64" placeholder="Collection name…" autocomplete="off"><button type="submit">Create</button><select id="collectionScope"><option value="local">Local (this browser)</option><option value="shared" id="collectionScopeShared">Shared (curator)</option></select></form>
           <div id="collectionList"></div>
-          <div id="collectionManage" class="coll-manage" hidden></div>
         </div>
       </section>
       <div class="side-resizer" id="sideResizer" title="Drag to resize"></div>
@@ -152,6 +151,22 @@
   <div class="modal-body">
     <div class="modal-left"><div class="zoom-bar" id="zoomBar"><button type="button" id="zoomOut" title="Zoom out">−</button><span class="zoom-label" id="zoomLabel">Fit</span><button type="button" id="zoomIn" title="Zoom in (Ctrl+wheel)">+</button><button type="button" id="zoomFit">Fit</button><button type="button" id="zoomActual">1:1</button></div><div class="modal-preview" id="dialogPreview"></div></div>
     <div class="details" id="dialogDetails"></div>
+  </div>
+</dialog>
+<dialog id="batchCollDialog" class="small-dialog">
+  <div class="modal-head"><strong>Batch add to collection</strong><span class="spacer"></span><button type="button" id="batchCollClose">Close</button></div>
+  <div class="panel-body">
+    <p class="panel-note">One image per line: full URL, <code>img@hex</code>, <code>hex.png</code>, a Transformice/XML path, or an asset ID such as <code>forum:hex.png</code>. Lines beginning with <code>#</code> are ignored. Local adds only tag this browser. Shared adds queue curated-tag edits for images already in the database (save them with Batch save in the Curator panel); images not yet in the database are added through the backend with the collection tag.</p>
+    <div class="panel-form">
+      <label for="batchCollName">Collection</label>
+      <div class="submit-line"><input id="batchCollName" type="text" maxlength="50" list="batchCollOptions" placeholder="Collection name…" autocomplete="off"><select id="batchCollScope"><option value="local">Local (this browser)</option><option value="shared" id="batchCollShared">Shared (curator)</option></select></div>
+      <datalist id="batchCollOptions"></datalist>
+      <label for="batchCollText" style="margin-top:8px">Images</label>
+      <textarea id="batchCollText" class="curator-batch-input" spellcheck="false" placeholder="img@18b4019de68&#10;149a49e4b38.png&#10;x_transformice/x_inventaire/17.jpg"></textarea>
+    </div>
+    <div class="panel-actions"><button type="button" id="batchCollRun">Add to collection</button></div>
+    <div id="batchCollStatus" class="panel-status"></div>
+    <div id="batchCollResults" class="curator-batch-results"></div>
   </div>
 </dialog>
 <dialog id="addAssetDialog" class="small-dialog">
@@ -290,7 +305,6 @@ const state = {
   formatPref: str(prefs.format) || 'all',
   collections: loadLocalCollections(),
   collectionByTab: {image:str(prefs.collectionByTab?.image), audio:str(prefs.collectionByTab?.audio)},
-  manageTarget: '', manageScope: 'local',
   folderQuery: '', collapsedFolders: new Set(),
   sidebarUi: {collectionsCollapsed:!!prefs.collectionsCollapsed, foldersCollapsed:!!prefs.foldersCollapsed, collectionsHeight:Number(prefs.collectionsHeight)>=60?Number(prefs.collectionsHeight):200},
   folderByTab: {image:str(prefs.folderByTab?.image), audio:str(prefs.folderByTab?.audio)},
@@ -576,7 +590,7 @@ let collectionsSig='';
 function renderCollections(){
   const list=buildCollections(),token=!!loadCuratorToken(),selected=curCollection();
   $('collectionScopeShared').disabled=!token;
-  const sig=JSON.stringify([list.map(c=>[c.key,c.name,c.count,c.local,c.shared,c.draft]),selected,token,state.tab,state.manageTarget,state.manageScope]);
+  const sig=JSON.stringify([list.map(c=>[c.key,c.name,c.count,c.local,c.shared,c.draft]),selected,token,state.tab]);
   if(sig!==collectionsSig){
     collectionsSig=sig;
     const box=$('collectionList');box.replaceChildren();
@@ -590,45 +604,7 @@ function renderCollections(){
       if(c.local||c.draft)row.appendChild(button('×',()=>deleteCollection(c),'coll-del'));else row.appendChild(document.createElement('span'));
       box.appendChild(row);
     }
-    renderCollectionManage(list,token);
   }
-  $('collectionManage').querySelectorAll('[data-count]').forEach(b=>{b.textContent=`${b.dataset.verb} ${state.filtered.length.toLocaleString()} shown`;});
-}
-function renderCollectionManage(list,token){
-  const box=$('collectionManage');box.replaceChildren();box.hidden=!list.length;if(!list.length)return;
-  const canShared=token&&state.tab==='image';if(!canShared)state.manageScope='local';
-  const target=document.createElement('select'),scope=document.createElement('select');
-  for(const c of list)target.add(new Option(c.name,c.key));
-  const want=state.manageTarget||curCollection();target.value=list.some(c=>c.key===want)?want:list[0].key;state.manageTarget=target.value;
-  scope.add(new Option('Local','local'));if(canShared)scope.add(new Option('Shared','shared'));scope.value=state.manageScope;
-  target.addEventListener('change',()=>{state.manageTarget=target.value;});scope.addEventListener('change',()=>{state.manageScope=scope.value;});
-  const run=remove=>{const c=list.find(x=>x.key===target.value);if(c)bulkCollection(c,scope.value,remove);};
-  const add=button('',()=>run(false)),rem=button('',()=>run(true),'danger-button');
-  add.dataset.count='1';add.dataset.verb='Add';rem.dataset.count='1';rem.dataset.verb='Remove';
-  box.append(el('span','detail-label','Bulk edit on shown results'),target,scope,add,rem);
-}
-function bulkCollection(c,scope,remove){
-  const assets=state.filtered;if(!assets.length)return;
-  if(!confirm(`${remove?'Remove':'Add'} ${assets.length.toLocaleString()} shown asset${assets.length===1?'':'s'} ${remove?'from':'to'} the ${scope} collection "${c.name}"?`))return;
-  if(scope==='shared'){
-    const tag=COLLECTION_PREFIX+c.key;
-    for(const a of assets){
-      if(a.kind!=='image')continue;const cur=effectiveCuratedTags(a),has=cur.includes(tag);if(remove?!has:has)continue;
-      const next=remove?cur.filter(t=>t!==tag):[...cur,tag];
-      if(sameTagList(next,a.tags?.curated||[]))delete state.pendingCurated[a.id];else state.pendingCurated[a.id]=next;
-    }
-    savePendingCuratedStore();
-  }else{
-    const tag=(COLLECTION_PREFIX+c.name).toLowerCase();
-    for(const a of assets){
-      const cur=localTagsFor(a),has=cur.some(t=>t.toLowerCase()===tag);if(remove?!has:has)continue;
-      const next=remove?cur.filter(t=>t.toLowerCase()!==tag):[...cur,COLLECTION_PREFIX+c.name];
-      if(next.length)state.localTags[a.id]=next;else delete state.localTags[a.id];
-    }
-    if(!remove&&!state.collections.local.some(n=>n.toLowerCase()===c.key)){state.collections.local.push(c.name);saveCollections();}
-    saveLocalTagStore();
-  }
-  apply();
 }
 function deleteCollection(c){
   if(!confirm(`Delete the ${c.local?'local ':''}collection "${c.name}"?${c.local?' It will be removed from every image in this browser. Shared (curated) membership is not affected.':''}`))return;
@@ -647,6 +623,66 @@ function createCollection(name,scope){
   if(scope==='shared'&&!loadCuratorToken())scope='local';
   const list=state.collections[scope];if(!list.some(n=>n.toLowerCase()===name.toLowerCase())){list.push(name);saveCollections();}
   state.collectionByTab[state.tab]=name.toLowerCase();state.page=0;apply();
+}
+function lineToAssetId(raw){
+  const v=String(raw||'').trim();
+  if(/^(forum|module|transformice|audio):/i.test(v))return v.replace(/^(\w+):/,(m,p)=>p.toLowerCase()+':');
+  return clientCanonicalAssetId(v);
+}
+function openCollectionBatch(){
+  const token=!!loadCuratorToken();$('batchCollShared').disabled=!token;if(!token)$('batchCollScope').value='local';
+  const all=buildCollections(),dl=$('batchCollOptions');dl.replaceChildren();for(const c of all)dl.appendChild(new Option(c.name));
+  if(!$('batchCollName').value&&curCollection())$('batchCollName').value=(all.find(c=>c.key===curCollection())||{}).name||curCollection();
+  $('batchCollStatus').textContent='';$('batchCollStatus').classList.remove('error');$('batchCollResults').replaceChildren();
+  $('batchCollDialog').showModal();
+}
+async function runCollectionBatch(){
+  const name=cleanCollectionName($('batchCollName').value),scope=$('batchCollScope').value,status=$('batchCollStatus'),results=$('batchCollResults'),run=$('batchCollRun');
+  status.classList.remove('error');results.replaceChildren();
+  const fail=m=>{status.textContent=m;status.classList.add('error');};
+  if(!name)return fail('Enter a collection name.');
+  const token=loadCuratorToken();if(scope==='shared'&&!token)return fail('Save the curator token first.');
+  const entries=$('batchCollText').value.split(/\r?\n/).map(x=>x.trim()).filter(x=>x&&!x.startsWith('#')).map(raw=>({raw,id:lineToAssetId(raw)}));
+  if(!entries.length)return fail('Enter at least one image reference.');
+  const note=(cls,text)=>results.appendChild(el('div','curator-batch-result '+cls,text));
+  const byId=new Map([...state.images,...state.audio].map(a=>[a.id,a]));
+  let added=0,already=0,invalid=0,unknown=0;
+  run.disabled=true;
+  try{
+    const valid=[],seen=new Set();
+    for(const e of entries){if(!e.id){invalid++;note('error',`${e.raw} — not a recognised image reference`);continue;}if(!seen.has(e.id)){seen.add(e.id);valid.push(e);}}
+    if(scope==='local'){
+      const tag=COLLECTION_PREFIX+name;
+      for(const e of valid){
+        const cur=localTagsFor({id:e.id});
+        if(cur.some(t=>t.toLowerCase()===tag.toLowerCase())){already++;continue;}
+        state.localTags[e.id]=[...cur,tag];added++;if(!byId.has(e.id))unknown++;
+      }
+      if(!state.collections.local.some(n=>n.toLowerCase()===name.toLowerCase())){state.collections.local.push(name);saveCollections();}
+      saveLocalTagStore();
+    }else{
+      const tag=COLLECTION_PREFIX+name.toLowerCase(),missing=[];
+      for(const e of valid){
+        const a=byId.get(e.id);
+        if(!a||a.kind!=='image'){missing.push(e);continue;}
+        const cur=effectiveCuratedTags(a);if(cur.includes(tag)){already++;continue;}
+        const next=[...cur,tag];if(sameTagList(next,a.tags?.curated||[]))delete state.pendingCurated[a.id];else state.pendingCurated[a.id]=next;added++;
+      }
+      savePendingCuratedStore();
+      for(let i=0;i<missing.length;i+=25){
+        const chunk=missing.slice(i,i+25);status.textContent=`Adding new images ${i+1}–${i+chunk.length} of ${missing.length}…`;
+        const data=await callBackendAddBatch(chunk.map(e=>({asset:e.raw,tags:[tag]})),token);
+        const records=Array.isArray(data.records)?data.records:[],rejected=Array.isArray(data.rejected)?data.rejected:[];
+        for(const raw of records){const r=normalizeApiRecord(raw);if(!r)continue;const ex=state.images.find(x=>x.id===r.id);if(ex)Object.assign(ex,r);else state.images.push(r);added++;unknown++;}
+        for(const item of rejected)note('error',`${item.asset||item.id||'Asset'} — ${item.error||'Rejected'}`);
+      }
+      if(!state.collections.shared.some(n=>n.toLowerCase()===name.toLowerCase())){state.collections.shared.push(name);saveCollections();}
+      if(missing.length)populateFormats(true);
+    }
+    status.textContent=`${added} added · ${already} already in the collection`+(invalid?` · ${invalid} invalid`:'')+(scope==='local'&&unknown?` · ${unknown} not in the database yet (tag kept locally)`:'')+(scope==='shared'&&unknown?` · ${unknown} newly added to the database`:'')+(scope==='shared'?' · queued edits need Batch save':'')+'.';
+    state.collectionByTab[state.tab]=name.toLowerCase();state.page=0;apply();
+  }catch(err){fail(`Stopped: ${err.message}`);}
+  finally{run.disabled=false;}
 }
 function syncSidebar(){
   const key=state.tab+'|'+state.images.length+'|'+state.audio.length+'|'+state.sources.includes('transformice');
@@ -1176,6 +1212,7 @@ $('advancedToggle').addEventListener('click',()=>{$('advanced').hidden=!$('advan
 $('collectionsCollapse').addEventListener('click',()=>{state.sidebarUi.collectionsCollapsed=!state.sidebarUi.collectionsCollapsed;updateSidebarUI();savePrefs();});
 $('foldersCollapse').addEventListener('click',()=>{state.sidebarUi.foldersCollapsed=!state.sidebarUi.foldersCollapsed;updateSidebarUI();savePrefs();});
 $('collectionAdd').addEventListener('click',()=>{const f=$('collectionForm');f.hidden=!f.hidden;if(!f.hidden){state.sidebarUi.collectionsCollapsed=false;updateSidebarUI();$('collectionName').focus();}});
+$('collectionBatch').addEventListener('click',openCollectionBatch);$('batchCollClose').addEventListener('click',()=>$('batchCollDialog').close());$('batchCollRun').addEventListener('click',runCollectionBatch);
 $('collectionForm').addEventListener('submit',e=>{e.preventDefault();createCollection($('collectionName').value,$('collectionScope').value);$('collectionName').value='';$('collectionForm').hidden=true;});
 $('folderSearch').addEventListener('input',()=>{state.folderQuery=$('folderSearch').value;renderFolders();});
 $('sideResizer').addEventListener('pointerdown',e=>{
@@ -1200,7 +1237,7 @@ $('saveCuratorToken').addEventListener('click',()=>{const value=$('curatorToken'
 $('curatorAddBatch').addEventListener('click',submitCuratorAddBatch);$('saveCuratorBatch').addEventListener('click',saveCuratorBatch);$('discardCuratorBatch').addEventListener('click',discardAllCuratorEdits);$('curatorImportLocalTags').addEventListener('click',()=>$('curatorImportLocalTagsFile').click());$('curatorImportLocalTagsFile').addEventListener('change',e=>{const file=e.target.files?.[0];if(file)importLocalTagsAsCurated(file);e.target.value='';});
 $('exportLocalTags').addEventListener('click',exportLocalTags);$('importLocalTags').addEventListener('click',()=>$('importLocalTagsFile').click());$('importLocalTagsFile').addEventListener('change',e=>{const file=e.target.files?.[0];if(file)importLocalTagsFile(file);e.target.value='';});$('clearLocalTags').addEventListener('click',clearAllLocalTags);
 $('detailsDialog').addEventListener('click',e=>{if(e.target===$('detailsDialog'))$('detailsDialog').close();});
-for(const id of['addAssetDialog','localTagsDialog','curatorDialog'])$(id).addEventListener('click',e=>{if(e.target===$(id))$(id).close();});
+for(const id of['addAssetDialog','localTagsDialog','curatorDialog','batchCollDialog'])$(id).addEventListener('click',e=>{if(e.target===$(id))$(id).close();});
 $('detailsDialog').addEventListener('close',()=>{const a=$('dialogPreview').querySelector('audio');if(a&&playback.audio===a)stopPlayback();else if(a)a.pause();});
 
 // Restore remembered options
