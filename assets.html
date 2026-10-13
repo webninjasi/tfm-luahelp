@@ -91,7 +91,7 @@
     <div class="top-row">
       <div class="title">TFM Asset Browser</div>
       <div class="tabs" id="assetTabs"></div>
-      <input id="search" class="search" type="search" placeholder="Search…  prefixes: tag:  id:  path:  source:" title="Plain words match anything. Use prefixes to narrow: tag:emote  id:1a2b  path:x_transformice  source:forum. Quote values with spaces: tag:&quot;big box&quot;" autocomplete="off">
+      <input id="search" class="search" type="search" placeholder="Search…  prefixes: tag:  id:  path:  source:" title="Plain words match anything. Use prefixes to narrow: tag:emote  id:1a2b  path:x_transformice  source:forum  source:tfmadv. Quote values with spaces: tag:&quot;big box&quot;" autocomplete="off">
       <button type="button" id="reset">Reset</button>
       <span class="summary" id="summary">0 assets</span>
       <span class="spacer"></span>
@@ -102,7 +102,7 @@
     </div>
     <div class="top-row">
       <button type="button" id="sidebarToggle" title="Show / hide the collections and folders sidebar">Sidebar</button>
-      <button type="button" class="preset-btn" data-preset="map" title="Transformice assets, small cards, sidebar on">Map</button>
+      <button type="button" class="preset-btn" data-preset="map" title="Transformice + TFM Adventures assets, small cards, sidebar on">Map</button>
       <button type="button" class="preset-btn" data-preset="lua" title="Forum + module images, large cards, no sidebar">Lua</button>
       <details class="dropdown" id="sourceMenu"><summary id="sourceSummary">Sources: All</summary><div class="menu" id="sourceMenuBody"></div></details>
       <button type="button" id="advancedToggle" aria-expanded="false">Advanced ▸</button>
@@ -156,7 +156,7 @@
 <dialog id="batchCollDialog" class="small-dialog">
   <div class="modal-head"><strong>Batch add to collection</strong><span class="spacer"></span><button type="button" id="batchCollClose">Close</button></div>
   <div class="panel-body">
-    <p class="panel-note">One image per line: full URL, <code>img@hex</code>, <code>hex.png</code>, a Transformice/XML path, or an asset ID such as <code>forum:hex.png</code>. Lines beginning with <code>#</code> are ignored. Local adds only tag this browser. Shared adds queue curated-tag edits for images already in the database (save them with Batch save in the Curator panel); images not yet in the database are added through the backend with the collection tag.</p>
+    <p class="panel-note">One image per line: full URL, <code>img@hex</code>, <code>hex.png</code>, a Transformice/XML path, a TFM Adventures path such as <code>tfmadv/equipement/101/arme1.png</code>, or an asset ID such as <code>forum:hex.png</code>. Lines beginning with <code>#</code> are ignored. Local adds only tag this browser. Shared adds queue curated-tag edits for images already in the database (save them with Batch save in the Curator panel); images not yet in the database are added through the backend with the collection tag.</p>
     <div class="panel-form">
       <label for="batchCollName">Collection</label>
       <div class="submit-line"><input id="batchCollName" type="text" maxlength="50" list="batchCollOptions" placeholder="Collection name…" autocomplete="off"><select id="batchCollScope"><option value="local">Local (this browser)</option><option value="shared" id="batchCollShared">Shared (curator)</option></select></div>
@@ -172,10 +172,10 @@
 <dialog id="addAssetDialog" class="small-dialog">
   <div class="modal-head"><strong>Add image asset</strong><span class="spacer"></span><button type="button" id="addAssetClose">Close</button></div>
   <div class="panel-body">
-    <p class="panel-note">Submit an existing asset as a full URL, <code>img@hex</code>, bare Forum reference such as <code>hex.png</code>, or Transformice/XML path such as <code>x_transformice/...</code> or <code>../wp-content/...</code>. The backend API validates it before adding it to the shared Hugging Face dataset.</p>
+    <p class="panel-note">Submit an existing asset as a full URL, <code>img@hex</code>, bare Forum reference such as <code>hex.png</code>, Transformice/XML path such as <code>x_transformice/...</code> or <code>../wp-content/...</code>, or TFM Adventures path such as <code>tfmadv/...</code> (<code>data.atelier801.com/tfmadv/...</code> and <code>transformice.com/images/tfmadv/...</code> URLs both work). The backend API validates it before adding it to the shared Hugging Face dataset.</p>
     <form id="addAssetForm" class="panel-form">
       <label for="addAssetUrl">Image URL / reference / path</label>
-      <div class="submit-line"><input id="addAssetUrl" type="text" required placeholder="img@hex · hex.png · x_transformice/... · ../wp-content/... · http://..." autocomplete="off"><button id="addAssetSubmit" type="submit">Validate &amp; add</button></div>
+      <div class="submit-line"><input id="addAssetUrl" type="text" required placeholder="img@hex · hex.png · x_transformice/... · tfmadv/... · ../wp-content/... · http://..." autocomplete="off"><button id="addAssetSubmit" type="submit">Validate &amp; add</button></div>
     </form>
     <div id="addAssetStatus" class="panel-status"></div>
     <div id="addAssetResult" class="submit-result" hidden></div>
@@ -259,7 +259,7 @@ let storedApiBase = localStorage.getItem(API_BASE_KEY)||'';
 if(storedApiBase.replace(/\/$/,'')===LEGACY_API_BASE){storedApiBase=DEFAULT_API_BASE;localStorage.setItem(API_BASE_KEY,DEFAULT_API_BASE);}
 if(apiOverride){storedApiBase=apiOverride.replace(/\/$/,'');localStorage.setItem(API_BASE_KEY,storedApiBase);}
 const API_BASE_URL = (storedApiBase || DEFAULT_API_BASE).replace(/\/$/,'');
-const SOURCE_LABEL = {forum:'Forum', module:'Module', transformice:'Transformice', audio:'Audio'};
+const SOURCE_LABEL = {forum:'Forum', module:'Module', transformice:'Transformice', tfmadv:'TFM Adventures', audio:'Audio'};
 const AUDIO_ALIASES = {amb:['ambiance'], attaque:['attack'], mort:['death','kill'], musique:['music'], voix:['voice'], tfmadv:['transformice','adventure']};
 const CUSTOM_AUDIO_TAGS = {
   'cite18/voix/tr/marion-bonjour-1':['hoşgeldin','hosgeldin'],
@@ -271,10 +271,12 @@ const $ = id => document.getElementById(id);
 const PREFS_KEY = 'tfm_asset_browser_prefs_v1';
 const COLLECTIONS_KEY = 'tfm_asset_browser_collections_v1';
 const COLLECTION_PREFIX = 'collection:';
-const SOURCES = ['forum','module','transformice'];
+const SOURCES = ['forum','module','transformice','tfmadv'];
+// Sources whose canonical URL path is meaningful enough to browse as a folder tree.
+const FOLDER_SOURCES = ['transformice','tfmadv'];
 const PAGE_SIZES = [30,60,120,240,360];
 const PRESETS = {
-  map:{sources:['transformice'],cardSize:130,fit:true,sidebar:true},
+  map:{sources:['transformice','tfmadv'],cardSize:130,fit:true,sidebar:true},
   lua:{sources:['forum','module'],cardSize:190,fit:true,sidebar:false}
 };
 const DEFAULT_SORT = {image:{sort:'timestamp',direction:'asc'}, audio:{sort:'name',direction:'asc'}};
@@ -300,7 +302,7 @@ const state = {
   pageSize: PAGE_SIZES.includes(prefs.pageSize) ? prefs.pageSize : 60,
   filtered: [], query: '', audioLoading: false, audioLoaded: false,
   localTags: loadLocalTagStore(), pendingCurated: loadPendingCuratedStore(),
-  sources: Array.isArray(prefs.sources)&&prefs.sources.some(s=>SOURCES.includes(s)) ? SOURCES.filter(s=>prefs.sources.includes(s)) : [...SOURCES],
+  sources: Array.isArray(prefs.sources)&&prefs.sources.some(s=>SOURCES.includes(s)) ? SOURCES.filter(s=>prefs.sources.includes(s)||(!prefs.sourcesV2&&s==='tfmadv'&&['forum','module','transformice'].every(x=>prefs.sources.includes(x)))) : [...SOURCES],
   fit: prefs.fit !== false, cardSize: clampCard(prefs.cardSize), sidebar: prefs.sidebar !== false,
   formatPref: str(prefs.format) || 'all',
   collections: loadLocalCollections(),
@@ -518,13 +520,14 @@ async function refreshAudio(force=false){
 function decodePathPart(value){try{return decodeURIComponent(value);}catch{return value;}}
 function assetPathForFolder(a){
   if(a.kind==='audio')return String(a.lua||a.name||a.id.replace(/^audio:/,'')).replace(/^\/+|\/+$/g,'');
-  if(a.source!=='transformice')return'';
+  if(!FOLDER_SOURCES.includes(a.source))return'';
   try{return decodePathPart(new URL(a.url,location.href).pathname).replace(/^\/+|\/+$/g,'');}
   catch{return String(a.xml||a.url||'').replace(/^\.\.\//,'').replace(/^\/+|\/+$/g,'');}
 }
 function folderPathFor(a){const path=assetPathForFolder(a),parts=path.split('/').filter(Boolean);return parts.length>1?parts.slice(0,-1).join('/'):'';}
 function folderMatches(a,selected){if(!selected)return true;const folder=folderPathFor(a);return folder===selected||folder.startsWith(selected+'/');}
-function folderAssets(){return state.tab==='audio'?state.audio:state.images.filter(a=>a.source==='transformice');}
+function hasFolderSource(){return FOLDER_SOURCES.some(s=>state.sources.includes(s));}
+function folderAssets(){return state.tab==='audio'?state.audio:state.images.filter(a=>FOLDER_SOURCES.includes(a.source)&&state.sources.includes(a.source));}
 function buildFolderTree(){
   const root={name:'All folders',path:'',count:0,children:new Map()};
   for(const a of folderAssets()){
@@ -557,7 +560,7 @@ function renderFolderNode(node,q,isRoot=false){
 }
 function renderFolders(){
   const tree=$('folderTree');
-  if(state.tab==='image'&&!state.sources.includes('transformice')){tree.replaceChildren(el('div','side-note','Only Transformice assets have folders. Enable the Transformice source to browse them.'));return;}
+  if(state.tab==='image'&&!hasFolderSource()){tree.replaceChildren(el('div','side-note','Only Transformice and TFM Adventures assets have folders. Enable one of those sources to browse them.'));return;}
   const root=getFolderRoot();
   if(!root.count){tree.replaceChildren(el('div','side-note',state.tab==='audio'&&!state.audioLoaded?'Sounds are still loading…':'No folders.'));return;}
   tree.replaceChildren(renderFolderNode(root,state.folderQuery.trim().toLowerCase(),true));updateFolderSelection();
@@ -565,7 +568,7 @@ function renderFolders(){
 function updateFolderSelection(){const sel=state.folderByTab[state.tab]||'';for(const b of $('folderTree').querySelectorAll('.folder-select'))b.classList.toggle('active',b.dataset.path===sel);}
 function selectFolder(path){
   state.folderByTab[state.tab]=path||'';
-  if(state.tab==='image'&&path&&!state.sources.includes('transformice')){state.sources=[...state.sources,'transformice'];syncControls();}
+  if(state.tab==='image'&&path){const need=/^tfmadv(\/|$)/i.test(path)?'tfmadv':'transformice';if(!state.sources.includes(need)){state.sources=[...state.sources,need];syncControls();}}
   state.page=0;apply();
 }
 
@@ -626,7 +629,7 @@ function createCollection(name,scope){
 }
 function lineToAssetId(raw){
   const v=String(raw||'').trim();
-  if(/^(forum|module|transformice|audio):/i.test(v))return v.replace(/^(\w+):/,(m,p)=>p.toLowerCase()+':');
+  if(/^(forum|module|transformice|tfmadv|audio):/i.test(v))return v.replace(/^(\w+):/,(m,p)=>p.toLowerCase()+':');
   return clientCanonicalAssetId(v);
 }
 function openCollectionBatch(){
@@ -685,7 +688,7 @@ async function runCollectionBatch(){
   finally{run.disabled=false;}
 }
 function syncSidebar(){
-  const key=state.tab+'|'+state.images.length+'|'+state.audio.length+'|'+state.sources.includes('transformice');
+  const key=state.tab+'|'+state.images.length+'|'+state.audio.length+'|'+state.sources.filter(s=>FOLDER_SOURCES.includes(s)).join(',');
   if(key!==syncSidebar.key){syncSidebar.key=key;renderFolders();}else updateFolderSelection();
   renderCollections();
 }
@@ -726,7 +729,7 @@ function buildSourceMenu(){
     cb.addEventListener('change',()=>{
       const next=SOURCES.filter(x=>x===s?cb.checked:state.sources.includes(x));
       if(!next.length){cb.checked=true;return;}
-      state.sources=next;if(!next.includes('transformice'))state.folderByTab.image='';
+      state.sources=next;if(!hasFolderSource())state.folderByTab.image='';
       state.page=0;syncControls();apply();
     });
     label.append(cb,document.createTextNode(SOURCE_LABEL[s]));box.appendChild(label);
@@ -735,12 +738,12 @@ function buildSourceMenu(){
 function applyPreset(key){
   const p=PRESETS[key];if(!p)return;
   state.sources=[...p.sources];state.cardSize=p.cardSize;state.fit=p.fit;state.sidebar=p.sidebar;
-  if(!state.sources.includes('transformice'))state.folderByTab.image='';
+  if(!hasFolderSource())state.folderByTab.image='';
   state.page=0;syncControls();
   if(state.tab!=='image')switchTab('image');else apply();
 }
 function savePrefs(){
-  const p={tab:state.tab,sources:state.sources,format:state.formatPref,orientation:$('orientation').value,pageSize:state.pageSize,fit:state.fit,cardSize:state.cardSize,sidebar:state.sidebar,advanced:!$('advanced').hidden,sortByTab:state.sortByTab,folderByTab:state.folderByTab,collectionByTab:state.collectionByTab,collectionsCollapsed:state.sidebarUi.collectionsCollapsed,foldersCollapsed:state.sidebarUi.foldersCollapsed,collectionsHeight:state.sidebarUi.collectionsHeight};
+  const p={tab:state.tab,sources:state.sources,sourcesV2:true,format:state.formatPref,orientation:$('orientation').value,pageSize:state.pageSize,fit:state.fit,cardSize:state.cardSize,sidebar:state.sidebar,advanced:!$('advanced').hidden,sortByTab:state.sortByTab,folderByTab:state.folderByTab,collectionByTab:state.collectionByTab,collectionsCollapsed:state.sidebarUi.collectionsCollapsed,foldersCollapsed:state.sidebarUi.foldersCollapsed,collectionsHeight:state.sidebarUi.collectionsHeight};
   for(const id of FILTER_INPUTS)p[id]=$(id).value;
   try{localStorage.setItem(PREFS_KEY,JSON.stringify(p));}catch{}
 }
@@ -993,10 +996,15 @@ function clientCanonicalAssetId(rawValue){
       const u=new URL(raw),host=u.hostname.toLowerCase(),path=u.pathname;
       if(host==='images.atelier801.com'){m=path.match(/^\/([0-9a-f]{8,32}\.(?:png|jpe?g|gif|webp))$/i);return m?`forum:${m[1].toLowerCase()}`:null;}
       if(host==='avatars.atelier801.com'){m=path.match(/^\/module\/([0-9a-f]{8,32})(?:\.png)?$/i);return m?`module:${m[1].toLowerCase()}`:null;}
-      if(host==='transformice.com')return `transformice:${path.replace(/^\/+/, '').replace(/\?$/,'')}`;
+      if(host==='data.atelier801.com'){m=path.match(/^\/tfmadv\/(.+)$/i);return m?`tfmadv:${m[1].replace(/\?$/,'')}`:null;}
+      if(host==='transformice.com'||host==='www.transformice.com'){
+        m=path.match(/^\/+images\/tfmadv\/(.+)$/i);if(m)return `tfmadv:${m[1].replace(/\?$/,'')}`;
+        return `transformice:${path.replace(/^\/+/, '').replace(/\?$/,'')}`;
+      }
       return null;
     }
     let path=raw.replace(/\\/g,'/');
+    m=path.match(/^\/*(?:images\/)?tfmadv\/(.+)$/i);if(m)return `tfmadv:${m[1].replace(/\?$/,'')}`;
     if(path.startsWith('../')||path.startsWith('./'))path=new URL(path,'http://transformice.com/images/').pathname.replace(/^\/+/, '');
     else{path=path.replace(/^\/+/, '');if(!/^(?:images|wp-content|wp-includes|wp-admin|om)\//i.test(path))path='images/'+path;}
     return path?`transformice:${path.replace(/\?$/,'')}`:null;
