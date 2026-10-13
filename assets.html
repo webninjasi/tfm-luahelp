@@ -372,7 +372,7 @@ function setLocalTags(assetId,tags) {
   const out=[];
   for(const raw of tags){const t=cleanLocalTag(raw);if(t&&!out.some(x=>x.toLowerCase()===t.toLowerCase()))out.push(t);}
   if(out.length)state.localTags[assetId]=out;else delete state.localTags[assetId];
-  saveLocalTagStore(); state.page=0; apply();
+  saveLocalTagStore(); apply();
 }
 function addLocalTag(a,value) { const t=cleanLocalTag(value);if(!t)return;setLocalTags(a.id,[...localTagsFor(a),t]); }
 function removeLocalTag(a,value) { setLocalTags(a.id,localTagsFor(a).filter(x=>x.toLowerCase()!==String(value).toLowerCase())); }
