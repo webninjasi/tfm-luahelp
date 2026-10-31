@@ -286,7 +286,8 @@ function applyLoadedData(fields, rows, meta){
     if(!nm) return;
     if(!(nm in originalMap)) rowOrder.push(nm);
     const obj = {};
-    headers.forEach(h => { obj[h] = (r[h] ?? '').trim(); });
+    // keep values verbatim: leading/trailing spaces and newlines are meaningful
+    headers.forEach(h => { obj[h] = (r[h] ?? ''); });
     originalMap[nm] = obj;
   });
   sourceMeta = meta;
@@ -353,13 +354,13 @@ function setSourceBusy(b){
 // editing
 // ---------------------------------------------------------------------------
 function commitEdit(name, col, newVal){
-  const trimmed = newVal.trim();
+  // no trimming: spaces and newlines in values are preserved exactly as typed
   const orig = originalValue(name, col);
   const k = key(name, col);
-  if(trimmed === orig){
+  if(newVal === orig){
     if(k in edits){ delete edits[k]; scheduleSaveEdits(); }
   }else{
-    edits[k] = trimmed;
+    edits[k] = newVal;
     scheduleSaveEdits();
   }
   renderTable();
@@ -678,8 +679,10 @@ function startEditing(td){
   if(td.querySelector('textarea')) return; // already editing
   const name = td.dataset.name, col = td.dataset.col;
   const val = currentValue(name, col);
-  td.innerHTML = `<textarea class="cell-edit-input">${escapeHtml(val)}</textarea>`;
+  td.innerHTML = `<textarea class="cell-edit-input"></textarea>`;
   const ta = td.querySelector('textarea');
+  // set via .value: the HTML parser drops a leading newline inside <textarea>
+  ta.value = val;
   ta.style.height = Math.max(30, ta.scrollHeight) + 'px';
   ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
   ta.focus();
