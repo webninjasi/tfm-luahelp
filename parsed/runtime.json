@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "collected_at": 1793865830,
+  "collected_at": 1793868991,
   "complete": true,
   "globals": {
     "_G": {
@@ -1380,7 +1380,7 @@
                       "children": {
                         "averageLatency": {
                           "type": "number",
-                          "value": 400
+                          "value": 44
                         },
                         "cheeses": {
                           "type": "number",
