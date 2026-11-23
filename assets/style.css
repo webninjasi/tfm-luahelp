@@ -186,6 +186,99 @@ button {
   color: red;
 }
 
+/* Runtime Data */
+
+.runtime-chip {
+  display: inline-block;
+  margin: 0.1em 0;
+  padding: 0.05em 0.45em;
+  color: #C2C2DA;
+  background-color: #111111;
+  border: 1px solid #2c565d;
+  border-left: 2px solid #009D9D;
+  border-radius: 3px;
+  font-size: 0.9em;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.runtime-label {
+  padding: 0 0.4em;
+  color: #111111;
+  background-color: #009D9D;
+  border-radius: 3px;
+  font-size: 0.85em;
+  font-weight: bold;
+}
+
+.runtime-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0.5em 0;
+  padding: 0.3em 0.5em;
+  background-color: #285058;
+  border-left: 2px solid #009D9D;
+}
+
+.runtime-strip.runtime-diffs {
+  display: block;
+}
+
+.runtime-diffs summary {
+  cursor: pointer;
+}
+
+.runtime-diffs table {
+  margin-top: 0.5em;
+}
+
+.luahelp-strip {
+  border-left-color: #6C77C1;
+}
+
+.luahelp-strip .runtime-label {
+  background-color: #6C77C1;
+}
+
+.runtime-row {
+  background-color: #285058;
+}
+
+.module801, .runtime-event {
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.5em;
+  background-color: #285058;
+  border-left: 2px solid #009D9D;
+}
+
+.module801 {
+  border-left-color: #ED67EA;
+}
+
+.module801 .runtime-label {
+  background-color: #ED67EA;
+}
+
+#sections:not(.show-module801) .module801 {
+  display: none !important;
+}
+
+#content.hide-runtime .runtime-chip,
+#content.hide-runtime .runtime-strip,
+#content.hide-runtime .runtime-row,
+#content.hide-runtime .runtime-event,
+#content.hide-runtime .module801,
+#content:not(.hide-runtime) .runtime-off-only {
+  display: none !important;
+}
+
 /* Tags Page */
 
 #tags-content {

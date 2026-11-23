@@ -3,9 +3,151 @@ const luatreeReplacements = {
   "Pikashu": "Pikashu#0095",
 };
 
+// Keys in parsed/runtime.json that are placeholders for dynamic keys
+const runtimeKeyReplacements = {
+  '["Player#0000"]': 'Tigrounette', // luatreeReplacements turns this into Tigrounette#0001
+};
+
+const runtimeFormat = 1;
+const module801EventNames = [
+  'eventMessageReceive',
+  'eventPlayerConnected',
+  'eventPlayerDisconnected',
+  'eventPlayerJoinRoom',
+  'eventPlayerLeaveRoom',
+  'eventRoomCreated',
+];
+const runtimeTypeColors = {
+  string: 'T',
+  number: 'J',
+  boolean: 'CH',
+  function: 'VP',
+  table: 'BV',
+};
+
 let latestVersion;
 let lastRendered;
 let loadedVersions = {};
+let runtimeData; // promise, fetched lazily for 'latest+'
+
+const loadRuntime = () => runtimeData = runtimeData || fetch('parsed/runtime.json')
+  .then(resp => resp.ok ? resp.json() : null)
+  .catch(err => (console.warn('runtime.json not loaded', err), null));
+
+const luaEscapes = {
+  '\\': '\\\\',
+  '"': '\\"',
+  '\x07': '\\a',
+  '\b': '\\b',
+  '\f': '\\f',
+  '\n': '\\n',
+  '\r': '\\r',
+  '\t': '\\t',
+  '\v': '\\v',
+};
+
+const escapeLuaChar = char => luaEscapes[char] || `\\${String(char.charCodeAt(0)).padStart(3, '0')}`;
+const escapeAttr = value => escapeHTML(value).replace(/"/g, '&quot;');
+
+// Renders a Lua string literal, escape sequences are highlighted
+const renderLuaString = value => `"${String(value).split(/([\\"\x00-\x1f\x7f])/).map(
+  (part, idx) => idx % 2 ? `<span class="CE">${escapeHTML(escapeLuaChar(part))}</span>` : escapeHTML(part)
+).join('')}"`;
+
+// { a: { children: { b: {...} } } } -> [{ name: 'a' }, { name: 'a.b' }]
+const flattenRuntime = (nodes, prefix = '') => Object.entries(nodes || {}).flatMap(
+  ([key, node]) => {
+    const name = prefix + (runtimeKeyReplacements[key] || key);
+    return [
+      {
+        name,
+        type: node.type,
+        value: node.value,
+        java: node.java,
+        ref: node.ref,
+        childCount: Object.keys(node.children || {}).length,
+      },
+      ...(node.children ? flattenRuntime(node.children, name + '.') : []),
+    ];
+  }
+);
+
+// Adds runtime info to an already merged 'latest+' sections object (does not mutate input)
+const mergeRuntime = (sections, runtime) => {
+  if (!runtime || runtime.format != runtimeFormat) {
+    return sections;
+  }
+
+  const flat = flattenRuntime(runtime.globals);
+  const flatByName = new Map(flat.map(r => [r.name, r]));
+  const tree = sections.tree.map(x => ({ ...x }));
+  const treeByName = new Map(tree.map(x => [x.name, x]));
+
+  // Only API classes identify a function, stdlib classes are shared by many
+  const namesByJava = flat.filter(r => r.java?.includes('luapi_')).reduce(
+    (ret, r) => ret.set(r.java, [...(ret.get(r.java) || []), r.name]),
+    new Map()
+  );
+  flat.forEach(r => {
+    r.aliases = (namesByJava.get(r.java) || []).filter(name => name != r.name);
+  });
+
+  flat.forEach(r => {
+    const item = treeByName.get(r.name);
+
+    if (!item) {
+      tree.push({ name: r.name, runtime: r, undocumented: true });
+      return;
+    }
+
+    if (r.value != null && item.value && item.value != '-') {
+      r.matchesDocs = unescapeHTML(item.value) == String(r.value);
+
+      if (!r.matchesDocs) {
+        r.documented = item.value;
+      }
+    }
+
+    item.runtime = r;
+  });
+
+  const eventNames = new Set(sections.events.map(x => x.name));
+  const runtimeEvents = (runtime.events || []).filter(name => !eventNames.has(name)).map(name => {
+    const isModule801 = module801EventNames.includes(name);
+
+    return {
+      name,
+      undocumented: true,
+      ...(isModule801 ? { restricted: 'module801' } : {}),
+      parameters: { list: [], details: [] },
+      descriptions: [
+        isModule801
+          ? 'Module801 event found at runtime, not documented in /luahelp.'
+          : 'Discovered at runtime, not documented in /luahelp yet.',
+      ],
+    };
+  });
+
+  return {
+    ...sections,
+    tree,
+    events: [...sections.events, ...runtimeEvents],
+    functions: sections.functions.map(x => flatByName.has(x.name) ? { ...x, runtime: flatByName.get(x.name) } : x),
+    runtimeInfo: {
+      collectedAt: runtime.collected_at,
+      complete: runtime.complete,
+      module801: runtimeEvents.filter(x => x.restricted == 'module801').length,
+      luahelpVersions: {
+        api: treeByName.get('tfm.get.misc.apiVersion')?.value,
+        tfm: treeByName.get('tfm.get.misc.transformiceVersion')?.value,
+      },
+      runtimeVersions: {
+        api: flatByName.get('tfm.get.misc.apiVersion')?.value,
+        tfm: flatByName.get('tfm.get.misc.transformiceVersion')?.value,
+      },
+    },
+  };
+};
 
 const id = selector => document.getElementById(selector);
 const byClass = selector => [...document.getElementsByClassName(selector)];
@@ -257,18 +399,132 @@ const renderLuaTreeRestriction = (restriction) => {
   return '';
 }
 
+const renderRuntimeDetail = rt => {
+  if (rt.ref) {
+    return `<a class="V" href="#${escapeAttr(rt.ref)}">&rarr; ${escapeHTML(rt.ref)}</a>`;
+  }
+
+  if (rt.java) {
+    return `<span class="N2">${escapeHTML(rt.java)}</span>`;
+  }
+
+  if (rt.type == 'string') {
+    return renderLuaString(rt.value);
+  }
+
+  if (rt.value != null) {
+    return escapeHTML(String(rt.value));
+  }
+
+  return rt.childCount ? `<span class="N2">${rt.childCount} keys</span>` : '';
+};
+
+const renderRuntimeChip = rt => `<span class="runtime-chip" title="Runtime data"><span class="${runtimeTypeColors[rt.type] || 'N2'}">${rt.type}</span> ${renderRuntimeDetail(rt)}</span>`;
+
+const renderRuntimeFunction = rt => `
+  <div class="runtime-strip">
+    <span class="runtime-label">runtime</span>
+    ${renderRuntimeChip(rt)}
+    ${rt.aliases.length ? `
+      <span class="N2">same function as</span>
+      ${rt.aliases.map(name => `<a class="D" href="#${name}">${name}</a>`).join(', ')}
+    ` : ''}
+  </div>
+`;
+
+const renderVersionValue = (name, value, other) => `
+  <span class="BL">${name}</span>
+  <span class="${other != null && String(value) != String(other) ? 'O' : 'V'}">${escapeHTML(String(value ?? '-'))}</span>
+`;
+
+const renderRuntimeDiffRow = (name, docValue, runtimeCell) => `
+  <tr>
+    <td><a class="D" href="#${name}">${name}</a></td>
+    <td class="G">${docValue}</td>
+    <td>${runtimeCell}</td>
+  </tr>
+`;
+
+const renderRuntimeDiffs = sections => {
+  const values = sections.tree.filter(x => x.runtime?.documented != null);
+  const entries = sections.tree.filter(x => x.undocumented);
+  const events = sections.events.filter(x => x.undocumented && !x.restricted);
+  const missing = entries.length + events.length;
+
+  if (!values.length && !missing) {
+    return '';
+  }
+
+  return `
+    <details class="runtime-strip runtime-diffs">
+      <summary>
+        <span class="N">Runtime data differs from docs:</span>
+        ${values.length ? `<span class="O">${values.length} different value${values.length == 1 ? '' : 's'}</span>${missing ? ',' : ''}` : ''}
+        ${missing ? `<span class="CE">${missing} new from runtime</span>` : ''}
+      </summary>
+      <table class="parameter-table">
+        <thead>
+          <tr>
+            <th class="D">name</th>
+            <th class="G">docs</th>
+            <th class="V">runtime</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${values.map(x => renderRuntimeDiffRow(x.name, renderDiff(x.value), renderRuntimeChip(x.runtime))).join('')}
+          ${entries.map(x => renderRuntimeDiffRow(x.name, '-', renderRuntimeChip(x.runtime))).join('')}
+          ${events.map(x => renderRuntimeDiffRow(x.name, '-', '<span class="runtime-chip" title="Runtime data"><span class="V">event</span></span>')).join('')}
+        </tbody>
+      </table>
+    </details>
+  `;
+};
+
+const renderRuntimeInfo = sections => {
+  const info = sections.runtimeInfo;
+
+  return `
+  <div class="runtime-strip luahelp-strip">
+    <span class="runtime-label">luahelp</span>
+    ${renderVersionValue('API', info.luahelpVersions.api)}
+    ${renderVersionValue('TFM', info.luahelpVersions.tfm)}
+  </div>
+  <div class="runtime-strip">
+    <span class="runtime-label">runtime</span>
+    ${renderVersionValue('API', info.runtimeVersions.api, info.luahelpVersions.api)}
+    ${renderVersionValue('TFM', info.runtimeVersions.tfm, info.luahelpVersions.tfm)}
+    ${renderVersionValue('Collected', new Date(info.collectedAt * 1000).toLocaleString())}
+    ${info.complete ? '' : '<span class="R">Partial snapshot</span>'}
+  </div>
+  ${renderRuntimeDiffs(sections)}
+`;
+};
+
+const renderLuaTreeValue = (tree, elm) => {
+  const chip = elm.runtime && !elm.runtime.matchesDocs ? renderRuntimeChip(elm.runtime) : '';
+
+  if (elm.value == '-' && elm.runtime?.value != null) {
+    return `<span class="runtime-off-only">-</span>${chip}`;
+  }
+
+  return elm.value
+    ? `${renderDiff(elm.value)} ${chip}`
+    : `${chip}${renderLuaTreeTable(tree, elm.name)}`;
+};
+
 const renderLuaTreeItem = (tree, elm) => `
-  <tr class="luatree-elm" id="${elm.name}">
+  <tr class="luatree-elm${elm.undocumented ? ' runtime-row' : ''}" id="${elm.name}">
     <td>
       <button class="btn-small" onclick="copyPath('code_output', '${elm.name}')">Copy</button>
     </td>
     <td>
       ${elm.diff == 'added' ? '<span class="item-added">+</span>' : ''}
       ${elm.diff == 'removed' ? '<span class="item-removed">-</span>' : ''}
+      ${elm.undocumented ? '<span class="runtime-label" title="Found at runtime, not in /luahelp">runtime</span>' : ''}
       <a href="${elm.href ? elm.href : `#${elm.name}`}"${renderLuaTreeRestriction(elm.restricted)}>${getPathLast(elm.name)}</a>
     </td>
     <td class="G">
-      ${elm.value ? renderDiff(elm.value) : renderLuaTreeTable(tree, elm.name)}
+      ${renderLuaTreeValue(tree, elm)}
     </td>
   </tr>
 `;
@@ -349,11 +605,15 @@ const renderRestriction = restriction => {
     return `<span class="ROSE">Only available for</span> <span class="ES">Event Modules</span><br />`;
   }
 
+  if (restriction == "module801") {
+    return `<span class="runtime-label">module801</span><br />`;
+  }
+
   return '';
 }
 
 const renderFunction = type => elm => `
-<div class="${type}-elm" id="${type}_${elm.name}">
+<div class="${type}-elm${elm.restricted == 'module801' ? ' module801' : elm.undocumented ? ' runtime-event' : ''}" id="${type}_${elm.name}">
   ${elm.diff == "added" ? '<span class="item-added">+</span>' : ''}
   ${elm.diff == "removed" ? '<span class="item-removed">-</span>' : ''}
   <a id="${elm.name}" href="#${elm.name}" class="D">${elm.name}</a>
@@ -365,13 +625,14 @@ const renderFunction = type => elm => `
     </span>)
   </span>
   <br />
+  ${elm.undocumented && !elm.restricted ? '<span class="runtime-label">runtime only</span><br />' : ''}
   ${renderRestriction(elm.restricted)}
   <span class="N">
   ${
     elm.descriptions ? elm.descriptions.map(renderDiff).join('<br />') : ''
   }
   </span>
-  <br />
+  ${elm.runtime ? `<br class="runtime-off-only" />${renderRuntimeFunction(elm.runtime)}` : '<br />'}
   <br />
   ${renderExamples(elm, type)}
 
@@ -411,7 +672,10 @@ ${events.map(renderFunction('events')).join('')}
 const renderSections = sections => {
   lastRendered = sections;
 
-  id('current_version').innerHTML = `<div class="V TI">${sections.version}</div>`;
+  id('current_version').innerHTML = `<div class="V TI">${sections.version}</div>${
+    sections.runtimeInfo ? renderRuntimeInfo(sections) : ''
+  }`;
+  updateRuntimeToggles();
 
   id('section_luatree').section = sections.tree;
   id('section_luatree').parentIndex = sections.parentIndex;
@@ -471,7 +735,10 @@ const scanTree = tree => tree.map(item => {
 const applyTags = tree => tree.map(item => {
   let tags;
   
-  if (item.restricted == "modules") {
+  if (item.restricted == "module801") {
+    tags = "module801";
+  }
+  else if (item.restricted == "modules") {
     tags = "funcorp fc moduleteam module team mt modules";
   }
   else if (item.restricted == "moduleteam") {
@@ -481,6 +748,10 @@ const applyTags = tree => tree.map(item => {
     tags = "events event modules eventmodules";
   } else {
     tags = "tribehouse";
+  }
+
+  if (item.undocumented) {
+    tags += " undocumented runtime";
   }
 
   return { ...item, tags };
@@ -507,10 +778,13 @@ const loadVersion = (version, initial, errorCallback) => {
   const isExtra = version == 'latest+';
   const versionPath = (isExtra || version == latestVersion) ? 'latest' : version;
 
-  function render(sections) {
+  const getRuntime = () => isExtra ? loadRuntime() : Promise.resolve(null);
+
+  function render(sections, runtime) {
     if (versionPath == 'latest') {
       if (isExtra) {
         sections = mergeObjects(sections, customHelpData);
+        sections = mergeRuntime(sections, runtime);
         sections.tree = applyReplacements(sections.tree);
         sections.tree = applyTags(sections.tree);
         sections.events = applyTags(sections.events);
@@ -535,12 +809,9 @@ const loadVersion = (version, initial, errorCallback) => {
   }
 
   if (loadedVersions[versionPath]) {
-    try {
-      render(loadedVersions[versionPath]);
-    }
-    catch (err) {
-      errorCallback(err);
-    }
+    getRuntime()
+      .then(runtime => render(loadedVersions[versionPath], runtime))
+      .catch(errorCallback);
 
     return;
   }
@@ -558,7 +829,7 @@ const loadVersion = (version, initial, errorCallback) => {
       scanTree(sections.tree);
       console.log("loaded", versionPath, sections);
       loadedVersions[versionPath] = sections;
-      render(sections);
+      return getRuntime().then(runtime => render(sections, runtime));
     })
     .catch(errorCallback);
 }
@@ -626,7 +897,10 @@ const filterContent = (className, elmId, value, reg) => {
         param => !!param.match(reg)
       ) ||
       item.value && !!item.value.match(reg) ||
-      item.tags && !!item.tags.match(reg)
+      item.tags && !!item.tags.match(reg) ||
+      id('toggle_runtime').checked && [item.runtime?.value, item.runtime?.java, item.runtime?.ref].some(
+        x => x != null && !!String(x).match(reg)
+      )
     );
 
     sectionElements[item.name].style.display = cond ? null : "none";
@@ -718,4 +992,36 @@ id('toggle_events').addEventListener('change', function() {
 
 id('toggle_luatree').addEventListener('change', function() {
   saveToggle('section_luatree', this.checked);
+});
+
+function updateRuntimeToggles() {
+  const info = lastRendered?.runtimeInfo;
+  const showRuntime = id('toggle_runtime').checked;
+
+  id('runtime_toggle').style.display = info ? null : 'none';
+  id('module801_toggle').style.display = info?.module801 && showRuntime ? null : 'none';
+  id('content').classList.toggle('hide-runtime', !showRuntime);
+  id('sections').classList.toggle('show-module801', id('toggle_module801').checked);
+}
+
+const saveRuntimeToggle = (key, value) => {
+  updateRuntimeToggles();
+  id('snippet_code').innerHTML = '';
+  id('input_filter').dispatchEvent(new Event('keyup'));
+
+  if (window.localStorage) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+};
+
+// Runtime data is shown and module801 events are hidden unless changed
+id('toggle_runtime').checked = !window.localStorage || localStorage.getItem('show_runtime') != 'false';
+id('toggle_module801').checked = !!window.localStorage && localStorage.getItem('show_module801') == 'true';
+
+id('toggle_runtime').addEventListener('change', function() {
+  saveRuntimeToggle('show_runtime', this.checked);
+});
+
+id('toggle_module801').addEventListener('change', function() {
+  saveRuntimeToggle('show_module801', this.checked);
 });

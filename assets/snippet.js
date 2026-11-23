@@ -13,9 +13,15 @@ function generateSnippet() {
 
   var code = {};
   var elm, path;
+  var showRuntime = document.getElementById('toggle_runtime').checked;
 
   for (var i=0; i<lastRendered.tree.length; i++) {
     elm = lastRendered.tree[i];
+
+    if (elm.undocumented && !showRuntime) {
+      continue;
+    }
+
     path = convertLuaPath(elm.name);
     code[path] = {
       "scope": "lua",
@@ -44,6 +50,15 @@ function generateSnippet() {
 
   for (var i=0; i<lastRendered.events.length; i++) {
     elm = lastRendered.events[i];
+
+    if (elm.undocumented && !showRuntime) {
+      continue;
+    }
+
+    if (elm.restricted == "module801" && !document.getElementById('toggle_module801').checked) {
+      continue;
+    }
+
     code[elm.name] = {
       "scope": "lua",
       "prefix": elm.name,
