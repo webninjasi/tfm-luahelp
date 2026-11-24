@@ -494,7 +494,7 @@ const renderRuntimeDetail = rt => {
 const renderRuntimeChip = rt => `<span class="runtime-chip" title="Runtime data"><span class="${runtimeTypeColors[rt.type] || 'N2'}">${rt.type}</span> ${renderRuntimeDetail(rt)}</span>`;
 
 const renderRuntimeFunction = rt => `
-  <div class="runtime-strip">
+  <div class="runtime-strip${rt.aliases.length ? ' runtime-stacked' : ''}">
     ${renderRuntimeChip(rt)}
     ${rt.aliases.length ? `
       <div class="runtime-aliases">

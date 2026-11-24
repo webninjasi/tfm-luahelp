@@ -735,8 +735,10 @@ button:disabled {
   border: 0;
 }
 
-.runtime-aliases {
-  flex-basis: 100%;
+.runtime-stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15em;
 }
 
 .runtime-strip.runtime-diffs {
