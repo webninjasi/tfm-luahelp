@@ -107,6 +107,26 @@ const getOptionalParams = signature => {
   });
 };
 
+// Structured entries replace the raw manual text
+const applyLuaGuide = (fn, guide) => guide ? {
+  ...fn,
+  luaGuide: true,
+  descriptions: [escapeDocText(guide.description)],
+  parameters: {
+    ...fn.parameters,
+    details: (guide.params || []).map(([name, type, description, defaultValue]) => ({
+      name,
+      type,
+      descriptions: [escapeDocText(description)],
+      ...(defaultValue != null ? { default_value: defaultValue } : {}),
+    })),
+  },
+  ...(guide.returns ? {
+    returns: guide.returns.map(([type, description]) => ({ type, description: escapeDocText(description) })),
+  } : {}),
+  examples: guide.examples || [],
+} : fn;
+
 const createLuaFunction = (item, luaDoc) => ({
   name: item.name,
   href: item.href,
@@ -121,7 +141,7 @@ const createLuaFunction = (item, luaDoc) => ({
 });
 
 // Adds the functions documented in the Lua manual to the functions section (does not mutate input)
-const mergeLuaDocs = (sections, docs) => {
+const mergeLuaDocs = (sections, docs, guides) => {
   if (!docs?.entries) {
     return sections;
   }
@@ -129,7 +149,7 @@ const mergeLuaDocs = (sections, docs) => {
   const names = new Set(sections.functions.map(x => x.name));
   const added = sections.tree.flatMap(item => {
     const luaDoc = docs.entries[item.href?.split('#pdf-')[1]];
-    return luaDoc?.signature?.includes('(') && !names.has(item.name) ? [createLuaFunction(item, luaDoc)] : [];
+    return luaDoc?.signature?.includes('(') && !names.has(item.name) ? [applyLuaGuide(createLuaFunction(item, luaDoc), guides?.[item.name])] : [];
   });
 
   return {
@@ -475,6 +495,10 @@ const copyPath = (elm, path) => {
 const getExampleCode = (elm, index) => {
   const example = elm.examples[index];
 
+  if (typeof(example) == 'string') {
+    return example;
+  }
+
   return `${convertLuaPath(elm.name)}(${elm.parameters?.list?.map(
     (param, i) => example[i] ||
                   elm.parameters?.details?.[i]?.default_value ||
@@ -734,8 +758,9 @@ const renderType = type => {
     return renderDiff(type);
   }
 
-  const name = type.toLowerCase();
-  return `<span class="type-chip ${docTypeColors[name.split(' ')[0]] || 'N2'}">${name}</span>`;
+  return type.toLowerCase().split('|').map(
+    name => `<span class="type-chip ${docTypeColors[name.split(' ')[0]] || 'N2'}">${name}</span>`
+  ).join(' ');
 };
 
 const docUrlPattern = /\bhttps?:\/\/(?:(?!&(?:lt|gt|quot|#39|#x27);)[^\s<>"'])+/gi;
@@ -804,7 +829,7 @@ const renderParameter = (elm, hasDefaults) => item => {
 <tr>
   <td class="V param-name">
     ${renderDiff(param.name)}
-    ${param.default_value ? '<span class="param-optional">optional</span>' : ''}
+    ${param.default_value || elm.optionalParams?.includes(param.name) ? '<span class="param-optional">optional</span>' : ''}
   </td>
   <td class="param-type">${renderExtra(renderType(param.type), extra?.type)}</td>
   ${hasDefaults ? `
@@ -913,6 +938,10 @@ const renderItemChips = elm => {
 };
 
 const getItemSource = elm => {
+  if (elm.luaGuide) {
+    return ['Lua manual + this site', 'Based on the Lua 5.2 Reference Manual, organized by this site'];
+  }
+
   if (elm.luaDoc) {
     return ['Lua manual', 'From the Lua 5.2 Reference Manual'];
   }
@@ -966,7 +995,7 @@ const renderFunction = type => elm => `
     </div>
   </div>
   ${renderItemChips(elm)}
-  ${elm.luaDoc ? renderLuaDoc(elm) : `
+  ${elm.luaDoc && !elm.luaGuide ? renderLuaDoc(elm) : `
   <div class="N">
   ${
     elm.descriptions ? elm.descriptions.map(x => renderExtra(renderDocText(x), elm.extra?.descriptions.has(x))).join('<br />') : ''
@@ -976,7 +1005,7 @@ const renderFunction = type => elm => `
 
   ${renderItemExamples(elm, type)}
   ${renderParameters(elm, type)}
-  ${elm.returns ? renderReturn(elm.returns, elm.extra?.returns) : ''}
+  ${elm.returns ? [elm.returns].flat().map(x => renderReturn(x, elm.extra?.returns)).join('') : ''}
 </div>
 `;
 
@@ -1114,7 +1143,7 @@ const loadVersion = (version, initial, errorCallback) => {
       if (isExtra) {
         sections = annotateExtras(mergeObjects(sections, customHelpData), sections, customHelpData);
         sections = mergeRuntime(sections, runtime);
-        sections = mergeLuaDocs(sections, luaDocs);
+        sections = mergeLuaDocs(sections, luaDocs, luaManualData);
         sections.tree = applyReplacements(sections.tree);
         sections.tree = applyTags(sections.tree);
         sections.events = applyTags(sections.events);
@@ -1257,11 +1286,11 @@ const getSearchEntry = item => {
   const entry = {
     name: normalizeTexts(item.name),
     param: normalizeTexts(item.parameters?.list, details.map(x => x.name), item.luaDoc?.params),
-    type: normalizeTexts(details.map(x => x.type), item.returns?.type),
+    type: normalizeTexts(details.map(x => x.type), [item.returns].flat().map(x => x?.type)),
     desc: normalizeTexts(
       item.descriptions,
       details.map(x => x.descriptions),
-      item.returns?.description
+      [item.returns].flat().map(x => x?.description)
     ),
     value: normalizeTexts(item.value, details.map(x => x.default_value)),
     tag: normalizeTexts(item.tags).flatMap(x => x.split(/\s+/)),
