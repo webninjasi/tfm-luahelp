@@ -39,6 +39,23 @@ const loadLuaDocs = () => luaDocsData = luaDocsData || fetch('parsed/luadocs.jso
   .then(resp => resp.ok ? resp.json() : null)
   .catch(err => (console.warn('luadocs.json not loaded', err), null));
 
+// /luahelp text can contain literal code, existing entities are kept
+const escapeDocText = text => typeof(text) == 'string'
+  ? text.replace(/&(?!#?\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  : text;
+
+const escapeDocEntries = entries => entries.forEach(entry => {
+  [entry, ...(entry.parameters?.details || [])].forEach(item => {
+    if (Array.isArray(item.descriptions)) {
+      item.descriptions = item.descriptions.map(escapeDocText);
+    }
+  });
+
+  if (entry.returns?.description) {
+    entry.returns.description = escapeDocText(entry.returns.description);
+  }
+});
+
 const customTexts = x => Array.isArray(x) ? x : x?.list || [];
 
 // Records which parts of an entry come from data/help.js instead of /luahelp
@@ -1129,6 +1146,8 @@ const loadVersion = (version, initial, errorCallback) => {
     .then(data => data.json())
     .then(sections => {
       sections.version = sections.version || versionPath;
+      escapeDocEntries(sections.functions);
+      escapeDocEntries(sections.events);
       scanTree(sections.tree);
       console.log("loaded", versionPath, sections);
       loadedVersions[versionPath] = sections;
