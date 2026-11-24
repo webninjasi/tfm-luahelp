@@ -73,7 +73,65 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 .functions-elm, .events-elm {
-  margin-bottom: 2em;
+  box-sizing: border-box;
+  padding: 0.7em 0.2em;
+  overflow-x: auto;
+  border-bottom: 1px solid #315359;
+}
+
+.functions-elm > .parameter-table, .events-elm > .parameter-table {
+  margin-top: 0.6em;
+}
+
+.item-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25em;
+  margin-bottom: 0.3em;
+}
+
+.item-signature {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.item-actions, .item-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.item-actions {
+  gap: 0.25em 0.4em;
+  max-width: 100%;
+  padding: 2px;
+}
+
+.item-copy-label {
+  margin-right: 0.35em;
+  color: #9292AA;
+  font-size: 13px;
+}
+
+.item-actions button {
+  padding: 0.3em 0.65em;
+  border-color: #3B626A;
+  background-color: transparent;
+  color: #A9B2E8;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.item-actions button:hover {
+  position: relative;
+  border-color: #6C77C1;
+  background-color: #353a51;
+  color: #FFFFFF;
+}
+
+.item-copy button + button {
+  margin-left: -1px;
 }
 
 .parameter-table {
@@ -689,10 +747,8 @@ button:disabled {
 }
 
 .module801, .runtime-event {
-  width: fit-content;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 0.5em;
+  padding-left: 0.6em;
+  padding-right: 0.5em;
   background-color: #285058;
   border-left: 2px solid #009D9D;
 }

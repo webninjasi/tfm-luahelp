@@ -614,24 +614,24 @@ ${renderLuaTreeTable(tree, '')}
 
 // Examples doesn't handle diffs since it doesn't apply extras on diff view
 const renderExamples = (elm, type) => `
-  <button onclick="copyCode('${elm.name}', '${type}', 'name')">Copy</button>
-  <button onclick="copyCode('${elm.name}', '${type}', 'params')">Copy with params</button>
-
-  ${type == "functions" ? `
-  <button onclick="copyCode('${elm.name}', '${type}', 'defaults')">Copy with defaults</button>
-  ` : `
-  <button onclick="copyCode('${elm.name}', '${type}', 'skeleton')">Copy skeleton</button>
-  `}
-
-  ${(elm.examples || []).map((_, idx) => `
-    <button onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Copy Example ${idx+1}</button>
-  `)}
-
-  ${elm.luaDoc ? `
-  <button onclick="window.open('${elm.href}', '_blank', 'noopener')">Lua Manual</button>
-  ` : ''}
-
-  <br />
+  <div class="item-actions">
+    <span class="item-copy" role="group" aria-label="Copy ${elm.name}">
+      <span class="item-copy-label">Copy</span>
+      <button title="Copy the name" onclick="copyCode('${elm.name}', '${type}', 'name')">Name</button>
+      <button title="Copy with parameter names" onclick="copyCode('${elm.name}', '${type}', 'params')">Params</button>
+      ${type == "functions" ? `
+      <button title="Copy with default values" onclick="copyCode('${elm.name}', '${type}', 'defaults')">Defaults</button>
+      ` : `
+      <button title="Copy an event function skeleton" onclick="copyCode('${elm.name}', '${type}', 'skeleton')">Skeleton</button>
+      `}
+      ${(elm.examples || []).map((_, idx) => `
+      <button title="Copy example ${idx+1}" onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Example ${idx+1}</button>
+      `).join('')}
+    </span>
+    ${elm.luaDoc ? `
+    <button title="Open in the Lua 5.2 manual" onclick="window.open('${elm.href}', '_blank', 'noopener')">Manual</button>
+    ` : ''}
+  </div>
 `;
 
 const renderParameter = type => (param, idx) => `
@@ -684,32 +684,33 @@ const renderRestriction = restriction => {
 
 const renderFunction = type => elm => `
 <div class="${type}-elm${elm.restricted == 'module801' ? ' module801' : elm.undocumented ? ' runtime-event' : ''}" id="${type}_${elm.name}">
-  ${elm.diff == "added" ? '<span class="item-added">+</span>' : ''}
-  ${elm.diff == "removed" ? '<span class="item-removed">-</span>' : ''}
-  <a id="${elm.name}" href="#${elm.name}" class="D">${elm.name}</a>
-  <span class="N">
-    (<span class="V">
-    ${
-      elm.parameters ? elm.parameters.list.map(renderDiff).join('</span>, <span class="V">') : ''
-    }
-    </span>)
-  </span>
-  <br />
+  <div class="item-head">
+    <div class="item-signature">
+      ${elm.diff == "added" ? '<span class="item-added">+</span>' : ''}
+      ${elm.diff == "removed" ? '<span class="item-removed">-</span>' : ''}
+      <a id="${elm.name}" href="#${elm.name}" class="D">${elm.name}</a>
+      <span class="N">
+        (<span class="V">
+        ${
+          elm.parameters ? elm.parameters.list.map(renderDiff).join('</span>, <span class="V">') : ''
+        }
+        </span>)
+      </span>
+    </div>
+    ${renderExamples(elm, type)}
+  </div>
   ${elm.undocumented && !elm.restricted ? '<span class="runtime-label">runtime only</span><br />' : ''}
   ${renderRestriction(elm.restricted)}
   ${elm.luaDoc ? renderLuaDoc(elm) : `
-  <span class="N">
+  <div class="N">
   ${
     elm.descriptions ? elm.descriptions.map(renderDiff).join('<br />') : ''
   }
-  </span>
-  ${elm.runtime ? `<br class="runtime-off-only" />${renderRuntimeFunction(elm.runtime)}` : '<br />'}
-  <br />
+  </div>
+  ${elm.runtime ? renderRuntimeFunction(elm.runtime) : ''}
   `}
-  ${renderExamples(elm, type)}
 
   ${elm.parameters?.details?.length ? `
-  <br />
   <table class="parameter-table" id="table_param_${elm.name}">
   <thead>
     <tr>
