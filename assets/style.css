@@ -79,6 +79,40 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   border-bottom: 1px solid #315359;
 }
 
+.item-examples {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25em;
+  margin-top: 0.6em;
+  color: #B4BBD0;
+  font-size: 12px;
+}
+
+.item-example {
+  display: flex;
+  align-items: flex-start;
+  box-sizing: border-box;
+  max-width: 100%;
+  background-color: #172F33;
+  border-left: 2px solid #44707A;
+}
+
+.item-example pre {
+  min-width: 0;
+  margin: 0;
+  padding: 0.35em 0.6em;
+  overflow-x: auto;
+  color: #98E2EB;
+  font: 12px Consolas, monospace;
+}
+
+.item-example button {
+  flex: 0 0 auto;
+  padding: 0.25em 0.6em;
+  font-size: 13px;
+}
+
 .params-table {
   max-width: 100%;
   margin-top: 0.8em;

@@ -455,6 +455,16 @@ const copyPath = (elm, path) => {
   return copyText(elm, value);
 }
 
+const getExampleCode = (elm, index) => {
+  const example = elm.examples[index];
+
+  return `${convertLuaPath(elm.name)}(${elm.parameters?.list?.map(
+    (param, i) => example[i] ||
+                  elm.parameters?.details?.[i]?.default_value ||
+                  param
+  ).join(', ')})`;
+};
+
 const copyCode = (path, type, codeType, index) => {
   const elm = lastRendered?.[type]?.filter(x => x.name == path)[0];
 
@@ -482,17 +492,8 @@ const copyCode = (path, type, codeType, index) => {
 end`;
   }
   else if (codeType == 'example') {
-    const example = elm.examples?.[index];
-
-    if (type == 'events') {
-
-    }
-    else if (type == 'functions') {
-      value = `${luaPath}(${elm.parameters?.list?.map(
-        (param, i) => example[i] ||
-                      elm.parameters?.details?.[i]?.default_value ||
-                      param
-      ).join(', ')})`;
+    if (type == 'functions' && elm.examples?.[index]) {
+      value = getExampleCode(elm, index);
     }
   }
 
@@ -685,9 +686,6 @@ const renderExamples = (elm, type) => `
       ` : `
       <button title="Copy an event function skeleton" onclick="copyCode('${elm.name}', '${type}', 'skeleton')">Skeleton</button>
       `}
-      ${(elm.examples || []).map((_, idx) => `
-      <button title="Copy example ${idx+1}${elm.extra?.examples ? ` (added by this site)` : ''}" onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Example ${idx+1}</button>
-      `).join('')}
     </span>
     ${elm.luaDoc ? `
     <button title="Open in the Lua 5.2 manual" onclick="window.open('${elm.href}', '_blank', 'noopener')">Manual</button>
@@ -823,6 +821,24 @@ const renderParameters = (elm, type) => {
   `;
 };
 
+const renderItemExamples = (elm, type) => {
+  if (type != 'functions' || !elm.examples?.length) {
+    return '';
+  }
+
+  return `
+  <div class="item-examples">
+    ${renderExtra(elm.examples.length > 1 ? 'Examples' : 'Example', elm.extra?.examples)}
+    ${elm.examples.map((_, idx) => `
+    <div class="item-example">
+      <pre>${escapeHTML(getExampleCode(elm, idx))}</pre>
+      <button title="Copy example" onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Copy</button>
+    </div>
+    `).join('')}
+  </div>
+  `;
+};
+
 const renderSignatureParam = elm => param => (
   elm.optionalParams?.includes(param) ? `[${param}]` : renderDiff(param)
 );
@@ -918,6 +934,7 @@ const renderFunction = type => elm => `
   </div>
   `}
 
+  ${renderItemExamples(elm, type)}
   ${renderParameters(elm, type)}
   ${elm.returns ? renderReturn(elm.returns, elm.extra?.returns) : ''}
 </div>
