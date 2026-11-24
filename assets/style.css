@@ -115,7 +115,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .param-description {
   max-width: 46em;
-  color: #C2C2DA;
+  color: #E2E4F0;
   overflow-wrap: anywhere;
 }
 
@@ -138,7 +138,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .param-optional {
   display: block;
-  color: #9292AA;
+  color: #B4BBD0;
   font-size: 10px;
 }
 
@@ -274,7 +274,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .item-copy-label {
   margin-right: 0.45em;
-  color: #9292AA;
+  color: #B4BBD0;
   font-size: 13px;
 }
 
@@ -631,7 +631,7 @@ body.resizing-panes {
 .lua-doc {
   max-width: 52em;
   margin-bottom: 0.5em;
-  color: #C2C2DA;
+  color: #E2E4F0;
   line-height: 1.45;
 }
 
@@ -960,6 +960,21 @@ button:disabled {
 #content.hide-runtime .module801,
 #content:not(.hide-runtime) .runtime-off-only {
   display: none !important;
+}
+
+/* Brighter versions of the game colors, only for the docs page */
+
+#sections .V, #sections .param-name, #current_version .V {
+  color: #4FD8CC;
+}
+
+#sections .N, #sections .runtime-chip, #sections .luatree-elm a:not([class]),
+#current_version .N, #current_version .runtime-chip {
+  color: #E2E4F0;
+}
+
+#sections .N2, #sections .G, #current_version .N2, #current_version .G {
+  color: #B4BBD0;
 }
 
 /* Tags Page */
