@@ -1,4 +1,4 @@
-var tagsMessage = "See various html tags you can use <a href=\"tags.html\">here</a>";
+var tagsMessage = "Supports formatting with <a class=\"doc-link\" href=\"tags.html\">HTML tags</a>.";
 var customHelpData = {
   "tree": [
     {
@@ -225,8 +225,23 @@ var customHelpData = {
     {
       "name": "print",
       "descriptions": [
+        "Displays a value in the special #lua channel. There is no size limit.",
+        "Tables show their keys and values, but nested tables may display oddly.",
+        "Avoid printing a table that refers to itself, directly or through another table. Printing it never finishes, so the script may crash from runtime limits.",
         tagsMessage,
       ],
+      "parameters": {
+        "list": ["value"],
+        "details": [
+          {
+            "name": "value",
+            "type": "Any",
+            "descriptions": [
+              "the value to print",
+            ],
+          },
+        ],
+      },
     },
     {
       "name": "tfm.exec.addImage",
