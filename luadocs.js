@@ -82,7 +82,7 @@ const parseEntry = (manual, name, treeNames) => {
     const headEnd = manual.indexOf("</h3>", start);
     const signature = stripTags(manual.slice(start, headEnd));
     const bodyStart = headEnd + 5;
-    const bodyEnd = manual.slice(bodyStart).search(/<hr>|<h[12]>/i);
+    const bodyEnd = manual.slice(bodyStart).search(/<hr>|<h[123]>/i);
     return createEntry(signature, sanitize(manual.slice(bodyStart, bodyStart + bodyEnd), treeNames));
   }
 
