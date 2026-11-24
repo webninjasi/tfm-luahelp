@@ -248,9 +248,13 @@ var customHelpData = {
       "examples": [
         ["'149a49e4b38.jpg'", "'!1'"],
       ],
-      "descriptions": [
-        "You can request to host an image on <a href=\"https://atelier801.com/topic?f=6&t=893819&p=1\">Module Image Upload Center</a>",
-      ],
+      "descriptions": {
+        "replace": true,
+        "list": [
+          "Displays an image on screen or attaches it to a player, object, or other game element.",
+          "You can request image hosting at the <a class=\"doc-link\" href=\"https://atelier801.com/topic?f=6&amp;t=893819&amp;p=1\" target=\"_blank\" rel=\"noopener noreferrer\">Module Image Upload Center</a>.",
+        ],
+      },
       "parameters": {
         "details": [
           {
