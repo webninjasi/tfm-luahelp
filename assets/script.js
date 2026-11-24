@@ -555,7 +555,7 @@ const renderRuntimeInfo = sections => {
     <span class="runtime-label">runtime</span>
     ${renderVersionValue('API', info.runtimeVersions.api, info.luahelpVersions.api)}
     ${renderVersionValue('TFM', info.runtimeVersions.tfm, info.luahelpVersions.tfm)}
-    ${renderVersionValue('Collected', new Date(info.collectedAt * 1000).toLocaleString())}
+    ${renderVersionValue('Last updated', new Date(info.collectedAt * 1000).toLocaleString())}
     ${info.complete ? '' : '<span class="R">Partial snapshot</span>'}
   </div>
   ${renderRuntimeDiffs(sections)}
