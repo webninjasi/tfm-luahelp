@@ -622,6 +622,28 @@ var luaManualData = {
     "returns": [["String", "the joined string"]],
     "examples": ["print(table.concat({\"a\", \"b\", \"c\"}, \", \")) --> a, b, c"],
   },
+  "table.foreach": {
+    "signature": "table.foreach (table, f)",
+    "manualUrl": "https://www.lua.org/manual/5.0/manual.html#5.4",
+    "description": "Calls f with each key and value of a table, in no specified order. If f returns a non-nil value, the loop stops and that value is returned.",
+    "params": [
+      ["table", "Table", "the table to iterate"],
+      ["f", "Function", "receives the key and value"],
+    ],
+    "returns": [["Any", "the first non-nil value returned by f, or nil"]],
+    "examples": ["local count = 0\ntable.foreach({a = 1, b = 2}, function(key, value)\n  count = count + 1\nend)\nprint(count) --> 2"],
+  },
+  "table.foreachi": {
+    "signature": "table.foreachi (table, f)",
+    "manualUrl": "https://www.lua.org/manual/5.0/manual.html#5.4",
+    "description": "Calls f with each index and value of a list, in order starting from 1. If f returns a non-nil value, the loop stops and that value is returned.",
+    "params": [
+      ["table", "Table", "the list to iterate"],
+      ["f", "Function", "receives the index and value"],
+    ],
+    "returns": [["Any", "the first non-nil value returned by f, or nil"]],
+    "examples": ["local found = table.foreachi({\"a\", \"b\", \"c\"}, function(index, value)\n  if value == \"b\" then\n    return index\n  end\nend)\nprint(found) --> 2"],
+  },
   "table.insert": {
     "description": "Inserts a value into a list, shifting later elements up. With two arguments, the value is added at the end.",
     "params": [

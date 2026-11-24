@@ -110,6 +110,7 @@ const getOptionalParams = signature => {
 // Structured entries replace the raw manual text
 const applyLuaGuide = (fn, guide) => guide ? {
   ...fn,
+  href: guide.manualUrl || fn.href,
   luaGuide: true,
   descriptions: [escapeDocText(guide.description)],
   parameters: {
@@ -126,6 +127,13 @@ const applyLuaGuide = (fn, guide) => guide ? {
   } : {}),
   examples: guide.examples || [],
 } : fn;
+
+// Functions LuaJ kept from older Lua versions are not in the 5.2 manual
+const createLegacyLuaDoc = guide => ({
+  signature: guide.signature,
+  params: guide.params.map(([name]) => name),
+  legacy: true,
+});
 
 const createLuaFunction = (item, luaDoc) => ({
   name: item.name,
@@ -148,8 +156,9 @@ const mergeLuaDocs = (sections, docs, guides) => {
 
   const names = new Set(sections.functions.map(x => x.name));
   const added = sections.tree.flatMap(item => {
-    const luaDoc = docs.entries[item.href?.split('#pdf-')[1]];
-    return luaDoc?.signature?.includes('(') && !names.has(item.name) ? [applyLuaGuide(createLuaFunction(item, luaDoc), guides?.[item.name])] : [];
+    const guide = guides?.[item.name];
+    const luaDoc = docs.entries[item.href?.split('#pdf-')[1]] || (guide?.signature ? createLegacyLuaDoc(guide) : null);
+    return luaDoc?.signature?.includes('(') && !names.has(item.name) ? [applyLuaGuide(createLuaFunction(item, luaDoc), guide)] : [];
   });
 
   return {
@@ -941,6 +950,10 @@ const renderItemChips = elm => {
 };
 
 const getItemSource = elm => {
+  if (elm.luaDoc?.legacy) {
+    return ['Lua 5.0 manual + this site', 'Not in the Lua 5.2 manual, but still available through LuaJ. Based on the Lua 5.0 Reference Manual'];
+  }
+
   if (elm.luaGuide) {
     return ['Lua manual + this site', 'Based on the Lua 5.2 Reference Manual, organized by this site'];
   }
