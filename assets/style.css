@@ -175,7 +175,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .param-description {
   max-width: 46em;
-  color: #E2E4F0;
+  color: #CDD2E0;
   overflow-wrap: anywhere;
 }
 
@@ -194,8 +194,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   overflow-wrap: anywhere;
 }
 
-.extra-text, .extra-text code {
-  color: #D7A8F5;
+/* Added by this site, slightly brighter than /luahelp text */
+.extra-text {
+  color: #FFFFFF;
 }
 
 .param-empty {
@@ -706,7 +707,7 @@ body.resizing-panes {
 .lua-doc {
   max-width: 52em;
   margin-bottom: 0.5em;
-  color: #E2E4F0;
+  color: #CDD2E0;
   line-height: 1.45;
 }
 
@@ -1038,7 +1039,7 @@ button:disabled {
 
 #sections .N, #sections .runtime-chip, #sections .luatree-elm a:not([class]),
 #current_version .N, #current_version .runtime-chip {
-  color: #E2E4F0;
+  color: #CDD2E0;
 }
 
 #sections .N2, #sections .G, #current_version .N2, #current_version .G {
