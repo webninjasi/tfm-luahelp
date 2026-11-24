@@ -934,17 +934,6 @@ button:disabled {
   background-color: #285058;
 }
 
-.module801, .runtime-event {
-  padding-left: 0.6em;
-  padding-right: 0.5em;
-  background-color: #285058;
-  border-left: 2px solid #009D9D;
-}
-
-.module801 {
-  border-left-color: #ED67EA;
-}
-
 .module801 .runtime-label {
   background-color: #ED67EA;
 }
