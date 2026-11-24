@@ -738,6 +738,29 @@ const renderType = type => {
   return `<span class="type-chip ${docTypeColors[name.split(' ')[0]] || 'N2'}">${name}</span>`;
 };
 
+const docUrlPattern = /\bhttps?:\/\/(?:(?!&(?:lt|gt|quot|#39|#x27);)[^\s<>"'])+/gi;
+
+const linkifyUrl = match => {
+  const url = match.replace(/[.,:!?)\]]+$/, '');
+  return `<a class="doc-link" href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${match.slice(url.length)}`;
+};
+
+// Expects escaped text, tags from data/help.js and their contents are left alone
+const linkifyDocText = html => {
+  let insideLink = false;
+
+  return html.split(/(<[^>]*>)/).map((part, idx) => {
+    if (idx % 2) {
+      insideLink = /^<a\b/i.test(part) || insideLink && !/^<\/a\b/i.test(part);
+      return part;
+    }
+
+    return insideLink ? part : part.replace(docUrlPattern, linkifyUrl);
+  }).join('');
+};
+
+const renderDocText = x => linkifyDocText(renderDiff(x));
+
 const extraTitle = 'Added by this site';
 const renderExtra = (html, isExtra) => isExtra ? `<span class="extra-text" title="${extraTitle}">${html}</span>` : html;
 
@@ -790,9 +813,9 @@ const renderParameter = (elm, hasDefaults) => item => {
   </td>
   ` : ''}
   <td class="param-description">
-    ${description != null ? renderExtra(renderDiff(description), extra?.texts.has(description)) : ''}
+    ${description != null ? renderExtra(renderDocText(description), extra?.texts.has(description)) : ''}
     ${notes.length ? `<ul class="param-notes">${notes.map(note => {
-      const html = renderParamNote(note);
+      const html = linkifyDocText(renderParamNote(note));
       return extra?.texts.has(note) ? html.replace(/<li>/g, `<li class="extra-text" title="${extraTitle}">`) : html;
     }).join('')}</ul>` : ''}
   </td>
@@ -807,7 +830,7 @@ const renderReturn = (item, isExtra) => {
   <div class="item-returns">
     <span class="R">returns</span>
     ${renderType(value.type)}
-    ${value.description != null ? renderExtra(renderDiff(value.description), isExtra) : ''}
+    ${value.description != null ? renderExtra(renderDocText(value.description), isExtra) : ''}
   </div>
 `;
 };
@@ -946,7 +969,7 @@ const renderFunction = type => elm => `
   ${elm.luaDoc ? renderLuaDoc(elm) : `
   <div class="N">
   ${
-    elm.descriptions ? elm.descriptions.map(x => renderExtra(renderDiff(x), elm.extra?.descriptions.has(x))).join('<br />') : ''
+    elm.descriptions ? elm.descriptions.map(x => renderExtra(renderDocText(x), elm.extra?.descriptions.has(x))).join('<br />') : ''
   }
   </div>
   `}

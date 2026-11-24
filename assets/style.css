@@ -162,6 +162,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   font-size: 13px;
 }
 
+.doc-link {
+  color: #E9E654;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
 .extra-text, .extra-text code {
   color: #D7A8F5;
 }
