@@ -194,13 +194,29 @@ var customHelpData = {
     {
       "name": "tfm.exec.addPhysicObject",
       "examples": [
-        [1, "400", "200", "{\n\ttype = 1,\n\twidth = 100,\n\theight = 100,\n\tmiceCollision = false,\n\tgroundCollision = false\n}"],
+        `-- Add a 100x100 ice block that mice and grounds pass through
+tfm.exec.addPhysicObject(1, 400, 200, {
+  type = tfm.enum.ground.ice,
+  width = 100,
+  height = 100,
+  miceCollision = false,
+  groundCollision = false,
+})`,
+        `-- Add a wooden box that falls and can be pushed
+tfm.exec.addPhysicObject(2, 400, 100, {
+  type = tfm.enum.ground.wood,
+  width = 40,
+  height = 40,
+  dynamic = true,
+  mass = 1,
+})`,
       ],
     },
     {
       "name": "system.bindKeyboard",
       "examples": [
-        [null, "32", "true", "true"],
+        `-- Listen for the space bar
+system.bindKeyboard("Souris#0000", 32, true, true)`,
       ],
     },
     {
@@ -246,7 +262,8 @@ var customHelpData = {
     {
       "name": "tfm.exec.addImage",
       "examples": [
-        ["'149a49e4b38.jpg'", "'!1'"],
+        `-- Show an image in front of the map
+tfm.exec.addImage("149a49e4b38.jpg", "!1", 100, 100)`,
       ],
       "descriptions": {
         "replace": true,
@@ -282,7 +299,7 @@ var customHelpData = {
     {
       "name": "tfm.exec.playSound",
       "examples": [
-        ["'cite18/voix/en/marion-bonjour-4'", "100"],
+        `tfm.exec.playSound("cite18/voix/en/marion-bonjour-4", 100)`,
       ],
     },
     {
@@ -345,7 +362,21 @@ var customHelpData = {
         "description": "the new timer id, also passed as the first argument of the callback",
       },
       "examples": [
-        ["function(timerId, arg1, arg2, arg3, arg4)\n\tprint(timerId)\tprint(arg1+arg2+arg3+arg4)\nend", "false", "1", "2", "3", "4"],
+        `-- Print a number every second, 3 times
+local count = 0
+
+system.newTimer(function(timerId)
+  count = count + 1
+  print(count)
+
+  if count == 3 then
+    system.removeTimer(timerId)
+  end
+end, 1000, true)`,
+        `-- Pass extra values to the callback, after the timer id
+system.newTimer(function(timerId, name, points)
+  print(name .. " has " .. points .. " points")
+end, 1000, false, "Souris#0000", 10)`,
       ],
     },
     {
@@ -520,6 +551,13 @@ var customHelpData = {
       },
     },
     {
+      "name": "debug.disableEventLog",
+      "examples": [
+        `-- Show triggered events in #lua
+debug.disableEventLog(false)`,
+      ],
+    },
+    {
       "name": "debug.getCurrentThreadName",
       "returns": {
         "type": "String",
@@ -528,6 +566,286 @@ var customHelpData = {
     },
   ],
 };
+
+// Example code added to the matching entries on latest+
+var helpExamples = {
+  "system.bindKeyboard": [
+    `-- Print the movement keys each player presses
+function eventNewPlayer(playerName)
+  -- 0 to 3 are left, up, right, and down for both arrows and WASD/ZQSD
+  for key = 0, 3 do
+    system.bindKeyboard(playerName, key, true, true)
+  end
+end
+
+function eventKeyboard(playerName, keyCode, down, x, y)
+  print(playerName .. " pressed " .. keyCode)
+end
+
+for playerName in pairs(tfm.get.room.playerList) do
+  eventNewPlayer(playerName)
+end`,
+  ],
+  "system.bindMouse": [
+    `-- Teleport players to where they click
+function eventNewPlayer(playerName)
+  system.bindMouse(playerName, true)
+end
+
+function eventMouse(playerName, x, y)
+  tfm.exec.movePlayer(playerName, x, y)
+end
+
+for playerName in pairs(tfm.get.room.playerList) do
+  eventNewPlayer(playerName)
+end`,
+  ],
+  "system.disableChatCommandDisplay": [
+    `-- Hide every command starting with !
+system.disableChatCommandDisplay(nil, true)`,
+  ],
+  "system.loadPlayerData": [
+    `-- Count how many times each player joined
+function eventNewPlayer(playerName)
+  system.loadPlayerData(playerName)
+end
+
+function eventPlayerDataLoaded(playerName, data)
+  local wins = tonumber(data) or 0
+  system.savePlayerData(playerName, tostring(wins + 1))
+end`,
+  ],
+  "system.loadFile": [
+    `-- Load file 1 and print its size
+system.loadFile(1)
+
+function eventFileLoaded(fileNumber, fileData)
+  print("file " .. fileNumber .. " has " .. #fileData .. " characters")
+end`,
+  ],
+  "system.saveFile": [
+    `-- Save text to file 1
+system.saveFile("some data", 1)
+
+function eventFileSaved(fileNumber)
+  print("saved file " .. fileNumber)
+end`,
+  ],
+  "tfm.exec.addBonus": [
+    `-- Add a point bonus that disappears once grabbed
+tfm.exec.addBonus(tfm.enum.bonus.point, 400, 200, 1)
+
+function eventPlayerBonusGrabbed(playerName, bonusId)
+  tfm.exec.removeBonus(bonusId)
+end`,
+  ],
+  "tfm.exec.addConjuration": [
+    `-- Grid coordinates, so this is at x = 400 and y = 200
+tfm.exec.addConjuration(40, 20, 5000)`,
+  ],
+  "tfm.exec.addImage": [
+    `-- Show an image above each new player's mouse
+function eventNewPlayer(playerName)
+  -- Shows the image above the player's mouse
+  tfm.exec.addImage("149a49e4b38.jpg", "$" .. playerName, -20, -60)
+end`,
+  ],
+  "tfm.exec.addNPC": [
+    `-- Add an NPC that players can click
+tfm.exec.addNPC("Shopkeeper", {
+  title = 0,
+  look = "1;0,0,0,0,0,0,0,0,0",
+  x = 400,
+  y = 300,
+  interactive = true,
+})
+
+function eventTalkToNPC(playerName, npcName)
+  print(playerName .. " talked to " .. npcName)
+end`,
+  ],
+  "tfm.exec.addShamanObject": [
+    `-- Spawn an anvil and keep its id to move or remove it later
+local objectId = tfm.exec.addShamanObject(tfm.enum.shamanObject.anvil, 400, 100)`,
+  ],
+  "tfm.exec.changePlayerSize": [
+    `tfm.exec.changePlayerSize("Souris#0000", 2)`,
+  ],
+  "tfm.exec.disableAutoNewGame": [
+    `-- Take control of rounds and start a specific map
+tfm.exec.disableAutoNewGame(true)
+tfm.exec.disableAutoShaman(true)
+tfm.exec.disableAutoTimeLeft(true)
+tfm.exec.newGame("@42583")`,
+  ],
+  "tfm.exec.displayParticle": [
+    `tfm.exec.displayParticle(tfm.enum.particle.heart, 400, 200, 0, -1)`,
+  ],
+  "tfm.exec.explosion": [
+    `tfm.exec.explosion(400, 200, 10, 100)`,
+  ],
+  "tfm.exec.freezePlayer": [
+    `tfm.exec.freezePlayer("Souris#0000", true, false)`,
+  ],
+  "tfm.exec.giveCheese": [
+    `-- Give players the cheese when they respawn
+function eventPlayerRespawn(playerName)
+  tfm.exec.giveCheese(playerName)
+end`,
+  ],
+  "tfm.exec.movePlayer": [
+    `-- Pushes the player upwards without moving them
+tfm.exec.movePlayer("Souris#0000", 0, 0, true, 0, -50, false)`,
+  ],
+  "tfm.exec.newGame": [
+    `tfm.exec.newGame("@42583")`,
+    `tfm.exec.newGame("#4", true)`,
+  ],
+  "tfm.exec.playEmote": [
+    `tfm.exec.playEmote("Souris#0000", tfm.enum.emote.flag, "TR")`,
+  ],
+  "tfm.exec.playerVictory": [
+    `-- Send players to the hole as soon as they get the cheese
+function eventPlayerGetCheese(playerName)
+  tfm.exec.playerVictory(playerName)
+end`,
+  ],
+  "tfm.exec.removeImage": [
+    `-- Add an image, then fade it out
+local imageId = tfm.exec.addImage("149a49e4b38.jpg", "!1", 100, 100)
+tfm.exec.removeImage(imageId, true)`,
+  ],
+  "tfm.exec.removeObject": [
+    `-- Remove every object a shaman summons
+function eventSummoningEnd(playerName, objectType, x, y, angle, objectDescription)
+  tfm.exec.removeObject(objectDescription.id)
+end`,
+  ],
+  "tfm.exec.setGameTime": [
+    `tfm.exec.setGameTime(60)`,
+  ],
+  "tfm.exec.setNameColor": [
+    `tfm.exec.setNameColor("Souris#0000", 0xFF0000)`,
+  ],
+  "tfm.exec.setPlayerCollision": [
+    `-- Collide with grounds, objects, and other mice
+tfm.exec.setPlayerCollision("Souris#0000", 2)`,
+    `-- Combine categories by adding them: 8 + 1 = 9
+tfm.exec.setPlayerCollision("Souris#0000", -1, 8 + 1, 4 + 2)`,
+  ],
+  "tfm.exec.setPlayerScore": [
+    `-- Give a point for each win
+function eventPlayerWon(playerName)
+  tfm.exec.setPlayerScore(playerName, 1, true)
+end`,
+  ],
+  "tfm.exec.setWorldGravity": [
+    `tfm.exec.setWorldGravity(0, 5)`,
+  ],
+  "tfm.exec.snow": [
+    `tfm.exec.snow(30)`,
+  ],
+  "ui.addPopup": [
+    `-- Ask a player a yes or no question
+ui.addPopup(1, 1, "Ready?", "Souris#0000")
+
+function eventPopupAnswer(popupId, playerName, answer)
+  print(playerName .. " answered " .. answer)
+end`,
+  ],
+  "ui.addTextArea": [
+    `-- Show a text area that closes when its link is clicked
+ui.addTextArea(1, "<a href='event:close'>Close</a>", nil, 100, 100, 200, 40)
+
+function eventTextAreaCallback(textAreaId, playerName, eventName)
+  if eventName == "close" then
+    ui.removeTextArea(textAreaId, playerName)
+  end
+end`,
+  ],
+  "ui.setMapName": [
+    `ui.setMapName("My map")`,
+  ],
+  "ui.showColorPicker": [
+    `-- Let a player pick their name color
+ui.showColorPicker(1, "Souris#0000", 0xFF0000, "Pick a color")
+
+function eventColorPicked(colorPickerId, playerName, color)
+  if color ~= -1 then
+    tfm.exec.setNameColor(playerName, color)
+  end
+end`,
+  ],
+  "eventChatCommand": [
+    `-- !size 2 doubles your size
+function eventChatCommand(playerName, command)
+  local name, argument = command:match("^(%S+)%s*(.*)$")
+
+  if name == "size" then
+    tfm.exec.changePlayerSize(playerName, tonumber(argument) or 1)
+  end
+end`,
+  ],
+  "eventContactListener": [
+    `-- Detect players touching a ground
+tfm.exec.addPhysicObject(1, 400, 300, {
+  type = tfm.enum.ground.wood,
+  width = 100,
+  height = 20,
+  contactListener = true,
+})
+
+function eventContactListener(playerName, groundId, contactInfos)
+  print(playerName .. " touched ground " .. groundId)
+end`,
+  ],
+  "eventLoop": [
+    `-- Start a new round when time runs out
+function eventLoop(elapsedTime, remainingTime)
+  if remainingTime < 500 then
+    tfm.exec.newGame()
+  end
+end`,
+  ],
+  "eventNewPlayer": [
+    `-- Welcome every player, including those already in the room
+function eventNewPlayer(playerName)
+  ui.addTextArea(1, "Welcome!", playerName, 300, 30)
+end
+
+-- eventNewPlayer doesn't run for players already in the room
+for playerName in pairs(tfm.get.room.playerList) do
+  eventNewPlayer(playerName)
+end`,
+  ],
+  "eventPlayerDied": [
+    `-- Respawn players when they die
+function eventPlayerDied(playerName)
+  tfm.exec.respawnPlayer(playerName)
+end`,
+  ],
+  "eventTextAreaCallback": [
+    `-- A #clear, link clears the text area and sends the rest as eventName
+ui.addTextArea(1, "<a href='event:#clear,hello'>Clear</a>", nil, 100, 100)
+
+function eventTextAreaCallback(textAreaId, playerName, eventName)
+  print(eventName) --> hello
+end`,
+  ],
+};
+
+// Adds the examples to their entries, creating entries when needed
+Object.entries(helpExamples).forEach(([name, examples]) => {
+  const list = customHelpData[name.startsWith("event") ? "events" : "functions"];
+  let entry = list.find(x => x.name == name);
+
+  if (!entry) {
+    entry = { "name": name };
+    list.push(entry);
+  }
+
+  entry.examples = [...(entry.examples || []), ...examples];
+});
 
 // Corrections for /luahelp text and parameters on latest+
 // text: exact description replacements, params: fixes for one parameter of one entry

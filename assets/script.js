@@ -575,7 +575,7 @@ const copyCode = (path, type, codeType, index) => {
 end`;
   }
   else if (codeType == 'example') {
-    if (type == 'functions' && elm.examples?.[index]) {
+    if (elm.examples?.[index]) {
       value = getExampleCode(elm, index);
     }
   }
@@ -932,7 +932,8 @@ const renderParameters = (elm, type) => {
 };
 
 const renderItemExamples = (elm, type) => {
-  if (type != 'functions' || !elm.examples?.length) {
+  // Events can only show code examples, functions can also build calls from arguments
+  if (!elm.examples?.length || type != 'functions' && elm.examples.some(x => typeof(x) != 'string')) {
     return '';
   }
 

@@ -111,7 +111,7 @@ var luaManualData = {
     "description": "Creates a new coroutine that runs f when it is first resumed.",
     "params": [["f", "Function", "the coroutine body, must be a Lua function"]],
     "returns": [["Thread", "the new coroutine"]],
-    "examples": ["local co = coroutine.create(function(text)\n  print(text) --> hello\nend)\ncoroutine.resume(co, \"hello\")"],
+    "examples": ["-- Run a function as a coroutine\nlocal co = coroutine.create(function(text)\n  print(text) --> hello\nend)\ncoroutine.resume(co, \"hello\")"],
   },
   "coroutine.resume": {
     "description": "Starts or continues a coroutine. On the first resume the values are passed to its body, afterwards they become the results of the yield it stopped at.",
@@ -124,7 +124,7 @@ var luaManualData = {
       ["Boolean", "whether it ran without errors"],
       ["Any", "the values passed to yield or returned by the body, or the error message"],
     ],
-    "examples": ["local co = coroutine.create(function(a)\n  local b = coroutine.yield(a + 1)\n  return b * 2\nend)\nprint(select(2, coroutine.resume(co, 1))) --> 2\nprint(select(2, coroutine.resume(co, 5))) --> 10"],
+    "examples": ["-- Pass values in and out of a coroutine\nlocal co = coroutine.create(function(a)\n  local b = coroutine.yield(a + 1)\n  return b * 2\nend)\nprint(select(2, coroutine.resume(co, 1))) --> 2\nprint(select(2, coroutine.resume(co, 5))) --> 10"],
   },
   "coroutine.running": {
     "description": "Returns the running coroutine.",
@@ -138,19 +138,19 @@ var luaManualData = {
     "description": "Returns the status of a coroutine: \"running\" if it called status, \"suspended\" if it yielded or has not started, \"normal\" if it resumed another coroutine, or \"dead\" if it finished or stopped with an error.",
     "params": [["co", "Thread", "the coroutine to check"]],
     "returns": [["String", "the coroutine status"]],
-    "examples": ["local co = coroutine.create(function() end)\nprint(coroutine.status(co)) --> suspended\ncoroutine.resume(co)\nprint(coroutine.status(co)) --> dead"],
+    "examples": ["-- A coroutine is dead once it finishes\nlocal co = coroutine.create(function() end)\nprint(coroutine.status(co)) --> suspended\ncoroutine.resume(co)\nprint(coroutine.status(co)) --> dead"],
   },
   "coroutine.wrap": {
     "description": "Creates a coroutine and returns a function that resumes it on each call. Unlike coroutine.resume, the function does not return a status boolean and it propagates errors.",
     "params": [["f", "Function", "the coroutine body, must be a Lua function"]],
     "returns": [["Function", "the function that resumes the coroutine"]],
-    "examples": ["local nextNumber = coroutine.wrap(function()\n  for i = 1, 2 do\n    coroutine.yield(i)\n  end\nend)\nprint(nextNumber()) --> 1\nprint(nextNumber()) --> 2"],
+    "examples": ["-- A generator that returns 1, then 2\nlocal nextNumber = coroutine.wrap(function()\n  for i = 1, 2 do\n    coroutine.yield(i)\n  end\nend)\nprint(nextNumber()) --> 1\nprint(nextNumber()) --> 2"],
   },
   "coroutine.yield": {
     "description": "Suspends the running coroutine. Its arguments become extra results of the coroutine.resume call.",
     "params": [["...", "Any", "the values to pass to resume"]],
     "returns": [["Any", "the values passed to the next resume"]],
-    "examples": ["local co = coroutine.wrap(function()\n  local answer = coroutine.yield(\"question\")\n  print(answer) --> reply\nend)\nprint(co()) --> question\nco(\"reply\")"],
+    "examples": ["-- Yield a question and receive the reply\nlocal co = coroutine.wrap(function()\n  local answer = coroutine.yield(\"question\")\n  print(answer) --> reply\nend)\nprint(co()) --> question\nco(\"reply\")"],
   },
   "debug.traceback": {
     "description": "Builds a traceback of the call stack. If message is neither a string nor nil, it is returned without further processing.",
@@ -168,7 +168,7 @@ var luaManualData = {
       ["message", "Any", "the error message"],
       ["level", "Int", "where to report the error: 1 is where error was called, 2 is the caller of that function, 0 adds no position", "1"],
     ],
-    "examples": ["local ok, message = pcall(function()\n  error(\"failed\", 0)\nend)\nprint(message) --> failed"],
+    "examples": ["-- Raise an error without position information\nlocal ok, message = pcall(function()\n  error(\"failed\", 0)\nend)\nprint(message) --> failed"],
   },
   "getmetatable": {
     "description": "Returns the metatable of object. If the metatable has a \"__metatable\" field, that field's value is returned instead.",
@@ -184,7 +184,7 @@ var luaManualData = {
       ["Table", "the table"],
       ["Int", "the starting index, 0"],
     ],
-    "examples": ["local total = 0\nfor i, v in ipairs({10, 20, 30}) do\n  total = total + v\nend\nprint(total) --> 60"],
+    "examples": ["-- Sum the values of a list\nlocal total = 0\nfor i, v in ipairs({10, 20, 30}) do\n  total = total + v\nend\nprint(total) --> 60"],
   },
   "math.abs": {
     "description": "Returns the absolute value of x.",
@@ -345,7 +345,7 @@ var luaManualData = {
   "math.randomseed": {
     "description": "Sets the seed of the pseudo-random generator. Equal seeds produce equal sequences of numbers.",
     "params": [["x", "Number", "the seed"]],
-    "examples": ["math.randomseed(42)\nlocal first = math.random(100)\nmath.randomseed(42)\nprint(math.random(100) == first) --> true"],
+    "examples": ["-- The same seed gives the same numbers\nmath.randomseed(42)\nlocal first = math.random(100)\nmath.randomseed(42)\nprint(math.random(100) == first) --> true"],
   },
   "math.sin": {
     "description": "Returns the sine of x.",
@@ -421,7 +421,7 @@ var luaManualData = {
       ["Table", "the table"],
       ["Any", "the starting key, nil"],
     ],
-    "examples": ["local count = 0\nfor key, value in pairs({a = 1, b = 2}) do\n  count = count + 1\nend\nprint(count) --> 2"],
+    "examples": ["-- Count the keys of a table\nlocal count = 0\nfor key, value in pairs({a = 1, b = 2}) do\n  count = count + 1\nend\nprint(count) --> 2"],
   },
   "pcall": {
     "description": "Calls f in protected mode, so an error inside it is caught instead of being propagated.",
@@ -541,7 +541,7 @@ var luaManualData = {
       ["pattern", "String", "the pattern to look for"],
     ],
     "returns": [["Function", "the iterator"]],
-    "examples": ["local words = {}\nfor word in string.gmatch(\"hello world from Lua\", \"%a+\") do\n  words[#words + 1] = word\nend\nprint(#words) --> 4"],
+    "examples": ["-- Count the words in a string\nlocal words = {}\nfor word in string.gmatch(\"hello world from Lua\", \"%a+\") do\n  words[#words + 1] = word\nend\nprint(#words) --> 4"],
   },
   "string.gsub": {
     "description": "Replaces matches of a pattern. In a replacement string, %1 to %9 are captures, %0 is the whole match, and %% is a percent sign. A table is queried with the first capture, and a function receives all captures. If they return false or nil, the match is kept.",
@@ -631,7 +631,7 @@ var luaManualData = {
       ["f", "Function", "receives the key and value"],
     ],
     "returns": [["Any", "the first non-nil value returned by f, or nil"]],
-    "examples": ["local count = 0\ntable.foreach({a = 1, b = 2}, function(key, value)\n  count = count + 1\nend)\nprint(count) --> 2"],
+    "examples": ["-- Count the keys of a table\nlocal count = 0\ntable.foreach({a = 1, b = 2}, function(key, value)\n  count = count + 1\nend)\nprint(count) --> 2"],
   },
   "table.foreachi": {
     "signature": "table.foreachi (table, f)",
@@ -642,7 +642,7 @@ var luaManualData = {
       ["f", "Function", "receives the index and value"],
     ],
     "returns": [["Any", "the first non-nil value returned by f, or nil"]],
-    "examples": ["local found = table.foreachi({\"a\", \"b\", \"c\"}, function(index, value)\n  if value == \"b\" then\n    return index\n  end\nend)\nprint(found) --> 2"],
+    "examples": ["-- Find the index of a value\nlocal found = table.foreachi({\"a\", \"b\", \"c\"}, function(index, value)\n  if value == \"b\" then\n    return index\n  end\nend)\nprint(found) --> 2"],
   },
   "table.insert": {
     "description": "Inserts a value into a list, shifting later elements up. With two arguments, the value is added at the end.",
@@ -719,6 +719,6 @@ var luaManualData = {
       ["Boolean", "whether the call succeeded"],
       ["Any", "the results of the call, or the handler's result"],
     ],
-    "examples": ["local ok, message = xpcall(function()\n  error(\"failed\", 0)\nend, function(err)\n  return \"caught: \" .. err\nend)\nprint(message) --> caught: failed"],
+    "examples": ["-- Handle an error with a custom message\nlocal ok, message = xpcall(function()\n  error(\"failed\", 0)\nend, function(err)\n  return \"caught: \" .. err\nend)\nprint(message) --> caught: failed"],
   },
 };
