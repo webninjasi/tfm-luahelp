@@ -209,7 +209,7 @@ const mergeRuntime = (sections, runtime) => {
       parameters: { list: [], details: [] },
       descriptions: [
         isModule801
-          ? 'Module801 event found at runtime, not documented in /luahelp.'
+          ? 'Likely a leftover from code shared with Module 801, a former framework for building Atelier 801 games. The Lua runtime still looks for this event at startup but never triggers it, so handlers won\'t run. Listed here for reference.'
           : 'Discovered at runtime, not documented in /luahelp yet.',
       ],
     };
