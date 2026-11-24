@@ -844,7 +844,7 @@ fetch('versions')
   })
   .then(data => data.text())
   .then(data => {
-    const versions = data.split('\n');
+    const versions = data.split('\n').map(x => x.trim()).filter(Boolean);
     const defaultVersion = 'latest+';
     let currentVersion = defaultVersion;
     latestVersion = versions[0];
