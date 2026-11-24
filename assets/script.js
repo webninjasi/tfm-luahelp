@@ -214,6 +214,7 @@ const createLuaFunction = (item, luaDoc) => ({
   name: item.name,
   href: item.href,
   restricted: item.restricted,
+  runtime: item.runtime,
   parameters: {
     list: [...luaDoc.params, ...(luaDoc.signature.includes('&middot;') ? ['...'] : [])],
     details: [],
