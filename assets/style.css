@@ -79,8 +79,130 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   border-bottom: 1px solid #315359;
 }
 
-.functions-elm > .parameter-table, .events-elm > .parameter-table {
+.params-table {
+  width: 100%;
   margin-top: 0.8em;
+  border-collapse: collapse;
+  background-color: #172F33;
+  border-left: 2px solid #44707A;
+}
+
+.params-table th {
+  padding: 0.3em 0.5em;
+  border-bottom: 1px solid #2c565d;
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.params-table td {
+  padding: 0.35em 0.5em;
+  vertical-align: top;
+}
+
+.params-table tbody tr + tr td {
+  border-top: 1px solid #234348;
+}
+
+.param-name, .param-type {
+  white-space: nowrap;
+}
+
+.param-default {
+  max-width: 8em;
+  overflow-wrap: anywhere;
+}
+
+.param-description {
+  width: 100%;
+  color: #C2C2DA;
+  overflow-wrap: anywhere;
+}
+
+.param-empty {
+  color: #4F6D73;
+}
+
+.param-optional {
+  display: block;
+  color: #9292AA;
+  font-size: 10px;
+}
+
+.param-notes {
+  margin: 0.3em 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.param-notes li {
+  padding: 0.1em 0;
+}
+
+.param-notes code {
+  color: #98E2EB;
+}
+
+.item-returns {
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 0.4em;
+  padding: 0.3em 0.5em;
+  background-color: #172F33;
+  border-left: 2px solid #CB546B;
+  color: #C2C2DA;
+}
+
+@media (max-width: 760px) {
+  .params-table thead {
+    display: none;
+  }
+
+  .params-table, .params-table tbody {
+    display: block;
+  }
+
+  .params-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    padding: 0.2em 0;
+  }
+
+  .params-table tbody tr + tr {
+    border-top: 1px solid #234348;
+  }
+
+  .params-table tbody tr + tr td {
+    border-top: 0;
+  }
+
+  .params-table td {
+    padding: 0.15em 0.5em;
+  }
+
+  .param-optional {
+    display: inline;
+    margin-left: 0.3em;
+  }
+
+  .param-default {
+    max-width: none;
+  }
+
+  .param-default::before {
+    content: "default: ";
+  }
+
+  .param-no-default {
+    display: none;
+  }
+
+  .param-description {
+    flex: 1 1 100%;
+    box-sizing: border-box;
+  }
 }
 
 .item-head {

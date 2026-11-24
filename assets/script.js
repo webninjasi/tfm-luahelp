@@ -41,6 +41,17 @@ const loadLuaDocs = () => luaDocsData = luaDocsData || fetch('parsed/luadocs.jso
 
 const sortByName = items => [...items].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
 
+// "f (a [, b [, c]])" -> ['b', 'c']
+const getOptionalParams = signature => {
+  const tokens = signature.slice(signature.indexOf('(')).replace(/(&middot;)+/g, '...').replace(/&[a-z]+;/gi, ' ');
+  let depth = 0;
+
+  return (tokens.match(/\[|\]|\.\.\.|[a-z_]\w*/gi) || []).filter(token => {
+    depth += token == '[' ? 1 : token == ']' ? -1 : 0;
+    return depth > 0 && token != '[' && token != ']';
+  });
+};
+
 const createLuaFunction = (item, luaDoc) => ({
   name: item.name,
   href: item.href,
@@ -50,6 +61,7 @@ const createLuaFunction = (item, luaDoc) => ({
     details: [],
   },
   descriptions: [luaDoc.text],
+  optionalParams: getOptionalParams(luaDoc.signature),
   luaDoc,
 });
 
@@ -645,33 +657,105 @@ const renderExamples = (elm, type) => `
   </div>
 `;
 
-const renderParameter = type => (param, idx) => `
+// Version diffs can wrap a whole entry in { added, removed, diff }
+const unwrapDiff = x => x?.diff ? x.added || x.removed : x;
+
+const renderParamField = (name, fieldType, text) => `
+  <li><code>${name}</code> <span class="BL">${fieldType}</span>${text ? ` ${text}` : ''}</li>
+`;
+
+// Notes are free text, known shapes: "name (Type): text", "value (text)", "a (Type), b (Type)"
+const renderParamNote = note => {
+  if (typeof(note) != 'string') {
+    return `<li>${renderDiff(note)}</li>`;
+  }
+
+  const field = note.match(/^([^\s:()]+) \(([^)]+)\): (.*)$/);
+
+  if (field) {
+    return renderParamField(field[1], field[2], field[3]);
+  }
+
+  const value = note.match(/^([^\s()]+)(?: \(([^()]*)\))?$/);
+
+  if (value) {
+    return `<li><code>${value[1]}</code>${value[2] ? ` ${value[2]}` : ''}</li>`;
+  }
+
+  const fields = note.split(', ').map(x => x.match(/^(\w+) \(([^)]+)\)(?: (.+))?$/));
+
+  if (fields.length > 1 && fields.every(Boolean)) {
+    return fields.map(x => renderParamField(x[1], x[2], x[3])).join('');
+  }
+
+  return `<li>${note}</li>`;
+};
+
+const renderParameter = (type, hasDefaults) => item => {
+  const param = unwrapDiff(item);
+  const [description, ...notes] = [param.descriptions ?? []].flat();
+
+  return `
 <tr>
-  <td class="J">${idx + 1}</td>
-  <td class="V">${param.name}</td>
-  <td class="BL">${renderDiff(param.type)}</td>
-  ${type == "functions" ? `<td class="G">${renderDiff(param.default_value || '-')}</td>` : ''}
-  <td>
-    ${param.descriptions.slice(0, 1).map(renderDiff).join('')}
-    ${param.descriptions.length > 1 ? `
-      <br />
-      <span class="BL">
-      ${param.descriptions.slice(1).map(renderDiff).join('<br />')}
-      </span>
-    ` : ''}
+  <td class="V param-name">
+    ${renderDiff(param.name)}
+    ${param.default_value ? '<span class="param-optional">optional</span>' : ''}
+  </td>
+  <td class="BL param-type">${renderDiff(param.type ?? '-')}</td>
+  ${hasDefaults ? `
+  <td class="N2 param-default${param.default_value ? '' : ' param-no-default'}">
+    ${param.default_value ? renderDiff(param.default_value) : '<span class="param-empty">-</span>'}
+  </td>
+  ` : ''}
+  <td class="param-description">
+    ${description != null ? renderDiff(description) : ''}
+    ${notes.length ? `<ul class="param-notes">${notes.map(renderParamNote).join('')}</ul>` : ''}
   </td>
 </tr>
-`
+`;
+};
 
-const renderReturn = (param, idx) => `
-<tr>
-  <td class="R">${idx + 1}</td>
-  <td class="R">Returns</td>
-  <td class="BL">${param.type || "-"}</td>
-  <td class="G">-</td>
-  <td>${renderDiff(param.description || "")}</td>
-</tr>
-`
+const renderReturn = item => {
+  const value = unwrapDiff(item);
+
+  return `
+  <div class="item-returns">
+    <span class="R">returns</span>
+    <span class="BL">${renderDiff(value.type ?? '-')}</span>
+    ${value.description != null ? renderDiff(value.description) : ''}
+  </div>
+`;
+};
+
+const renderParameters = (elm, type) => {
+  const details = elm.parameters?.details;
+
+  if (!details?.length) {
+    return '';
+  }
+
+  const hasDefaults = type == "functions" && details.some(x => unwrapDiff(x).default_value);
+
+  return `
+  <table class="params-table" id="table_param_${elm.name}">
+  <thead>
+    <tr>
+      <th class="V">parameter</th>
+      <th class="BL">type</th>
+      ${hasDefaults ? '<th class="N2">default</th>' : ''}
+      <th>description</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${details.map(renderParameter(type, hasDefaults)).join('')}
+  </tbody>
+  </table>
+  `;
+};
+
+const renderSignatureParam = elm => param => (
+  elm.optionalParams?.includes(param) ? `[${param}]` : renderDiff(param)
+);
 
 const restrictionChips = {
   modules: [['FunCorp', 'fc'], ['Module Team', 'mt']],
@@ -707,7 +791,7 @@ const renderFunction = type => elm => `
       <span class="N">
         (<span class="V">
         ${
-          elm.parameters ? elm.parameters.list.map(renderDiff).join('</span>, <span class="V">') : ''
+          elm.parameters ? elm.parameters.list.map(renderSignatureParam(elm)).join('</span>, <span class="V">') : ''
         }
         </span>)
       </span>
@@ -725,23 +809,8 @@ const renderFunction = type => elm => `
   </div>
   `}
 
-  ${elm.parameters?.details?.length ? `
-  <table class="parameter-table" id="table_param_${elm.name}">
-  <thead>
-    <tr>
-      <th class="J">#</th>
-      <th class="V">parameter</th>
-      <th class="BL">type</th>
-      ${type == "functions" ? '<th class="G">default</th>' : ''}
-      <th>description</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${elm.parameters?.details?.map(renderParameter(type)).join('')}
-    ${elm.returns ? renderReturn(elm.returns, elm.parameters?.details?.length || 0) : ''}
-  </tbody>
-  </table>
-  ` : ''}
+  ${renderParameters(elm, type)}
+  ${elm.returns ? renderReturn(elm.returns) : ''}
 </div>
 `;
 
