@@ -16,7 +16,7 @@ a {
 button, input, select, textarea {
   background-color: #111111;
   color: #8E98DC;
-  border: 1px solid #444444;
+  border: 1px solid #3B626A;
   padding: 0.3em;
 }
 
@@ -383,7 +383,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .filter-chip span {
   padding: 0.25em 0.7em;
-  border: 1px solid #444444;
+  border: 1px solid #3B626A;
   border-radius: 999px;
   background-color: #111111;
   color: #777777;
@@ -419,7 +419,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .advanced-menu > summary {
   padding: 0.3em 0.7em;
-  border: 1px solid #444444;
+  border: 1px solid #3B626A;
   background-color: #111111;
   color: #8E98DC;
   font-size: 13px;
@@ -1236,7 +1236,7 @@ button:disabled {
   width: 1.6em;
   height: 1.6em;
   padding: 0;
-  border: 1px solid #444444;
+  border: 1px solid #3B626A;
   cursor: pointer;
 }
 
