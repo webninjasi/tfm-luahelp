@@ -39,6 +39,8 @@ const loadLuaDocs = () => luaDocsData = luaDocsData || fetch('parsed/luadocs.jso
   .then(resp => resp.ok ? resp.json() : null)
   .catch(err => (console.warn('luadocs.json not loaded', err), null));
 
+const sortByName = items => [...items].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+
 const createLuaFunction = (item, luaDoc) => ({
   name: item.name,
   href: item.href,
@@ -65,7 +67,7 @@ const mergeLuaDocs = (sections, docs) => {
 
   return {
     ...sections,
-    functions: [...sections.functions, ...added].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
+    functions: sortByName([...sections.functions, ...added]),
   };
 };
 
@@ -163,11 +165,19 @@ const mergeRuntime = (sections, runtime) => {
     };
   });
 
+  const functions = sections.functions.map(x => flatByName.has(x.name) ? { ...x, runtime: flatByName.get(x.name) } : x);
+  const functionNames = new Set(functions.map(x => x.name));
+
+  // Aliases are only known at runtime, they share the data of the documented function
+  const aliases = functions.flatMap(x => (x.runtime?.aliases || []).filter(
+    name => !functionNames.has(name) && functionNames.add(name)
+  ).map(name => ({ ...x, name, runtime: flatByName.get(name), aliasOf: x.name })));
+
   return {
     ...sections,
     tree,
     events: [...sections.events, ...runtimeEvents],
-    functions: sections.functions.map(x => flatByName.has(x.name) ? { ...x, runtime: flatByName.get(x.name) } : x),
+    functions: sortByName([...functions, ...aliases]),
     runtimeInfo: {
       collectedAt: runtime.collected_at,
       complete: runtime.complete,
@@ -487,8 +497,10 @@ const renderRuntimeFunction = rt => `
   <div class="runtime-strip">
     ${renderRuntimeChip(rt)}
     ${rt.aliases.length ? `
-      <span class="N2">same function as</span>
-      ${rt.aliases.map(name => `<a class="D" href="#${name}">${name}</a>`).join(', ')}
+      <div class="runtime-aliases">
+        <span class="N2">same function as</span>
+        ${rt.aliases.map(name => `<a class="D" href="#${name}">${name}</a>`).join(', ')}
+      </div>
     ` : ''}
   </div>
 `;
@@ -1045,11 +1057,11 @@ const matchesAccess = (item, access) => {
 
 const matchesSource = (item, source) => {
   if (source == 'documented') {
-    return !item.undocumented;
+    return !item.undocumented && !item.aliasOf;
   }
 
   if (source == 'undocumented') {
-    return !!item.undocumented;
+    return !!item.undocumented || !!item.aliasOf;
   }
 
   return source != 'different' || item.runtime?.documented != null;
@@ -1057,7 +1069,7 @@ const matchesSource = (item, source) => {
 
 // Entries that are hidden by the runtime/module801 toggles are not counted
 const isItemEnabled = (item, options) => (
-  (options.showRuntime || !item.undocumented) &&
+  (options.showRuntime || !item.undocumented && !item.aliasOf) &&
   (options.showModule801 || item.restricted != 'module801') &&
   (options.showLua || !item.luaDoc)
 );

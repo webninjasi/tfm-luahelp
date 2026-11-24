@@ -104,6 +104,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   border-left: 2px solid #6C77C1;
 }
 
+.item-signature a[id] {
+  scroll-margin-top: 3.5em;
+}
+
 .item-actions, .item-copy {
   display: flex;
   flex-wrap: wrap;
@@ -729,6 +733,10 @@ button:disabled {
   padding: 0;
   background: none;
   border: 0;
+}
+
+.runtime-aliases {
+  flex-basis: 100%;
 }
 
 .runtime-strip.runtime-diffs {

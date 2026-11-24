@@ -59,6 +59,10 @@ function generateSnippet() {
         continue;
       }
 
+      if (elm.aliasOf && !showRuntime) {
+        continue;
+      }
+
       code[elm.name] = {
         "scope": "lua",
         "prefix": elm.name,
