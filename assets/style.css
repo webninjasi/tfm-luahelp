@@ -90,8 +90,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 .item-example {
-  display: flex;
-  align-items: flex-start;
+  position: relative;
   box-sizing: border-box;
   max-width: 100%;
   background-color: #172F33;
@@ -102,14 +101,41 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   min-width: 0;
   margin: 0;
   padding: 0.35em 0.6em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   overflow-x: auto;
   color: #98E2EB;
   font: 12px Consolas, monospace;
 }
 
+.example-collapsible {
+  cursor: pointer;
+}
+
+.example-collapsible:hover, .example-collapsible:focus-visible {
+  background-color: #1D3A40;
+}
+
+.example-collapsible.collapsed .example-rest, .example-collapsible:not(.collapsed) .example-more {
+  display: none;
+}
+
+.example-collapsible.collapsed {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.example-more {
+  color: #B4BBD0;
+  font-style: italic;
+}
+
 .item-example button {
-  flex: 0 0 auto;
-  padding: 0.25em 0.6em;
+  float: right;
+  margin: -0.15em -0.35em 0.2em 0.8em;
+  padding: 0.2em 0.6em;
+  font-family: Verdana, Arial, sans-serif;
+  user-select: none;
   font-size: 13px;
 }
 

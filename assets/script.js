@@ -931,6 +931,28 @@ const renderParameters = (elm, type) => {
   `;
 };
 
+// Examples longer than this collapse to their first line
+const exampleMaxLines = 3;
+
+// The button floats inside the code, so only the lines next to it make room
+const renderExampleCode = (code, button) => {
+  const [first, ...rest] = code.split('\n');
+
+  if (rest.length < exampleMaxLines) {
+    return `<pre>${button}${escapeHTML(code)}</pre>`;
+  }
+
+  return `<pre class="example-collapsible collapsed" tabindex="0" role="button" aria-expanded="false" title="Click to expand">${button}${
+    escapeHTML(first)
+  }<span class="example-rest">\n${escapeHTML(rest.join('\n'))}</span><span class="example-more"> … ${rest.length} more lines</span></pre>`;
+};
+
+const toggleExample = pre => {
+  const expanded = pre.classList.toggle('collapsed') == false;
+  pre.setAttribute('aria-expanded', expanded);
+  pre.title = expanded ? 'Click to collapse' : 'Click to expand';
+};
+
 const renderItemExamples = (elm, type) => {
   // Events can only show code examples, functions can also build calls from arguments
   if (!elm.examples?.length || type != 'functions' && elm.examples.some(x => typeof(x) != 'string')) {
@@ -942,8 +964,10 @@ const renderItemExamples = (elm, type) => {
     ${renderExtra(elm.examples.length > 1 ? 'Examples' : 'Example', elm.extra?.examples)}
     ${elm.examples.map((_, idx) => `
     <div class="item-example">
-      <pre>${escapeHTML(getExampleCode(elm, idx))}</pre>
-      <button title="Copy example" onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Copy</button>
+      ${renderExampleCode(
+        getExampleCode(elm, idx),
+        `<button title="Copy example" onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Copy</button>`
+      )}
     </div>
     `).join('')}
   </div>
@@ -1745,6 +1769,24 @@ id('content').addEventListener('click', e => {
 });
 
 id('content').addEventListener('scroll', () => requestAnimationFrame(updateJumpActive), { passive: true });
+
+// Selecting text inside an example should not toggle it
+id('content').addEventListener('click', e => {
+  const pre = e.target.closest('.example-collapsible');
+
+  if (pre && !e.target.closest('button') && !window.getSelection()?.toString()) {
+    toggleExample(pre);
+  }
+});
+
+id('content').addEventListener('keydown', e => {
+  const pre = e.target.closest('.example-collapsible');
+
+  if (pre && !e.target.closest('button') && (e.key == 'Enter' || e.key == ' ')) {
+    e.preventDefault();
+    toggleExample(pre);
+  }
+});
 
 id('content').addEventListener('pointerdown', e => {
   const splitter = e.target.closest('.section-splitter');
