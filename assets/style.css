@@ -111,34 +111,29 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 .item-actions {
-  gap: 0.25em 0.4em;
+  box-sizing: border-box;
   max-width: 100%;
-  padding: 2px;
+  padding: 0 0 0 0.5em;
+  background-color: #172F33;
+  border-left: 2px solid #44707A;
 }
 
 .item-copy-label {
-  margin-right: 0.35em;
+  margin-right: 0.45em;
   color: #9292AA;
   font-size: 13px;
 }
 
 .item-actions button {
-  padding: 0.3em 0.65em;
-  border-color: #3B626A;
-  background-color: transparent;
-  color: #A9B2E8;
+  padding: 0.25em 0.6em;
   font-size: 13px;
-  font-weight: normal;
 }
 
-.item-actions button:hover {
+.item-actions button:hover, .item-actions button:focus-visible {
   position: relative;
-  border-color: #6C77C1;
-  background-color: #353a51;
-  color: #FFFFFF;
 }
 
-.item-copy button + button {
+.item-copy button + button, .item-copy + button {
   margin-left: -1px;
 }
 
