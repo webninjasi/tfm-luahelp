@@ -411,6 +411,31 @@ body.resizing-panes {
   user-select: none;
 }
 
+/* Lua manual entries */
+
+.lua-doc {
+  max-width: 52em;
+  margin-bottom: 0.5em;
+  color: #C2C2DA;
+  line-height: 1.45;
+}
+
+.lua-doc p {
+  margin: 0.5em 0;
+}
+
+.lua-doc code, .lua-doc pre {
+  color: #98E2EB;
+}
+
+.lua-doc pre {
+  overflow: auto;
+}
+
+.lua-doc a {
+  color: #E9E654;
+}
+
 /* Snippet dialog */
 
 .snippet-body {

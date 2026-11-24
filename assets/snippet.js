@@ -54,6 +54,11 @@ function generateSnippet() {
   if (document.getElementById('snippet_functions').checked) {
     for (var i=0; i<lastRendered.functions.length; i++) {
       elm = lastRendered.functions[i];
+
+      if (elm.luaDoc && !document.getElementById('toggle_lua').checked) {
+        continue;
+      }
+
       code[elm.name] = {
         "scope": "lua",
         "prefix": elm.name,

@@ -29,10 +29,45 @@ let latestVersion;
 let lastRendered;
 let loadedVersions = {};
 let runtimeData; // promise, fetched lazily for 'latest+'
+let luaDocsData; // promise, fetched lazily for 'latest+'
 
 const loadRuntime = () => runtimeData = runtimeData || fetch('parsed/runtime.json')
   .then(resp => resp.ok ? resp.json() : null)
   .catch(err => (console.warn('runtime.json not loaded', err), null));
+
+const loadLuaDocs = () => luaDocsData = luaDocsData || fetch('parsed/luadocs.json')
+  .then(resp => resp.ok ? resp.json() : null)
+  .catch(err => (console.warn('luadocs.json not loaded', err), null));
+
+const createLuaFunction = (item, luaDoc) => ({
+  name: item.name,
+  href: item.href,
+  restricted: item.restricted,
+  parameters: {
+    list: [...luaDoc.params, ...(luaDoc.signature.includes('&middot;') ? ['...'] : [])],
+    details: [],
+  },
+  descriptions: [luaDoc.text],
+  luaDoc,
+});
+
+// Adds the functions documented in the Lua manual to the functions section (does not mutate input)
+const mergeLuaDocs = (sections, docs) => {
+  if (!docs?.entries) {
+    return sections;
+  }
+
+  const names = new Set(sections.functions.map(x => x.name));
+  const added = sections.tree.flatMap(item => {
+    const luaDoc = docs.entries[item.href?.split('#pdf-')[1]];
+    return luaDoc?.signature?.includes('(') && !names.has(item.name) ? [createLuaFunction(item, luaDoc)] : [];
+  });
+
+  return {
+    ...sections,
+    functions: [...sections.functions, ...added].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
+  };
+};
 
 const luaEscapes = {
   '\\': '\\\\',
@@ -539,6 +574,12 @@ const renderLuaTreeValue = (tree, elm) => {
     : `${chip}${renderLuaTreeTable(tree, elm.name)}`;
 };
 
+const renderLuaDoc = elm => `
+  <div class="lua-doc">
+    ${elm.luaDoc.html}
+  </div>
+`;
+
 const renderLuaTreeItem = (tree, elm) => `
   <tr class="luatree-elm${elm.undocumented ? ' runtime-row' : ''}" id="${elm.name}">
     <td>
@@ -585,6 +626,10 @@ const renderExamples = (elm, type) => `
   ${(elm.examples || []).map((_, idx) => `
     <button onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Copy Example ${idx+1}</button>
   `)}
+
+  ${elm.luaDoc ? `
+  <button onclick="window.open('${elm.href}', '_blank', 'noopener')">Lua Manual</button>
+  ` : ''}
 
   <br />
 `;
@@ -652,6 +697,7 @@ const renderFunction = type => elm => `
   <br />
   ${elm.undocumented && !elm.restricted ? '<span class="runtime-label">runtime only</span><br />' : ''}
   ${renderRestriction(elm.restricted)}
+  ${elm.luaDoc ? renderLuaDoc(elm) : `
   <span class="N">
   ${
     elm.descriptions ? elm.descriptions.map(renderDiff).join('<br />') : ''
@@ -659,6 +705,7 @@ const renderFunction = type => elm => `
   </span>
   ${elm.runtime ? `<br class="runtime-off-only" />${renderRuntimeFunction(elm.runtime)}` : '<br />'}
   <br />
+  `}
   ${renderExamples(elm, type)}
 
   ${elm.parameters?.details?.length ? `
@@ -776,6 +823,10 @@ const applyTags = tree => tree.map(item => {
     tags += " undocumented runtime";
   }
 
+  if (item.luaDoc) {
+    tags += " lua stdlib manual";
+  }
+
   return { ...item, tags };
 });
 
@@ -800,13 +851,14 @@ const loadVersion = (version, initial, errorCallback) => {
   const isExtra = version == 'latest+';
   const versionPath = (isExtra || version == latestVersion) ? 'latest' : version;
 
-  const getRuntime = () => isExtra ? loadRuntime() : Promise.resolve(null);
+  const getExtras = () => isExtra ? Promise.all([loadRuntime(), loadLuaDocs()]) : Promise.resolve([null, null]);
 
-  function render(sections, runtime) {
+  function render(sections, [runtime, luaDocs]) {
     if (versionPath == 'latest') {
       if (isExtra) {
         sections = mergeObjects(sections, customHelpData);
         sections = mergeRuntime(sections, runtime);
+        sections = mergeLuaDocs(sections, luaDocs);
         sections.tree = applyReplacements(sections.tree);
         sections.tree = applyTags(sections.tree);
         sections.events = applyTags(sections.events);
@@ -833,8 +885,8 @@ const loadVersion = (version, initial, errorCallback) => {
   }
 
   if (loadedVersions[versionPath]) {
-    getRuntime()
-      .then(runtime => render(loadedVersions[versionPath], runtime))
+    getExtras()
+      .then(extras => render(loadedVersions[versionPath], extras))
       .catch(errorCallback);
 
     return;
@@ -853,7 +905,7 @@ const loadVersion = (version, initial, errorCallback) => {
       scanTree(sections.tree);
       console.log("loaded", versionPath, sections);
       loadedVersions[versionPath] = sections;
-      return getRuntime().then(runtime => render(sections, runtime));
+      return getExtras().then(extras => render(sections, extras));
     })
     .catch(errorCallback);
 }
@@ -935,7 +987,7 @@ const getSearchEntry = item => {
     : [];
   const entry = {
     name: normalizeTexts(item.name),
-    param: normalizeTexts(item.parameters?.list, details.map(x => x.name)),
+    param: normalizeTexts(item.parameters?.list, details.map(x => x.name), item.luaDoc?.params),
     type: normalizeTexts(details.map(x => x.type), item.returns?.type),
     desc: normalizeTexts(
       item.descriptions,
@@ -1006,7 +1058,8 @@ const matchesSource = (item, source) => {
 // Entries that are hidden by the runtime/module801 toggles are not counted
 const isItemEnabled = (item, options) => (
   (options.showRuntime || !item.undocumented) &&
-  (options.showModule801 || item.restricted != 'module801')
+  (options.showModule801 || item.restricted != 'module801') &&
+  (options.showLua || !item.luaDoc)
 );
 
 const getSearchOptions = () => {
@@ -1020,6 +1073,7 @@ const getSearchOptions = () => {
     source: showRuntime ? id('search_source').value : 'all',
     showRuntime: !lastRendered?.runtimeInfo || id('toggle_runtime').checked,
     showModule801: showRuntime && id('toggle_module801').checked,
+    showLua: id('toggle_lua').checked,
   };
 };
 
@@ -1454,6 +1508,7 @@ function updateRuntimeToggles() {
   const showRuntime = id('toggle_runtime').checked;
 
   id('runtime_toggle').style.display = info ? null : 'none';
+  id('lua_toggle').style.display = lastRendered?.functions.some(x => x.luaDoc) ? null : 'none';
   id('advanced_runtime').hidden = !info;
   id('module801_toggle').style.display = info?.module801 && showRuntime ? null : 'none';
   id('content').classList.toggle('hide-runtime', !showRuntime);
@@ -1473,6 +1528,7 @@ const saveRuntimeToggle = (key, value) => {
 // Runtime data is shown and module801 events are hidden unless changed
 id('toggle_runtime').checked = !window.localStorage || localStorage.getItem('show_runtime') != 'false';
 id('toggle_module801').checked = !!window.localStorage && localStorage.getItem('show_module801') == 'true';
+id('toggle_lua').checked = !window.localStorage || localStorage.getItem('show_lua') != 'false';
 
 id('toggle_runtime').addEventListener('change', function() {
   saveRuntimeToggle('show_runtime', this.checked);
@@ -1480,4 +1536,8 @@ id('toggle_runtime').addEventListener('change', function() {
 
 id('toggle_module801').addEventListener('change', function() {
   saveRuntimeToggle('show_module801', this.checked);
+});
+
+id('toggle_lua').addEventListener('change', function() {
+  saveRuntimeToggle('show_lua', this.checked);
 });
