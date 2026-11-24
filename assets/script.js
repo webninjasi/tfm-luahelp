@@ -567,8 +567,6 @@ ${
 `;
 
 const renderLuaTree = tree => `<span class="O section-head">Lua Tree</span>
-<br />
-<br />
 ${renderLuaTreeTable(tree, '')}
 `;
 
@@ -684,14 +682,10 @@ const renderFunction = type => elm => `
 `;
 
 const renderFunctions = functions => `<span class="O section-head">Functions</span>
-<br />
-<br />
 ${functions.map(renderFunction('functions')).join('')}
 `;
 
 const renderEvents = events => `<span class="O section-head">Events</span>
-<br />
-<br />
 ${events.map(renderFunction('events')).join('')}
 `;
 
@@ -828,6 +822,7 @@ const loadVersion = (version, initial, errorCallback) => {
 
     if (initial) {
       loadToggles();
+      updateSplitters();
       applySearch();
 
       if (window.location.hash) {
@@ -1097,6 +1092,14 @@ function applySearch() {
   const shown = results.reduce((sum, x) => sum + x.shown, 0);
   const total = results.reduce((sum, x) => sum + x.total, 0);
 
+  sectionResults.forEach(x => {
+    const button = document.querySelector(`[data-jump="${x.name}"]`);
+
+    button.hidden = !x.enabled;
+    button.querySelector('span').textContent = x.shown;
+  });
+  updateJumpActive();
+
   id('btn_clear_search').hidden = !id('input_filter').value;
   id('search_count').textContent = shown == total ? `${total} entries` : shown ? `${shown} of ${total}` : 'No results';
   id('search_count').classList.toggle('empty', !shown && !!total);
@@ -1189,15 +1192,204 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Toggle between row/column mode
-const updateRowcol = (state) => {
-  id('btn_toggle_rowcol').innerHTML = state ? "Columns" : "Rows";
-  id('sections').style.flexDirection = state ? "column" : null;
+// Docs layout: flat page, or resizable column/row panes
+const layoutModes = ['flat', 'col', 'row'];
+const narrowLayout = window.matchMedia('(max-width: 760px)');
+const minPaneSize = 120;
+
+const getSavedLayout = () => {
+  const saved = window.localStorage?.getItem('docs_layout');
+
+  if (layoutModes.includes(saved)) {
+    return saved;
+  }
+
+  return window.localStorage?.getItem('row_mode') == 'true' ? 'flat' : 'col';
+};
+
+const getSavedPaneSizes = () => {
+  try {
+    return JSON.parse(window.localStorage?.getItem('docs_pane_sizes')) || {};
+  } catch (err) {
+    return {};
+  }
+};
+
+let layoutMode = getSavedLayout();
+let paneSizes = getSavedPaneSizes();
+
+const getActiveLayout = () => narrowLayout.matches ? 'flat' : layoutMode;
+const isSectionVisible = elm => elm?.classList.contains('section') && elm.style.display != 'none';
+const visibleSections = () => docSections.map(name => id('section_' + name)).filter(isSectionVisible);
+const getPaneSize = elm => parseFloat(elm.style.getPropertyValue('--pane')) || 1;
+
+function updateSplitters() {
+  byClass('section-splitter').forEach(x => x.hidden = true);
+  visibleSections().slice(1).forEach(x => x.previousElementSibling.hidden = false);
+}
+
+const applyLayout = () => {
+  const mode = getActiveLayout();
+
+  layoutModes.forEach(x => id('content').classList.toggle('layout-' + x, x == mode));
+  docSections.forEach(name => {
+    id('section_' + name).style.setProperty('--pane', paneSizes[mode]?.[name] || 1);
+  });
+  byClass('section-splitter').forEach(x => {
+    x.setAttribute('aria-orientation', mode == 'col' ? 'vertical' : 'horizontal');
+  });
+  updateSplitters();
+  updateJumpActive();
+};
+
+const setLayout = mode => {
+  layoutMode = mode;
+  applyLayout();
 
   if (window.localStorage) {
-    localStorage.setItem('row_mode', JSON.stringify(state));
+    localStorage.setItem('docs_layout', mode);
   }
-}
+};
+
+const savePaneSizes = () => {
+  const mode = getActiveLayout();
+
+  paneSizes[mode] = Object.fromEntries(docSections.map(name => [name, getPaneSize(id('section_' + name))]));
+
+  if (window.localStorage) {
+    localStorage.setItem('docs_pane_sizes', JSON.stringify(paneSizes));
+  }
+};
+
+const getSplitterPanes = splitter => {
+  let before = splitter.previousElementSibling;
+  let after = splitter.nextElementSibling;
+
+  while (before && !isSectionVisible(before)) {
+    before = before.previousElementSibling;
+  }
+
+  while (after && !isSectionVisible(after)) {
+    after = after.nextElementSibling;
+  }
+
+  return before && after ? [before, after] : null;
+};
+
+const measurePane = elm => getActiveLayout() == 'col' ? elm.getBoundingClientRect().width : elm.getBoundingClientRect().height;
+
+// Padding and borders are not part of the flex-grow space
+const getPaneChrome = elm => {
+  const style = getComputedStyle(elm);
+  const sides = getActiveLayout() == 'col' ? ['Left', 'Right'] : ['Top', 'Bottom'];
+
+  return sides.reduce((sum, side) => (
+    sum + parseFloat(style['padding' + side]) + parseFloat(style[`border${side}Width`])
+  ), 0);
+};
+
+const startPaneResize = splitter => {
+  const panes = getSplitterPanes(splitter);
+
+  if (!panes) {
+    return null;
+  }
+
+  const startSize = measurePane(panes[0]);
+  const pixels = startSize + measurePane(panes[1]);
+  const weight = getPaneSize(panes[0]) + getPaneSize(panes[1]);
+  const chrome = panes.map(getPaneChrome);
+  const space = pixels - chrome[0] - chrome[1];
+
+  return delta => {
+    const size = Math.min(Math.max(startSize + delta, Math.min(minPaneSize, pixels / 2)), pixels - Math.min(minPaneSize, pixels / 2));
+
+    panes[0].style.setProperty('--pane', weight * (size - chrome[0]) / space);
+    panes[1].style.setProperty('--pane', weight * (pixels - size - chrome[1]) / space);
+  };
+};
+
+const updateJumpActive = () => {
+  if (getActiveLayout() != 'flat') {
+    return;
+  }
+
+  const content = id('content');
+  const sections = visibleSections();
+  const top = content.getBoundingClientRect().top + id('section_jump').offsetHeight + 8;
+  const atBottom = content.scrollTop + content.clientHeight >= content.scrollHeight - 2;
+  const current = atBottom ? sections[sections.length - 1] : sections.reduce(
+    (ret, x) => x.getBoundingClientRect().top <= top ? x : ret,
+    sections[0]
+  );
+
+  document.querySelectorAll('[data-jump]').forEach(x => {
+    x.classList.toggle('active', 'section_' + x.dataset.jump == current?.id);
+  });
+};
+
+// Delegated since error handling can recreate the content
+id('content').addEventListener('click', e => {
+  const button = e.target.closest('[data-jump]');
+
+  if (button) {
+    id('section_' + button.dataset.jump).scrollIntoView({ block: 'start' });
+  }
+});
+
+id('content').addEventListener('scroll', () => requestAnimationFrame(updateJumpActive), { passive: true });
+
+id('content').addEventListener('pointerdown', e => {
+  const splitter = e.target.closest('.section-splitter');
+  const resize = splitter && startPaneResize(splitter);
+
+  if (!resize) {
+    return;
+  }
+
+  const axis = getActiveLayout() == 'col' ? 'clientX' : 'clientY';
+  const start = e[axis];
+  const move = ev => resize(ev[axis] - start);
+  const stop = () => {
+    splitter.removeEventListener('pointermove', move);
+    splitter.removeEventListener('pointerup', stop);
+    splitter.removeEventListener('pointercancel', stop);
+    splitter.classList.remove('dragging');
+    document.body.classList.remove('resizing-panes');
+    savePaneSizes();
+  };
+
+  e.preventDefault();
+  splitter.setPointerCapture(e.pointerId);
+  splitter.classList.add('dragging');
+  document.body.classList.add('resizing-panes');
+  splitter.addEventListener('pointermove', move);
+  splitter.addEventListener('pointerup', stop);
+  splitter.addEventListener('pointercancel', stop);
+});
+
+id('content').addEventListener('dblclick', e => {
+  if (e.target.closest('.section-splitter')) {
+    docSections.forEach(name => id('section_' + name).style.setProperty('--pane', 1));
+    savePaneSizes();
+  }
+});
+
+id('content').addEventListener('keydown', e => {
+  const splitter = e.target.closest('.section-splitter');
+  const keys = getActiveLayout() == 'col' ? ['ArrowLeft', 'ArrowRight'] : ['ArrowUp', 'ArrowDown'];
+  const direction = keys.indexOf(e.key);
+
+  if (!splitter || direction == -1) {
+    return;
+  }
+
+  e.preventDefault();
+  startPaneResize(splitter)?.(direction ? 32 : -32);
+  savePaneSizes();
+});
+
+narrowLayout.addEventListener('change', applyLayout);
 
 // Toggle save/load
 const getToggles = () => {
@@ -1218,17 +1410,12 @@ const saveToggle = (elmId, value) => {
     }));
   }
 
+  updateSplitters();
   applySearch();
 }
 
 function loadToggles() {
   if (window.localStorage) {
-    const state = localStorage.getItem('row_mode') == 'true';
-  
-    if (state) {
-      updateRowcol(true);
-    }
-  
     // Load toggles
     const toggles = getToggles();
     Object.keys(toggles).map(elmId => {
@@ -1243,10 +1430,11 @@ function loadToggles() {
 }
 
 
-id('btn_toggle_rowcol').addEventListener('click', function() {
-  const state = id('sections').style.flexDirection == 'column';
-  updateRowcol(!state);
+layoutModes.forEach(mode => {
+  id('layout_' + mode).checked = mode == layoutMode;
+  id('layout_' + mode).addEventListener('change', () => setLayout(mode));
 });
+applyLayout();
 
 id('toggle_functions').addEventListener('change', function() {
   saveToggle('section_functions', this.checked);

@@ -74,6 +74,15 @@
               <label class="filter-chip" id="module801_toggle" style="display: none"><input id="toggle_module801" type="checkbox" /><span class="ROSE">Module801 Events</span></label>
             </div>
 
+            <div class="advanced-row">
+              <span class="advanced-label">Layout</span>
+              <div class="chip-group">
+                <label class="filter-chip" title="All sections in one scrolling page"><input id="layout_flat" name="layout" type="radio" /><span>Flat</span></label>
+                <label class="filter-chip" title="Resizable side by side panes"><input id="layout_col" name="layout" type="radio" /><span>Columns</span></label>
+                <label class="filter-chip" title="Resizable stacked panes"><input id="layout_row" name="layout" type="radio" /><span>Rows</span></label>
+              </div>
+            </div>
+
             <p class="search-help">
               <code>player move</code> all words,
               <code>"exact phrase"</code>,
@@ -87,7 +96,6 @@
           </div>
         </details>
 
-        <button id="btn_toggle_rowcol">Rows</button>
         <button onclick="showSnippet()">Snippet</button>
 
         <span id="page_error"></span>
@@ -96,10 +104,17 @@
       </div>
 
       <div id="content">
-        <span id="current_version">...</span>
+        <div id="current_version">...</div>
+        <div class="section-jump" id="section_jump" role="navigation" aria-label="Jump to section">
+          <button type="button" data-jump="functions">Functions <span></span></button>
+          <button type="button" data-jump="events">Events <span></span></button>
+          <button type="button" data-jump="luatree">Lua Tree <span></span></button>
+        </div>
         <div class="sections-wrapper" id="sections">
           <div id="section_functions" class="section"></div>
+          <div class="section-splitter" role="separator" tabindex="0" aria-label="Resize sections" title="Drag to resize, double click to reset"></div>
           <div id="section_events" class="section"></div>
+          <div class="section-splitter" role="separator" tabindex="0" aria-label="Resize sections" title="Drag to resize, double click to reset"></div>
           <div id="section_luatree" class="section"></div>
         </div>
       </div>

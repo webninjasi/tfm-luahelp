@@ -283,6 +283,134 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   gap: 0.5em;
 }
 
+/* Docs layouts */
+
+#content.layout-flat, #content.layout-col, #content.layout-row {
+  margin-left: 0;
+  padding: 0 1em;
+}
+
+#content.layout-col, #content.layout-row {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0.5em;
+}
+
+#current_version {
+  flex: 0 0 auto;
+}
+
+.layout-col #current_version, .layout-row #current_version {
+  max-height: 35vh;
+  overflow: auto;
+}
+
+.section-jump {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  gap: 0.3em;
+  margin: 0.4em -1em;
+  padding: 0.35em 1em;
+  border-bottom: 1px solid #315359;
+  background-color: #1E3D42;
+}
+
+.layout-flat .section-jump {
+  display: flex;
+}
+
+.section-jump button[hidden], .section-splitter[hidden] {
+  display: none;
+}
+
+.section-jump button span {
+  color: #9292AA;
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.section-jump button.active {
+  border-color: #6C77C1;
+  background-color: #353a51;
+  color: #FFFFFF;
+}
+
+.layout-flat .sections-wrapper {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.layout-flat .section {
+  flex: none;
+  margin: 0 0 1.5em;
+  scroll-margin-top: 3em;
+}
+
+.layout-col .sections-wrapper, .layout-row .sections-wrapper {
+  flex: 1 1 0;
+  flex-wrap: nowrap;
+  min-height: 0;
+  margin-top: 0.4em;
+}
+
+.layout-col .sections-wrapper {
+  flex-direction: row;
+}
+
+.layout-row .sections-wrapper {
+  flex-direction: column;
+}
+
+.layout-col .section, .layout-row .section {
+  flex: var(--pane, 1) 1 0;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0 0.6em 0.6em;
+  overflow: auto;
+  border: 1px solid #315359;
+}
+
+.layout-col .section-head, .layout-row .section-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -0.6em 0.4em;
+  padding: 0.2em 0.6em;
+  background-color: #1E3D42;
+}
+
+.section-splitter {
+  flex: 0 0 7px;
+  background-color: transparent;
+  touch-action: none;
+}
+
+.layout-flat .section-splitter {
+  display: none;
+}
+
+.layout-col .section-splitter {
+  cursor: col-resize;
+}
+
+.layout-row .section-splitter {
+  cursor: row-resize;
+}
+
+.section-splitter:hover, .section-splitter.dragging, .section-splitter:focus-visible {
+  background-color: #6C77C1;
+  outline: none;
+}
+
+body.resizing-panes {
+  user-select: none;
+}
+
 .copy-buffer {
   position: fixed;
   top: 0;
@@ -409,6 +537,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 .section-head {
+  display: block;
+  padding: 0.2em 0;
   font-size: 20px;
 }
 
