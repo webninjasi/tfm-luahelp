@@ -5,6 +5,7 @@
   "main": "update.js",
   "scripts": {
     "start": "node update.js",
+    "luadocs": "node luadocs.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "webninjasi",
