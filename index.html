@@ -12,39 +12,87 @@
   <body>
     <div class="wrapper">
       <script src="assets/nav.js"></script>
-      <div class="header">
-        <select id="versions"></select>
-        <input type="text" id="input_filter" placeholder="Search by name/parameter" />
+      <div class="header docs-toolbar">
+        <div class="search-box">
+          <input type="text" id="input_filter" placeholder="Search the API...  ( / )" autocomplete="off" spellcheck="false" aria-label="Search the API" />
+          <button id="btn_clear_search" type="button" title="Clear search (Esc)" aria-label="Clear search" hidden>&times;</button>
+        </div>
+        <span id="search_count" class="search-count" aria-live="polite"></span>
 
-        <input id="toggle_functions" type="checkbox" checked />
-        <label for="toggle_functions">Functions</label>
+        <select id="versions" aria-label="API version"></select>
 
-        <input id="toggle_events" type="checkbox" checked />
-        <label for="toggle_events">Events</label>
+        <div class="chip-group">
+          <label class="filter-chip"><input id="toggle_functions" type="checkbox" checked /><span>Functions</span></label>
+          <label class="filter-chip"><input id="toggle_events" type="checkbox" checked /><span>Events</span></label>
+          <label class="filter-chip"><input id="toggle_luatree" type="checkbox" checked /><span>Lua Tree</span></label>
+          <label class="filter-chip" id="runtime_toggle" style="display: none"><input id="toggle_runtime" type="checkbox" checked /><span class="V">Runtime</span></label>
+        </div>
 
-        <input id="toggle_luatree" type="checkbox" checked />
-        <label for="toggle_luatree">Lua Tree</label>
+        <details class="advanced-menu" id="advanced_menu">
+          <summary>Advanced <span id="advanced_count" class="advanced-count" hidden></span></summary>
+          <div class="advanced-panel">
+            <div class="advanced-row">
+              <span class="advanced-label">Search in</span>
+              <div class="chip-group">
+                <label class="filter-chip"><input data-search-scope="name" type="checkbox" checked /><span>Names</span></label>
+                <label class="filter-chip"><input data-search-scope="param" type="checkbox" checked /><span>Parameters</span></label>
+                <label class="filter-chip"><input data-search-scope="type" type="checkbox" /><span>Types</span></label>
+                <label class="filter-chip"><input data-search-scope="desc" type="checkbox" /><span>Descriptions</span></label>
+                <label class="filter-chip"><input data-search-scope="value" type="checkbox" checked /><span>Values</span></label>
+                <label class="filter-chip"><input data-search-scope="tag" type="checkbox" checked /><span>Tags</span></label>
+              </div>
+            </div>
 
-        <span id="runtime_toggle" style="display: none">
-          <input id="toggle_runtime" type="checkbox" checked />
-          <label for="toggle_runtime" class="V">Runtime Data</label>
-        </span>
+            <div class="advanced-row">
+              <label class="advanced-label" for="search_match">Match</label>
+              <select id="search_match">
+                <option value="contains">Contains</option>
+                <option value="start">Starts with</option>
+                <option value="exact">Exact</option>
+              </select>
+            </div>
 
-        <span id="module801_toggle" style="display: none">
-          <input id="toggle_module801" type="checkbox" />
-          <label for="toggle_module801" class="ROSE">Module801 Events</label>
-        </span>
+            <div class="advanced-row">
+              <label class="advanced-label" for="search_access">Available to</label>
+              <select id="search_access">
+                <option value="all">Any</option>
+                <option value="public">Everyone</option>
+                <option value="modules">FunCorp &amp; Module Team</option>
+                <option value="moduleteam">Module Team</option>
+                <option value="events">Event Modules</option>
+              </select>
+            </div>
+
+            <div class="advanced-row" id="advanced_runtime" hidden>
+              <label class="advanced-label" for="search_source">Runtime</label>
+              <select id="search_source">
+                <option value="all">All entries</option>
+                <option value="documented">Documented only</option>
+                <option value="undocumented">Runtime only</option>
+                <option value="different">Differs from docs</option>
+              </select>
+              <label class="filter-chip" id="module801_toggle" style="display: none"><input id="toggle_module801" type="checkbox" /><span class="ROSE">Module801 Events</span></label>
+            </div>
+
+            <p class="search-help">
+              <code>player move</code> all words,
+              <code>"exact phrase"</code>,
+              <code>-exclude</code>,
+              <code>name:</code> <code>param:</code> <code>type:</code> <code>desc:</code> <code>value:</code> <code>tag:</code>
+            </p>
+
+            <div class="advanced-actions">
+              <button type="button" id="btn_reset_search">Reset Filters</button>
+            </div>
+          </div>
+        </details>
 
         <button id="btn_toggle_rowcol">Rows</button>
         <button onclick="showSnippet()">Snippet</button>
 
-        <div class="header-down">
-          <div class="header-down-left">
-            <textarea id="code_output" onclick="copyText(this)" readonly="readonly" placeholder="Copy Code Output"></textarea>
-
-            <span id="page_error"></span>
-          </div>
-        </div>
+        <span id="page_error"></span>
+        <textarea id="code_output" class="copy-buffer" readonly="readonly" tabindex="-1" aria-hidden="true"></textarea>
+        <div id="copy_toast" class="copy-toast" role="status"></div>
       </div>
 
       <div id="content">

@@ -162,8 +162,34 @@ const copyText = (elm, value) => {
     elm.value = value;
   }
 
+  const active = document.activeElement;
+
   elm.select();
-  document.execCommand('copy');
+  const copied = document.execCommand('copy');
+
+  if (elm.id == 'code_output') {
+    active?.focus?.({ preventScroll: true });
+  }
+
+  if (elm.value) {
+    showToast(copied ? `Copied: ${elm.value.slice(0, 120)}` : 'Could not copy to clipboard', !copied);
+  }
+};
+
+let toastTimer;
+const showToast = (message, isError) => {
+  const toast = id('copy_toast');
+  const host = document.querySelector('dialog[open]') || document.body;
+
+  if (toast.parentElement != host) {
+    host.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.classList.toggle('error', !!isError);
+  toast.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), 2000);
 };
 
 const getPathParent = (name) => name.split('.').slice(0, -1).join('.')
@@ -710,6 +736,7 @@ const renderSections = sections => {
 
   id('page_error').innerHTML = "";
   id('input_filter').value = "";
+  applySearch();
 }
 
 const errorSet = err => {
@@ -801,6 +828,7 @@ const loadVersion = (version, initial, errorCallback) => {
 
     if (initial) {
       loadToggles();
+      applySearch();
 
       if (window.location.hash) {
         window.location = window.location;
@@ -875,54 +903,290 @@ fetch('versions')
   })
   .catch(err => errorSet(err));
 
-// Filter functions/events
-const filterContent = (className, elmId, value, reg) => {
-  if (!value) {
-    byClass(className).map(elm => elm.style.display = null);
-    return;
+// Search: all terms must match, supports "phrases", -exclusions and field:value
+const docSections = ['functions', 'events', 'luatree'];
+const searchFields = ['name', 'param', 'type', 'desc', 'value', 'tag'];
+const searchIndex = new WeakMap();
+const scopeInputs = () => [...document.querySelectorAll('[data-search-scope]')];
+const searchSelects = () => ['search_match', 'search_access', 'search_source'].map(id);
+
+// Version diffs wrap changed values in { added, removed, diff }
+const flattenText = x => {
+  if (x == null) {
+    return [];
   }
 
-  const section = id(elmId).section;
-  const parentIndex = id(elmId).parentIndex;
-  const sectionElements = id(elmId).sectionElements;
+  if (Array.isArray(x)) {
+    return x.flatMap(flattenText);
+  }
+
+  if (typeof(x) == 'object') {
+    return x.diff ? [...flattenText(x.added), ...flattenText(x.removed)] : [];
+  }
+
+  return [String(x)];
+};
+
+const normalizeTexts = (...values) => flattenText(values).map(x => unescapeHTML(x).toLowerCase());
+
+const getSearchEntry = item => {
+  if (searchIndex.has(item)) {
+    return searchIndex.get(item);
+  }
+
+  const details = Array.isArray(item.parameters?.details)
+    ? item.parameters.details.map(x => x.diff ? x.added || x.removed : x)
+    : [];
+  const entry = {
+    name: normalizeTexts(item.name),
+    param: normalizeTexts(item.parameters?.list, details.map(x => x.name)),
+    type: normalizeTexts(details.map(x => x.type), item.returns?.type),
+    desc: normalizeTexts(
+      item.descriptions,
+      details.map(x => x.descriptions),
+      item.returns?.description
+    ),
+    value: normalizeTexts(item.value, details.map(x => x.default_value)),
+    tag: normalizeTexts(item.tags).flatMap(x => x.split(/\s+/)),
+    runtime: {
+      type: normalizeTexts(item.runtime?.type),
+      value: normalizeTexts(item.runtime?.value, item.runtime?.java, item.runtime?.ref),
+    },
+  };
+
+  searchIndex.set(item, entry);
+  return entry;
+};
+
+const parseSearch = query => [...query.matchAll(/(-(?=[^\s\d]))?(?:([a-z]+):)?(?:"([^"]*)"?|(\S*))/gi)].flatMap(
+  ([, negate, prefix, phrase, word]) => {
+    const value = (phrase ?? word ?? '').toLowerCase();
+    const field = prefix?.toLowerCase();
+    const known = searchFields.includes(field);
+    const text = prefix && !known ? `${field}:${value}` : value;
+
+    return !value || text == '-' ? [] : [{ negate: !!negate, field: known ? field : null, text }];
+  }
+);
+
+const textMatches = (text, term, mode) => {
+  if (mode == 'exact') {
+    return text == term || getPathLast(text) == term;
+  }
+
+  if (mode == 'start') {
+    return text.startsWith(term) || getPathLast(text).startsWith(term);
+  }
+
+  return text.includes(term);
+};
+
+const termMatches = (entry, term, options) => (term.field ? [term.field] : options.scope).some(field => [
+  ...entry[field],
+  ...(options.showRuntime && entry.runtime[field] || []),
+].some(text => textMatches(text, term.text, options.match)));
+
+const matchesAccess = (item, access) => {
+  if (access == 'all') {
+    return true;
+  }
+
+  const restricted = flattenText(item.restricted);
+  return access == 'public' ? !restricted.length : restricted.includes(access);
+};
+
+const matchesSource = (item, source) => {
+  if (source == 'documented') {
+    return !item.undocumented;
+  }
+
+  if (source == 'undocumented') {
+    return !!item.undocumented;
+  }
+
+  return source != 'different' || item.runtime?.documented != null;
+};
+
+// Entries that are hidden by the runtime/module801 toggles are not counted
+const isItemEnabled = (item, options) => (
+  (options.showRuntime || !item.undocumented) &&
+  (options.showModule801 || item.restricted != 'module801')
+);
+
+const getSearchOptions = () => {
+  const scope = scopeInputs().filter(x => x.checked).map(x => x.dataset.searchScope);
+  const showRuntime = !!lastRendered?.runtimeInfo && id('toggle_runtime').checked;
+
+  return {
+    scope: scope.length ? scope : ['name'],
+    match: id('search_match').value,
+    access: id('search_access').value,
+    source: showRuntime ? id('search_source').value : 'all',
+    showRuntime: !lastRendered?.runtimeInfo || id('toggle_runtime').checked,
+    showModule801: showRuntime && id('toggle_module801').checked,
+  };
+};
+
+const filterContent = (elmId, terms, options) => {
+  const { section, parentIndex, sectionElements } = id(elmId);
+  const visible = new Set();
+  let shown = 0;
+  let total = 0;
 
   if (!section) {
+    return { shown, total };
+  }
+
+  section.forEach(item => {
+    if (!isItemEnabled(item, options)) {
+      return;
+    }
+
+    total++;
+
+    if (
+      !matchesAccess(item, options.access) ||
+      !matchesSource(item, options.source) ||
+      !terms.every(term => termMatches(getSearchEntry(item), term, options) != term.negate)
+    ) {
+      return;
+    }
+
+    shown++;
+    visible.add(item.name);
+
+    for (let index = parentIndex?.[item.name]; index != null; index = parentIndex[section[index].name]) {
+      visible.add(section[index].name);
+    }
+  });
+
+  section.forEach(item => {
+    const elm = sectionElements[item.name];
+
+    if (elm) {
+      elm.style.display = visible.has(item.name) ? null : "none";
+    }
+  });
+
+  return { shown, total };
+};
+
+const updateAdvancedCount = options => {
+  const count = [
+    scopeInputs().some(x => x.checked != x.defaultChecked),
+    options.match != 'contains',
+    options.access != 'all',
+    options.source != 'all',
+    options.showModule801,
+  ].filter(Boolean).length;
+
+  id('advanced_count').hidden = !count;
+  id('advanced_count').textContent = count;
+};
+
+function applySearch() {
+  const query = id('input_filter').value.trim();
+  const terms = parseSearch(query);
+  const options = getSearchOptions();
+  const sectionResults = docSections.map(name => ({
+    name,
+    enabled: id('toggle_' + name).checked,
+    ...filterContent('section_' + name, terms, options),
+  }));
+  const results = sectionResults.filter(x => x.enabled);
+  const shown = results.reduce((sum, x) => sum + x.shown, 0);
+  const total = results.reduce((sum, x) => sum + x.total, 0);
+
+  id('btn_clear_search').hidden = !id('input_filter').value;
+  id('search_count').textContent = shown == total ? `${total} entries` : shown ? `${shown} of ${total}` : 'No results';
+  id('search_count').classList.toggle('empty', !shown && !!total);
+  updateAdvancedCount(options);
+}
+
+const saveSearchOptions = () => {
+  if (window.localStorage) {
+    localStorage.setItem('search_options', JSON.stringify({
+      scope: scopeInputs().filter(x => x.checked).map(x => x.dataset.searchScope),
+      selects: Object.fromEntries(searchSelects().map(x => [x.id, x.value])),
+    }));
+  }
+};
+
+const loadSearchOptions = () => {
+  let saved;
+
+  try {
+    saved = JSON.parse(window.localStorage?.getItem('search_options'));
+  } catch (err) {
+    console.warn('search options not loaded', err);
+  }
+
+  if (!saved) {
     return;
   }
 
-  section.map(item => {
-    const cond = (
-      !!item.name.match(reg) || // alternatively getPathLast can be applied
-      item.parameters?.list && item.parameters.list.some(
-        param => !!param.match(reg)
-      ) ||
-      item.value && !!item.value.match(reg) ||
-      item.tags && !!item.tags.match(reg) ||
-      id('toggle_runtime').checked && [item.runtime?.value, item.runtime?.java, item.runtime?.ref].some(
-        x => x != null && !!String(x).match(reg)
-      )
-    );
+  scopeInputs().forEach(x => x.checked = !!saved.scope?.includes(x.dataset.searchScope));
+  searchSelects().forEach(x => {
+    x.value = saved.selects?.[x.id];
 
-    sectionElements[item.name].style.display = cond ? null : "none";
-
-    if (cond && parentIndex) {
-      let index = parentIndex[item.name];
-
-      while (index != null) {
-        sectionElements[section[index].name].style.display = null;
-        index = parentIndex[section[index].name];
-      }
+    if (x.selectedIndex < 0) {
+      x.selectedIndex = 0;
     }
   });
 };
 
-id('input_filter').addEventListener('keyup', () => {
-  const value = id('input_filter').value.trim();
-  const reg = new RegExp(value, 'i');
+const clearSearch = () => {
+  id('input_filter').value = '';
+  applySearch();
+  id('input_filter').focus();
+};
 
-  filterContent('luatree-elm', 'section_luatree', value, reg);
-  filterContent('events-elm', 'section_events', value, reg);
-  filterContent('functions-elm', 'section_functions', value, reg);
+loadSearchOptions();
+
+id('input_filter').addEventListener('input', applySearch);
+id('btn_clear_search').addEventListener('click', clearSearch);
+
+[...scopeInputs(), ...searchSelects()].forEach(x => x.addEventListener('change', () => {
+  saveSearchOptions();
+  applySearch();
+}));
+
+id('btn_reset_search').addEventListener('click', () => {
+  scopeInputs().forEach(x => x.checked = x.defaultChecked);
+  searchSelects().forEach(x => x.selectedIndex = 0);
+  id('toggle_module801').checked = false;
+  saveSearchOptions();
+  saveRuntimeToggle('show_module801', false);
+});
+
+document.addEventListener('click', e => {
+  if (!id('advanced_menu').contains(e.target)) {
+    id('advanced_menu').open = false;
+  }
+});
+
+document.addEventListener('keydown', e => {
+  const typing = e.target.matches('input:not([type=checkbox]):not([type=radio]), textarea, select');
+  const isFocusKey = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() == 'k' ||
+    e.key == '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey;
+
+  if (document.querySelector('dialog[open]')) {
+    return;
+  }
+
+  if (isFocusKey) {
+    e.preventDefault();
+    id('input_filter').focus();
+    id('input_filter').select();
+  }
+  else if (e.key == 'Escape') {
+    if (id('advanced_menu').open) {
+      id('advanced_menu').open = false;
+    }
+    else if (e.target == id('input_filter') && id('input_filter').value) {
+      clearSearch();
+    }
+  }
 });
 
 // Toggle between row/column mode
@@ -953,6 +1217,8 @@ const saveToggle = (elmId, value) => {
       [elmId]: value
     }));
   }
+
+  applySearch();
 }
 
 function loadToggles() {
@@ -999,6 +1265,7 @@ function updateRuntimeToggles() {
   const showRuntime = id('toggle_runtime').checked;
 
   id('runtime_toggle').style.display = info ? null : 'none';
+  id('advanced_runtime').hidden = !info;
   id('module801_toggle').style.display = info?.module801 && showRuntime ? null : 'none';
   id('content').classList.toggle('hide-runtime', !showRuntime);
   id('sections').classList.toggle('show-module801', id('toggle_module801').checked);
@@ -1007,7 +1274,7 @@ function updateRuntimeToggles() {
 const saveRuntimeToggle = (key, value) => {
   updateRuntimeToggles();
   id('snippet_code').innerHTML = '';
-  id('input_filter').dispatchEvent(new Event('keyup'));
+  applySearch();
 
   if (window.localStorage) {
     localStorage.setItem(key, JSON.stringify(value));

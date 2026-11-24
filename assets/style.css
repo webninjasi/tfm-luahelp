@@ -15,8 +15,7 @@ a {
 
 button, input, select, textarea {
   background-color: #111111;
-  color: #6C77C1;
-  opacity: 0.8;
+  color: #8E98DC;
   border: 1px solid #444444;
   padding: 0.3em;
 }
@@ -28,6 +27,16 @@ button.current-page {
 button {
   cursor: pointer;
   font-weight: bold;
+}
+
+button:hover, select:hover {
+  border-color: #6A7495;
+  color: #98E2EB;
+}
+
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 2px solid #98E2EB;
+  outline-offset: 1px;
 }
 
 .btn-small {
@@ -87,22 +96,249 @@ button {
   flex-grow: 1;
 }
 
-.header-down {
+/* Docs toolbar */
+
+.docs-toolbar {
   display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 0.7em;
+  margin: 0;
+  padding: 0.7em 1em;
 }
 
-.header-down-left {
-  flex-grow: 1;
+.search-box {
+  position: relative;
+  flex: 1 1 18em;
+  max-width: 34em;
 }
 
-.gh-buttons {
-  text-align: right;
+.search-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.45em 2em 0.45em 0.6em;
+  font-size: 14px;
 }
 
-#code_output {
-  height: 1.5em;
-  max-width: 20em;
-  max-height: 5em;
+.search-box button {
+  position: absolute;
+  top: 50%;
+  right: 0.25em;
+  transform: translateY(-50%);
+  padding: 0 0.4em;
+  border: 0;
+  background: none;
+  font-size: 16px;
+}
+
+.search-box button[hidden], .advanced-count[hidden], .advanced-row[hidden] {
+  display: none;
+}
+
+.search-count {
+  min-width: 6em;
+  color: #9292AA;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.search-count.empty {
+  color: #CB546B;
+}
+
+.chip-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+}
+
+.filter-chip {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-chip input {
+  position: absolute;
+  margin: 0;
+  opacity: 0;
+}
+
+.filter-chip span {
+  padding: 0.25em 0.7em;
+  border: 1px solid #444444;
+  border-radius: 999px;
+  background-color: #111111;
+  color: #777777;
+  font-size: 12px;
+}
+
+.filter-chip:hover span {
+  border-color: #6A7495;
+}
+
+.filter-chip input:checked + span {
+  border-color: #6C77C1;
+  background-color: #353a51;
+  color: #FFFFFF;
+}
+
+.filter-chip input:checked + span.V {
+  color: #2ECF73;
+}
+
+.filter-chip input:checked + span.ROSE {
+  color: #ED67EA;
+}
+
+.filter-chip input:focus-visible + span {
+  outline: 2px solid #98E2EB;
+  outline-offset: 1px;
+}
+
+.advanced-menu {
+  position: relative;
+}
+
+.advanced-menu > summary {
+  padding: 0.3em 0.7em;
+  border: 1px solid #444444;
+  background-color: #111111;
+  color: #8E98DC;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.advanced-menu > summary:hover, .advanced-menu[open] > summary {
+  border-color: #6A7495;
+  color: #98E2EB;
+}
+
+.advanced-count {
+  display: inline-block;
+  min-width: 1.3em;
+  border-radius: 999px;
+  background-color: #6C77C1;
+  color: #FFFFFF;
+  font-size: 11px;
+  text-align: center;
+}
+
+.advanced-panel {
+  position: absolute;
+  top: calc(100% + 0.3em);
+  right: 0;
+  z-index: 6000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  box-sizing: border-box;
+  width: min(30em, calc(100vw - 2em));
+  padding: 0.9em;
+  border: 1px solid #6A7495;
+  background-color: #172f33;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+  color: #C2C2DA;
+  font-size: 13px;
+}
+
+.advanced-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em 0.6em;
+}
+
+.advanced-label {
+  flex: 0 0 6.5em;
+  color: #9292AA;
+  font-size: 12px;
+}
+
+.advanced-row .chip-group {
+  flex: 1 1 15em;
+}
+
+.search-help {
+  margin: 0;
+  color: #9292AA;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.search-help code {
+  padding: 0.1em 0.3em;
+  background-color: #111111;
+  color: #98E2EB;
+}
+
+.advanced-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+.copy-buffer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.copy-toast {
+  position: fixed;
+  right: 1em;
+  bottom: 1em;
+  z-index: 7000;
+  max-width: min(32em, calc(100vw - 2em));
+  overflow: hidden;
+  padding: 0.5em 0.8em;
+  border: 1px solid #2ECF73;
+  background-color: #111111;
+  color: #C2C2DA;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.copy-toast.visible {
+  opacity: 1;
+}
+
+.copy-toast.error {
+  border-color: #CB546B;
+}
+
+@media (max-width: 760px) {
+  .search-box {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .advanced-menu {
+    position: static;
+  }
+
+  .advanced-panel {
+    top: auto;
+    right: 1em;
+    left: 1em;
+    width: auto;
+    margin-top: 0.3em;
+  }
 }
 
 /* Audio Browser */
