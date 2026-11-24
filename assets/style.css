@@ -91,6 +91,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   margin-bottom: 0.3em;
 }
 
+.item-head .runtime-strip {
+  margin: 0.1em 0;
+}
+
 .item-signature {
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -718,8 +722,14 @@ button:disabled {
   box-sizing: border-box;
   margin: 0.5em 0;
   padding: 0.3em 0.5em;
-  background-color: #285058;
+  background-color: #172F33;
   border-left: 2px solid #009D9D;
+}
+
+.runtime-strip .runtime-chip {
+  padding: 0;
+  background: none;
+  border: 0;
 }
 
 .runtime-strip.runtime-diffs {

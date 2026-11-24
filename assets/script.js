@@ -485,7 +485,6 @@ const renderRuntimeChip = rt => `<span class="runtime-chip" title="Runtime data"
 
 const renderRuntimeFunction = rt => `
   <div class="runtime-strip">
-    <span class="runtime-label">runtime</span>
     ${renderRuntimeChip(rt)}
     ${rt.aliases.length ? `
       <span class="N2">same function as</span>
@@ -697,6 +696,7 @@ const renderFunction = type => elm => `
         </span>)
       </span>
     </div>
+    ${elm.runtime ? renderRuntimeFunction(elm.runtime) : ''}
     ${renderExamples(elm, type)}
   </div>
   ${elm.undocumented && !elm.restricted ? '<span class="runtime-label">runtime only</span><br />' : ''}
@@ -707,7 +707,6 @@ const renderFunction = type => elm => `
     elm.descriptions ? elm.descriptions.map(renderDiff).join('<br />') : ''
   }
   </div>
-  ${elm.runtime ? renderRuntimeFunction(elm.runtime) : ''}
   `}
 
   ${elm.parameters?.details?.length ? `
