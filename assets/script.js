@@ -10,6 +10,7 @@ const runtimeKeyReplacements = {
 
 const runtimeFormat = 1;
 const module801EventNames = [
+  'miseAJour',
   'eventMessageReceive',
   'eventPlayerConnected',
   'eventPlayerDisconnected',
@@ -55,6 +56,38 @@ const escapeDocEntries = entries => entries.forEach(entry => {
     entry.returns.description = escapeDocText(entry.returns.description);
   }
 });
+
+// Corrects /luahelp wording and parameters (does not mutate input)
+const applyHelpFixes = sections => {
+  const texts = new Map(Object.entries(luaHelpFixes.text).map(([from, to]) => [escapeDocText(from), escapeDocText(to)]));
+  const fixText = text => texts.get(text) ?? text;
+  const fixName = name => luaHelpFixes.paramNames[name] ?? name;
+  const fixParam = entry => param => {
+    const { description, descriptions: replaced, ...fields } = luaHelpFixes.params[entry.name]?.[param.name] || {};
+    const descriptions = replaced ? replaced.map(escapeDocText) : param.descriptions.map(fixText);
+
+    return {
+      ...param,
+      ...fields,
+      name: fixName(param.name),
+      descriptions: description ? [escapeDocText(description), ...descriptions.slice(1)] : descriptions,
+    };
+  };
+  const fixEntry = entry => ({
+    ...entry,
+    ...(entry.descriptions ? { descriptions: entry.descriptions.map(fixText) } : {}),
+    ...(entry.returns ? { returns: { ...entry.returns, description: fixText(entry.returns.description) } } : {}),
+    ...(entry.parameters ? {
+      parameters: {
+        ...entry.parameters,
+        list: entry.parameters.list.map(fixName),
+        details: (entry.parameters.details || []).map(fixParam(entry)),
+      },
+    } : {}),
+  });
+
+  return { ...sections, functions: sections.functions.map(fixEntry), events: sections.events.map(fixEntry) };
+};
 
 const customTexts = x => Array.isArray(x) ? x : x?.list || [];
 
@@ -1160,6 +1193,7 @@ const loadVersion = (version, initial, errorCallback) => {
   function render(sections, [runtime, luaDocs]) {
     if (versionPath == 'latest') {
       if (isExtra) {
+        sections = applyHelpFixes(sections);
         sections = annotateExtras(mergeObjects(sections, customHelpData), sections, customHelpData);
         sections = mergeRuntime(sections, runtime);
         sections = mergeLuaDocs(sections, luaDocs, luaManualData);
