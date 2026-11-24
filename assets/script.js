@@ -673,25 +673,29 @@ const renderReturn = (param, idx) => `
 </tr>
 `
 
+const restrictionChips = {
+  modules: [['FunCorp', 'fc'], ['Module Team', 'mt']],
+  moduleteam: [['Module Team', 'mt']],
+  events: [['Event Modules', 'es']],
+};
+
 const renderRestriction = restriction => {
-  if (restriction == "modules") {
-    return `<span class="ROSE">Only available for</span> <span class="FC">FunCorp</span> & <span class="MT">Module Team</span><br />`;
-  }
-
-  if (restriction == "moduleteam") {
-    return `<span class="ROSE">Only available for</span> <span class="MT">Module Team</span><br />`;
-  }
-
-  if (restriction == "events") {
-    return `<span class="ROSE">Only available for</span> <span class="ES">Event Modules</span><br />`;
-  }
-
   if (restriction == "module801") {
-    return `<span class="runtime-label">module801</span><br />`;
+    return '<div class="restriction-chips"><span class="runtime-label">module801</span></div>';
   }
 
-  return '';
-}
+  const chips = typeof(restriction) == 'string' && restrictionChips[restriction];
+
+  if (!chips) {
+    return '';
+  }
+
+  return `
+    <div class="restriction-chips" title="Only available for ${chips.map(([name]) => name).join(' &amp; ')}">
+      ${chips.map(([name, key]) => `<span class="runtime-label restriction-${key}">${name}</span>`).join('')}
+    </div>
+  `;
+};
 
 const renderFunction = type => elm => `
 <div class="${type}-elm${elm.restricted == 'module801' ? ' module801' : elm.undocumented ? ' runtime-event' : ''}" id="${type}_${elm.name}">

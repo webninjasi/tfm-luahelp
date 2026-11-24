@@ -715,6 +715,25 @@ button:disabled {
   font-weight: bold;
 }
 
+.restriction-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  margin-bottom: 0.45em;
+}
+
+.runtime-label.restriction-fc {
+  background-color: #FF8547;
+}
+
+.runtime-label.restriction-mt {
+  background-color: #8FE2D1;
+}
+
+.runtime-label.restriction-es {
+  background-color: #F0D3AD;
+}
+
 .runtime-strip {
   display: flex;
   flex-wrap: wrap;
