@@ -39,6 +39,44 @@ const loadLuaDocs = () => luaDocsData = luaDocsData || fetch('parsed/luadocs.jso
   .then(resp => resp.ok ? resp.json() : null)
   .catch(err => (console.warn('luadocs.json not loaded', err), null));
 
+const customTexts = x => Array.isArray(x) ? x : x?.list || [];
+
+// Records which parts of an entry come from data/help.js instead of /luahelp
+const createExtra = (base, custom) => {
+  const baseParams = new Map((base?.parameters?.details || []).map(x => [x.name, x]));
+  const descriptions = new Set(customTexts(custom.descriptions).filter(x => !base?.descriptions?.includes(x)));
+  const params = Object.fromEntries(customTexts(custom.parameters?.details).map(param => {
+    const baseParam = baseParams.get(param.name);
+
+    return [param.name, {
+      texts: new Set(customTexts(param.descriptions).filter(x => !baseParam?.descriptions?.includes(x))),
+      default: !!param.default_value && param.default_value != baseParam?.default_value,
+      type: !!param.type && param.type != baseParam?.type,
+    }];
+  }));
+  const hasParams = Object.values(params).some(x => x.texts.size || x.default || x.type);
+  const extra = {
+    isNew: !base,
+    descriptions,
+    params,
+    returns: !!custom.returns,
+    examples: !!custom.examples,
+    access: !!custom.restricted,
+  };
+
+  return !base || descriptions.size || hasParams || extra.returns || extra.examples || extra.access ? extra : null;
+};
+
+const annotateExtras = (merged, base, custom) => {
+  const annotate = key => merged[key].map(item => {
+    const customItem = custom[key].find(x => x.name == item.name);
+    const extra = customItem && createExtra(base[key].find(x => x.name == item.name), customItem);
+    return extra ? { ...item, extra } : item;
+  });
+
+  return { ...merged, functions: annotate('functions'), events: annotate('events'), hasSources: true };
+};
+
 const sortByName = items => [...items].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
 
 // "f (a [, b [, c]])" -> ['b', 'c']
@@ -648,7 +686,7 @@ const renderExamples = (elm, type) => `
       <button title="Copy an event function skeleton" onclick="copyCode('${elm.name}', '${type}', 'skeleton')">Skeleton</button>
       `}
       ${(elm.examples || []).map((_, idx) => `
-      <button title="Copy example ${idx+1}" onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Example ${idx+1}</button>
+      <button title="Copy example ${idx+1}${elm.extra?.examples ? ` (added by this site)` : ''}" onclick="copyCode('${elm.name}', '${type}', 'example', ${idx})">Example ${idx+1}</button>
       `).join('')}
     </span>
     ${elm.luaDoc ? `
@@ -660,8 +698,36 @@ const renderExamples = (elm, type) => `
 // Version diffs can wrap a whole entry in { added, removed, diff }
 const unwrapDiff = x => x?.diff ? x.added || x.removed : x;
 
+const docTypeColors = {
+  string: 'T',
+  int: 'J',
+  number: 'J',
+  float: 'J',
+  boolean: 'CH',
+  bool: 'CH',
+  function: 'VP',
+  table: 'BV',
+  object: 'BV',
+};
+
+const renderType = type => {
+  if (type == null) {
+    return '-';
+  }
+
+  if (typeof(type) != 'string') {
+    return renderDiff(type);
+  }
+
+  const name = type.toLowerCase();
+  return `<span class="type-chip ${docTypeColors[name.split(' ')[0]] || 'N2'}">${name}</span>`;
+};
+
+const extraTitle = 'Added by this site';
+const renderExtra = (html, isExtra) => isExtra ? `<span class="extra-text" title="${extraTitle}">${html}</span>` : html;
+
 const renderParamField = (name, fieldType, text) => `
-  <li><code>${name}</code> <span class="BL">${fieldType}</span>${text ? ` ${text}` : ''}</li>
+  <li><code>${name}</code> ${renderType(fieldType)}${text ? ` ${text}` : ''}</li>
 `;
 
 // Notes are free text, known shapes: "name (Type): text", "value (text)", "a (Type), b (Type)"
@@ -691,8 +757,9 @@ const renderParamNote = note => {
   return `<li>${note}</li>`;
 };
 
-const renderParameter = (type, hasDefaults) => item => {
+const renderParameter = (elm, hasDefaults) => item => {
   const param = unwrapDiff(item);
+  const extra = elm.extra?.params[param.name];
   const [description, ...notes] = [param.descriptions ?? []].flat();
 
   return `
@@ -701,28 +768,31 @@ const renderParameter = (type, hasDefaults) => item => {
     ${renderDiff(param.name)}
     ${param.default_value ? '<span class="param-optional">optional</span>' : ''}
   </td>
-  <td class="BL param-type">${renderDiff(param.type ?? '-')}</td>
+  <td class="param-type">${renderExtra(renderType(param.type), extra?.type)}</td>
   ${hasDefaults ? `
   <td class="N2 param-default${param.default_value ? '' : ' param-no-default'}">
-    ${param.default_value ? renderDiff(param.default_value) : '<span class="param-empty">-</span>'}
+    ${param.default_value ? renderExtra(renderDiff(param.default_value), extra?.default) : '<span class="param-empty">-</span>'}
   </td>
   ` : ''}
   <td class="param-description">
-    ${description != null ? renderDiff(description) : ''}
-    ${notes.length ? `<ul class="param-notes">${notes.map(renderParamNote).join('')}</ul>` : ''}
+    ${description != null ? renderExtra(renderDiff(description), extra?.texts.has(description)) : ''}
+    ${notes.length ? `<ul class="param-notes">${notes.map(note => {
+      const html = renderParamNote(note);
+      return extra?.texts.has(note) ? html.replace(/<li>/g, `<li class="extra-text" title="${extraTitle}">`) : html;
+    }).join('')}</ul>` : ''}
   </td>
 </tr>
 `;
 };
 
-const renderReturn = item => {
+const renderReturn = (item, isExtra) => {
   const value = unwrapDiff(item);
 
   return `
   <div class="item-returns">
     <span class="R">returns</span>
-    <span class="BL">${renderDiff(value.type ?? '-')}</span>
-    ${value.description != null ? renderDiff(value.description) : ''}
+    ${renderType(value.type)}
+    ${value.description != null ? renderExtra(renderDiff(value.description), isExtra) : ''}
   </div>
 `;
 };
@@ -747,7 +817,7 @@ const renderParameters = (elm, type) => {
     </tr>
   </thead>
   <tbody>
-    ${details.map(renderParameter(type, hasDefaults)).join('')}
+    ${details.map(renderParameter(elm, hasDefaults)).join('')}
   </tbody>
   </table>
   `;
@@ -763,22 +833,59 @@ const restrictionChips = {
   events: [['Event Modules', 'es']],
 };
 
-const renderRestriction = restriction => {
+const getRestrictionChips = (restriction, isExtra) => {
   if (restriction == "module801") {
-    return '<div class="restriction-chips"><span class="runtime-label">module801</span></div>';
+    return [['module801']];
   }
 
   const chips = typeof(restriction) == 'string' && restrictionChips[restriction];
 
   if (!chips) {
+    return [];
+  }
+
+  const title = `Only available for ${chips.map(([name]) => name).join(' &amp; ')}${isExtra ? ' (added by this site)' : ''}`;
+  return chips.map(([name, key]) => [name, key, title]);
+};
+
+const renderItemChip = ([name, key, title]) => `<span class="runtime-label${key ? ` restriction-${key}` : ''}"${title ? ` title="${title}"` : ''}>${name}</span>`;
+
+const renderItemChips = elm => {
+  const chips = getRestrictionChips(elm.restricted, elm.extra?.access);
+
+  return chips.length ? `<div class="restriction-chips">${chips.map(renderItemChip).join('')}</div>` : '';
+};
+
+const getItemSource = elm => {
+  if (elm.luaDoc) {
+    return ['Lua manual', 'From the Lua 5.2 Reference Manual'];
+  }
+
+  if (elm.aliasOf) {
+    return ['runtime alias', `Found at runtime, shows the data of ${elm.aliasOf}`];
+  }
+
+  if (elm.undocumented) {
+    return ['runtime', 'Found at runtime, not in /luahelp'];
+  }
+
+  if (elm.extra?.isNew) {
+    return ['this site', 'Added by this site'];
+  }
+
+  return elm.extra
+    ? ['luahelp + this site', 'From the in-game /luahelp command, with parts added by this site']
+    : ['luahelp', 'From the in-game /luahelp command'];
+};
+
+// Only 'latest+' mixes sources
+const renderItemSource = elm => {
+  if (!lastRendered?.hasSources) {
     return '';
   }
 
-  return `
-    <div class="restriction-chips" title="Only available for ${chips.map(([name]) => name).join(' &amp; ')}">
-      ${chips.map(([name, key]) => `<span class="runtime-label restriction-${key}">${name}</span>`).join('')}
-    </div>
-  `;
+  const [name, title] = getItemSource(elm);
+  return `<span class="item-source" title="${title}">${name}</span>`;
 };
 
 const renderFunction = type => elm => `
@@ -797,20 +904,22 @@ const renderFunction = type => elm => `
       </span>
     </div>
     ${elm.runtime ? renderRuntimeFunction(elm.runtime) : ''}
-    ${renderExamples(elm, type)}
+    <div class="item-toolbar">
+      ${renderExamples(elm, type)}
+      ${renderItemSource(elm)}
+    </div>
   </div>
-  ${elm.undocumented && !elm.restricted ? '<span class="runtime-label">runtime only</span><br />' : ''}
-  ${renderRestriction(elm.restricted)}
+  ${renderItemChips(elm)}
   ${elm.luaDoc ? renderLuaDoc(elm) : `
   <div class="N">
   ${
-    elm.descriptions ? elm.descriptions.map(renderDiff).join('<br />') : ''
+    elm.descriptions ? elm.descriptions.map(x => renderExtra(renderDiff(x), elm.extra?.descriptions.has(x))).join('<br />') : ''
   }
   </div>
   `}
 
   ${renderParameters(elm, type)}
-  ${elm.returns ? renderReturn(elm.returns) : ''}
+  ${elm.returns ? renderReturn(elm.returns, elm.extra?.returns) : ''}
 </div>
 `;
 
@@ -912,6 +1021,10 @@ const applyTags = tree => tree.map(item => {
     tags += " lua stdlib manual";
   }
 
+  if (item.extra) {
+    tags += " added";
+  }
+
   return { ...item, tags };
 });
 
@@ -941,7 +1054,7 @@ const loadVersion = (version, initial, errorCallback) => {
   function render(sections, [runtime, luaDocs]) {
     if (versionPath == 'latest') {
       if (isExtra) {
-        sections = mergeObjects(sections, customHelpData);
+        sections = annotateExtras(mergeObjects(sections, customHelpData), sections, customHelpData);
         sections = mergeRuntime(sections, runtime);
         sections = mergeLuaDocs(sections, luaDocs);
         sections.tree = applyReplacements(sections.tree);

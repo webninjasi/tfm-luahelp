@@ -80,7 +80,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 .params-table {
-  width: 100%;
+  max-width: 100%;
   margin-top: 0.8em;
   border-collapse: collapse;
   background-color: #172F33;
@@ -114,9 +114,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 .param-description {
-  width: 100%;
+  max-width: 46em;
   color: #C2C2DA;
   overflow-wrap: anywhere;
+}
+
+.type-chip {
+  display: inline-block;
+  padding: 0.05em 0.4em;
+  background-color: #10262A;
+  border: 1px solid #2c565d;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.extra-text, .extra-text code {
+  color: #D7A8F5;
 }
 
 .param-empty {
@@ -228,6 +241,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .item-signature a[id] {
   scroll-margin-top: 3.5em;
+}
+
+.item-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25em 0.7em;
+  max-width: 100%;
+}
+
+.item-source {
+  color: #B4BBD0;
+  font-size: 12px;
+  font-style: italic;
+  cursor: help;
 }
 
 .item-actions, .item-copy {
