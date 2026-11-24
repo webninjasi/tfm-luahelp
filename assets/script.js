@@ -905,7 +905,7 @@ const renderFunction = type => elm => `
     </div>
     ${elm.runtime ? renderRuntimeFunction(elm.runtime) : ''}
     <div class="item-toolbar">
-      ${renderExamples(elm, type)}
+      ${elm.restricted == 'module801' ? '' : renderExamples(elm, type)}
       ${renderItemSource(elm)}
     </div>
   </div>
