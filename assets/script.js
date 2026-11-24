@@ -58,33 +58,75 @@ const escapeDocEntries = entries => entries.forEach(entry => {
 });
 
 // Corrects /luahelp wording and parameters (does not mutate input)
+// Corrected parts keep their original in entry.edits, null means there was none
 const applyHelpFixes = sections => {
   const texts = new Map(Object.entries(luaHelpFixes.text).map(([from, to]) => [escapeDocText(from), escapeDocText(to)]));
-  const fixText = text => texts.get(text) ?? text;
   const fixName = name => luaHelpFixes.paramNames[name] ?? name;
-  const fixParam = entry => param => {
-    const { description, descriptions: replaced, ...fields } = luaHelpFixes.params[entry.name]?.[param.name] || {};
-    const descriptions = replaced ? replaced.map(escapeDocText) : param.descriptions.map(fixText);
+  const fixTexts = (list, originals) => list.map(text => {
+    const fixed = texts.get(text) ?? text;
 
-    return {
-      ...param,
-      ...fields,
-      name: fixName(param.name),
-      descriptions: description ? [escapeDocText(description), ...descriptions.slice(1)] : descriptions,
-    };
-  };
-  const fixEntry = entry => ({
-    ...entry,
-    ...(entry.descriptions ? { descriptions: entry.descriptions.map(fixText) } : {}),
-    ...(entry.returns ? { returns: { ...entry.returns, description: fixText(entry.returns.description) } } : {}),
-    ...(entry.parameters ? {
-      parameters: {
-        ...entry.parameters,
-        list: entry.parameters.list.map(fixName),
-        details: (entry.parameters.details || []).map(fixParam(entry)),
-      },
-    } : {}),
+    if (fixed != text) {
+      originals.set(fixed, text);
+    }
+
+    return fixed;
   });
+
+  const fixParam = (entry, edits) => param => {
+    const { description, descriptions: replaced, ...fields } = luaHelpFixes.params[entry.name]?.[param.name] || {};
+    const name = fixName(param.name);
+    const edit = { texts: new Map() };
+    let descriptions = replaced ? replaced.map(escapeDocText) : fixTexts(param.descriptions, edit.texts);
+
+    if (replaced) {
+      descriptions.forEach(x => edit.texts.set(x, param.descriptions.join(' ')));
+    }
+
+    if (description) {
+      descriptions = [escapeDocText(description), ...descriptions.slice(1)];
+      edit.texts.set(descriptions[0], param.descriptions[0] ?? null);
+    }
+
+    if (fields.type != null && fields.type != param.type) {
+      edit.type = param.type ?? null;
+    }
+
+    if (fields.default_value != null && fields.default_value != param.default_value) {
+      edit.default = param.default_value ?? null;
+    }
+
+    if (edit.texts.size || edit.type !== undefined || edit.default !== undefined) {
+      edits.params.set(name, edit);
+    }
+
+    return { ...param, ...fields, name, descriptions };
+  };
+
+  const fixEntry = entry => {
+    const edits = { texts: new Map(), params: new Map() };
+    const fixed = {
+      ...entry,
+      ...(entry.descriptions ? { descriptions: fixTexts(entry.descriptions, edits.texts) } : {}),
+      ...(entry.parameters ? {
+        parameters: {
+          ...entry.parameters,
+          list: entry.parameters.list.map(fixName),
+          details: (entry.parameters.details || []).map(fixParam(entry, edits)),
+        },
+      } : {}),
+    };
+
+    if (entry.returns) {
+      const description = texts.get(entry.returns.description) ?? entry.returns.description;
+      fixed.returns = { ...entry.returns, description };
+
+      if (description != entry.returns.description) {
+        edits.returns = entry.returns.description;
+      }
+    }
+
+    return edits.texts.size || edits.params.size || edits.returns !== undefined ? { ...fixed, edits } : fixed;
+  };
 
   return { ...sections, functions: sections.functions.map(fixEntry), events: sections.events.map(fixEntry) };
 };
@@ -826,7 +868,20 @@ const linkifyDocText = html => {
 const renderDocText = x => linkifyDocText(renderDiff(x));
 
 const extraTitle = 'Added by this site';
-const renderExtra = (html, isExtra) => isExtra ? `<span class="extra-text" title="${extraTitle}">${html}</span>` : html;
+
+// original is undefined for unedited text, null when an edit added something new
+const getMarkTitle = (isExtra, original) => {
+  if (original !== undefined) {
+    return `Edited by this site. Original: ${original == null || original === '' ? 'none' : escapeAttr(unescapeHTML(String(original)))}`;
+  }
+
+  return isExtra ? extraTitle : null;
+};
+
+const renderExtra = (html, isExtra, original) => {
+  const title = getMarkTitle(isExtra, original);
+  return title ? `<span class="extra-text" title="${title}">${html}</span>` : html;
+};
 
 const renderParamField = (name, fieldType, text) => `
   <li><code>${name}</code> ${renderType(fieldType)}${text ? ` ${text}` : ''}</li>
@@ -868,6 +923,7 @@ const isOptionalParam = (elm, name) => !!elm.optionalParams?.includes(name) || !
 const renderParameter = (elm, hasDefaults) => item => {
   const param = unwrapDiff(item);
   const extra = elm.extra?.params[param.name];
+  const edit = elm.edits?.params.get(param.name);
   const [description, ...notes] = [param.descriptions ?? []].flat();
 
   return `
@@ -876,31 +932,32 @@ const renderParameter = (elm, hasDefaults) => item => {
     ${renderDiff(param.name)}
     ${isOptionalParam(elm, param.name) ? '<span class="param-optional">optional</span>' : ''}
   </td>
-  <td class="param-type">${renderExtra(renderType(param.type), extra?.type)}</td>
+  <td class="param-type">${renderExtra(renderType(param.type), extra?.type, edit?.type)}</td>
   ${hasDefaults ? `
   <td class="N2 param-default${param.default_value ? '' : ' param-no-default'}">
-    ${param.default_value ? renderExtra(renderDiff(param.default_value), extra?.default) : '<span class="param-empty">-</span>'}
+    ${param.default_value ? renderExtra(renderDiff(param.default_value), extra?.default, edit?.default) : '<span class="param-empty">-</span>'}
   </td>
   ` : ''}
   <td class="param-description">
-    ${description != null ? renderExtra(renderDocText(description), extra?.texts.has(description)) : ''}
+    ${description != null ? renderExtra(renderDocText(description), extra?.texts.has(description), edit?.texts.get(description)) : ''}
     ${notes.length ? `<ul class="param-notes">${notes.map(note => {
       const html = linkifyDocText(renderParamNote(note));
-      return extra?.texts.has(note) ? html.replace(/<li>/g, `<li class="extra-text" title="${extraTitle}">`) : html;
+      const title = getMarkTitle(extra?.texts.has(note), edit?.texts.get(note));
+      return title ? html.replace(/<li>/g, `<li class="extra-text" title="${title}">`) : html;
     }).join('')}</ul>` : ''}
   </td>
 </tr>
 `;
 };
 
-const renderReturn = (item, isExtra) => {
+const renderReturn = (item, isExtra, original) => {
   const value = unwrapDiff(item);
 
   return `
   <div class="item-returns">
     <span class="R">returns</span>
     ${renderType(value.type)}
-    ${value.description != null ? renderExtra(renderDocText(value.description), isExtra) : ''}
+    ${value.description != null ? renderExtra(renderDocText(value.description), isExtra, original) : ''}
   </div>
 `;
 };
@@ -1032,8 +1089,8 @@ const getItemSource = elm => {
     return ['this site', 'Added by this site'];
   }
 
-  return elm.extra
-    ? ['luahelp + this site', 'From the in-game /luahelp command, with parts added by this site']
+  return elm.extra || elm.edits
+    ? ['luahelp + this site', 'From the in-game /luahelp command, with parts added or edited by this site']
     : ['luahelp', 'From the in-game /luahelp command'];
 };
 
@@ -1075,14 +1132,14 @@ const renderFunction = type => elm => `
   ${elm.luaDoc && !elm.luaGuide ? renderLuaDoc(elm) : `
   <div class="N">
   ${
-    elm.descriptions ? elm.descriptions.map(x => renderExtra(renderDocText(x), elm.extra?.descriptions.has(x))).join('<br />') : ''
+    elm.descriptions ? elm.descriptions.map(x => renderExtra(renderDocText(x), elm.extra?.descriptions.has(x), elm.edits?.texts.get(x))).join('<br />') : ''
   }
   </div>
   `}
 
   ${renderItemExamples(elm, type)}
   ${renderParameters(elm, type)}
-  ${elm.returns ? [elm.returns].flat().map(x => renderReturn(x, elm.extra?.returns)).join('') : ''}
+  ${elm.returns ? [elm.returns].flat().map(x => renderReturn(x, elm.extra?.returns, elm.edits?.returns)).join('') : ''}
 </div>
 `;
 
@@ -1187,6 +1244,10 @@ const applyTags = tree => tree.map(item => {
 
   if (item.extra) {
     tags += " added";
+  }
+
+  if (item.edits) {
+    tags += " edited";
   }
 
   return { ...item, tags };
