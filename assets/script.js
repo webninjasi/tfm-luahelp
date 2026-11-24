@@ -708,13 +708,13 @@ const renderSections = sections => {
     {}
   );
 
-  id('error').innerHTML = "";
+  id('page_error').innerHTML = "";
   id('input_filter').value = "";
 }
 
 const errorSet = err => {
   id('content').innerHTML = defaultContent;
-  id('error').innerHTML = err.stack;
+  id('page_error').innerHTML = err.stack;
   console.error(err.stack);
 };
 

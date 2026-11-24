@@ -157,10 +157,10 @@
 
   function errorSet(err) {
     if (err.stack) {
-      id('error').innerHTML = err.stack;
+      id('page_error').innerHTML = err.stack;
       console.error(err.stack);
     } else {
-      id('error').innerHTML = err;
+      id('page_error').innerHTML = err;
     }
   }
 

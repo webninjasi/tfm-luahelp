@@ -231,7 +231,7 @@
 
   function errorSet(err) {
     id('image-wrapper').innerHTML = defaultContent;
-    id('error').innerHTML = err.stack;
+    id('page_error').innerHTML = err.stack;
     console.error(err.stack);
   }
 
