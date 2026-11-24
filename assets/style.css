@@ -298,6 +298,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   cursor: help;
 }
 
+a.item-source {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+a.item-source:hover {
+  color: #E9E654;
+}
+
 .item-actions, .item-copy {
   display: flex;
   flex-wrap: wrap;

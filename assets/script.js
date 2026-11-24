@@ -728,9 +728,6 @@ const renderExamples = (elm, type) => `
       <button title="Copy an event function skeleton" onclick="copyCode('${elm.name}', '${type}', 'skeleton')">Skeleton</button>
       `}
     </span>
-    ${elm.luaDoc ? `
-    <button title="Open in the Lua 5.2 manual" onclick="window.open('${elm.href}', '_blank', 'noopener')">Manual</button>
-    ` : ''}
   </div>
 `;
 
@@ -976,7 +973,10 @@ const renderItemSource = elm => {
   }
 
   const [name, title] = getItemSource(elm);
-  return `<span class="item-source" title="${title}">${name}</span>`;
+
+  return elm.luaDoc
+    ? `<a class="item-source" href="${elm.href}" target="_blank" rel="noopener noreferrer" title="${title}. Click to open it.">${name}</a>`
+    : `<span class="item-source" title="${title}">${name}</span>`;
 };
 
 const renderFunction = type => elm => `
