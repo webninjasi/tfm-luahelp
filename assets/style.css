@@ -411,6 +411,54 @@ body.resizing-panes {
   user-select: none;
 }
 
+/* Snippet dialog */
+
+.snippet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+}
+
+.snippet-body p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.snippet-note {
+  color: #F79337;
+}
+
+.snippet-note[hidden] {
+  display: none;
+}
+
+.snippet-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+.snippet-options .search-count {
+  min-width: 0;
+}
+
+#snippet_code {
+  box-sizing: border-box;
+  width: 100%;
+  height: 45vh;
+  resize: vertical;
+  color: #C2C2DA;
+  font: 12px Consolas, monospace;
+  white-space: pre;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .copy-buffer {
   position: fixed;
   top: 0;

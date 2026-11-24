@@ -343,6 +343,7 @@ const compareVersions = (v1, v2) => {
     tree,
     events,
     functions,
+    isDiff: true,
   }
 }
 
@@ -1461,7 +1462,7 @@ function updateRuntimeToggles() {
 
 const saveRuntimeToggle = (key, value) => {
   updateRuntimeToggles();
-  id('snippet_code').innerHTML = '';
+  id('snippet_code').value = '';
   applySearch();
 
   if (window.localStorage) {

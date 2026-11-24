@@ -91,12 +91,12 @@
             </p>
 
             <div class="advanced-actions">
+              <button type="button" onclick="showSnippet()">Snippet Generator</button>
               <button type="button" id="btn_reset_search">Reset Filters</button>
             </div>
           </div>
         </details>
 
-        <button onclick="showSnippet()">Snippet</button>
 
         <span id="page_error"></span>
         <textarea id="code_output" class="copy-buffer" readonly="readonly" tabindex="-1" aria-hidden="true"></textarea>
@@ -119,22 +119,32 @@
         </div>
       </div>
 
-      <div class="overlay" id="snippet_overlay">
-        <div>
-          <button onclick="hideSnippet()">Go Back</button>
-          <br />
-          <h1>Snippet Generator</h1>
-          <h2>Visual Studio Code</h2>
-          <a href="https://code.visualstudio.com/docs/editor/userdefinedsnippets#_create-your-own-snippets" target="_blank">More info</a>
-          <br />
-          <br />
-          <textarea id="snippet_code" onclick="copyText(this)" readonly="readonly"></textarea>
-          <br />
-          <br />
-          <button onclick="generateSnippet()">Generate Snippet</button>
-          <button onclick="downloadSnippet()">Download Snippet</button>
+      <dialog class="app-dialog" id="snippet_overlay" aria-label="Snippet Generator">
+        <div class="dialog-head">
+          <h2>Snippet Generator</h2>
+          <button type="button" class="dialog-close" onclick="hideSnippet()" aria-label="Close">&times;</button>
         </div>
-      </div>
+        <div class="dialog-body snippet-body">
+          <p>
+            Autocomplete snippets for Visual Studio Code, built from the selected version.
+            <a href="https://code.visualstudio.com/docs/editor/userdefinedsnippets#_create-your-own-snippets" target="_blank" rel="noopener">How to install</a>
+          </p>
+          <p class="snippet-note" id="snippet_note" hidden>Comparison views can't be exported. Choose latest or latest+.</p>
+          <div class="snippet-options">
+            <div class="chip-group">
+              <label class="filter-chip"><input id="snippet_functions" type="checkbox" checked /><span>Functions</span></label>
+              <label class="filter-chip"><input id="snippet_events" type="checkbox" checked /><span>Events</span></label>
+              <label class="filter-chip"><input id="snippet_tree" type="checkbox" checked /><span>Lua Tree</span></label>
+            </div>
+            <span class="search-count" id="snippet_stats"></span>
+          </div>
+          <textarea id="snippet_code" readonly="readonly" spellcheck="false" aria-label="Generated snippets"></textarea>
+          <div class="advanced-actions">
+            <button type="button" id="btn_snippet_copy" onclick="copySnippet()">Copy</button>
+            <button type="button" id="btn_snippet_download" onclick="downloadSnippet()">Download</button>
+          </div>
+        </div>
+      </dialog>
     </div>
     <script src="assets/escape.js"></script>
     <script src="data/help.js"></script>
