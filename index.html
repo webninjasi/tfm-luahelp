@@ -2,13 +2,16 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TFM Lua Help</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link type="text/css" rel="stylesheet" href="assets/style.css">
     <link type="text/css" rel="stylesheet" href="assets/tfm.css">
+    <link type="text/css" rel="stylesheet" href="assets/nav.css">
   </head>
   <body>
     <div class="wrapper">
+      <script src="assets/nav.js"></script>
       <div class="header">
         <select id="versions"></select>
         <input type="text" id="input_filter" placeholder="Search by name/parameter" />
@@ -35,36 +38,16 @@
         <button id="btn_toggle_rowcol">Rows</button>
         <button onclick="showSnippet()">Snippet</button>
 
-        <a href="./assets.html"><button>Assets Browser</button></a>
-        <a href="./tags.html"><button>HTML Tags</button></a>
-        <a href="./collision.html"><button>Collision Calculator</button></a>
-        <a href="./ui.html"><button>UI Editor</button></a>
-        <a href="./xml.html"><button>XML Tools</button></a>
-        <a href="./parkour.html"><button>PK Tools</button></a>
-        
         <div class="header-down">
           <div class="header-down-left">
             <textarea id="code_output" onclick="copyText(this)" readonly="readonly" placeholder="Copy Code Output"></textarea>
 
             <span id="page_error"></span>
           </div>
-          <div class="gh-buttons">
-            <a class="github-button" href="https://github.com/webninjasi/tfm-luahelp" data-color-scheme="no-preference: dark_dimmed; light: light; dark: dark_dimmed;" data-icon="octicon-star" data-size="large" aria-label="Star webninjasi/tfm-luahelp on GitHub">Github</a>
-          </div>
         </div>
       </div>
 
       <div id="content">
-        <small>
-          <b>Sources:</b>
-          in-game /luahelp command,
-          <a href="https://atelier801.com/topic?f=5&t=451587">Lua documentation</a>,
-          <a href="https://atelier801.com/topic?f=6&t=781139">Module FAQ & Documentation</a>,
-          <a href="https://www.iforce2d.net/b2dtut/collision-filtering">iforce2d - Collision filtering</a>
-        </small>
-        <br />
-        <br />
-
         <span id="current_version">...</span>
         <div class="sections-wrapper" id="sections">
           <div id="section_functions" class="section"></div>
@@ -94,6 +77,5 @@
     <script src="data/help.js"></script>
     <script src="assets/script.js"></script>
     <script src="assets/snippet.js"></script>
-    <script async defer src="https://buttons.github.io/buttons.js"></script>
   </body>
 </html>

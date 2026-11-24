@@ -1,0 +1,208 @@
+.site-nav {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 1em;
+  padding: 0.3em 1em;
+  background-color: #172f33;
+  border-bottom: 1px solid #315359;
+  font: 13px Verdana, Arial, sans-serif;
+}
+
+.site-nav-brand {
+  margin: 0;
+  color: #F0D3AD;
+  font-size: 15px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.site-nav-links {
+  display: flex;
+  flex-grow: 1;
+  flex-wrap: wrap;
+  gap: 0.2em;
+}
+
+.site-nav-links a {
+  padding: 0.3em 0.7em;
+  border-radius: 3px;
+  color: #C2C2DA;
+  white-space: nowrap;
+}
+
+.site-nav-links a:hover {
+  background-color: #285058;
+  color: #98E2EB;
+}
+
+.site-nav-links a.active {
+  background-color: #353a51;
+  color: #FFFFFF;
+  font-weight: bold;
+}
+
+.site-nav-end {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5em;
+  white-space: nowrap;
+}
+
+.site-nav-star {
+  display: inline-flex;
+  align-items: center;
+  min-width: 88px;
+  height: 28px;
+}
+
+.site-nav-star a {
+  color: #C2C2DA;
+}
+
+.site-nav-credits {
+  height: 28px;
+  padding: 0 0.8em;
+  border: 1px solid #444444;
+  border-radius: 6px;
+  background-color: #111111;
+  color: #C2C2DA;
+  font: bold 12px Verdana, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.site-nav-credits:hover {
+  border-color: #6A7495;
+  color: #98E2EB;
+}
+
+.site-nav-toggle {
+  display: none;
+  margin-left: auto;
+  padding: 0.2em 0.6em;
+}
+
+.site-nav a:focus-visible,
+.site-nav button:focus-visible,
+.app-dialog a:focus-visible,
+.app-dialog button:focus-visible {
+  outline: 2px solid #98E2EB;
+  outline-offset: 1px;
+}
+
+dialog.app-dialog {
+  box-sizing: border-box;
+  width: min(44em, calc(100vw - 2em));
+  max-height: calc(100vh - 2em);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #6A7495;
+  background-color: #172f33;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  color: #C2C2DA;
+  font: 13px Verdana, Arial, sans-serif;
+}
+
+dialog.app-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog.app-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+.dialog-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6em 1em;
+  border-bottom: 1px solid #315359;
+}
+
+.dialog-head h2 {
+  margin: 0;
+  color: #F0D3AD;
+  font-size: 16px;
+}
+
+.dialog-close {
+  padding: 0 0.5em;
+  border: 1px solid #444444;
+  background-color: #111111;
+  color: #C2C2DA;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.dialog-close:hover {
+  border-color: #6A7495;
+  color: #98E2EB;
+}
+
+.dialog-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 1em;
+}
+
+.dialog-body a {
+  color: #98E2EB;
+}
+
+.credits-body section + section {
+  margin-top: 1em;
+}
+
+.credits-body h3 {
+  margin: 0 0 0.4em;
+  color: #E9E654;
+  font-size: 13px;
+}
+
+.credits-body ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.credits-body li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2em 0.7em;
+  padding: 0.25em 0;
+}
+
+.credits-body small {
+  color: #9292AA;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .site-nav {
+    flex-wrap: wrap;
+  }
+
+  .site-nav-toggle {
+    display: block;
+  }
+
+  .site-nav-links,
+  .site-nav-end {
+    display: none;
+    flex-basis: 100%;
+  }
+
+  .site-nav.open .site-nav-links,
+  .site-nav.open .site-nav-end {
+    display: flex;
+  }
+
+  .site-nav-links {
+    flex-direction: column;
+  }
+}
