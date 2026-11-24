@@ -820,6 +820,12 @@ const renderParamNote = note => {
   return `<li>${note}</li>`;
 };
 
+// Lua manual signatures mark optional parameters, other entries have a default value
+const isOptionalParam = (elm, name) => !!elm.optionalParams?.includes(name) || !!elm.parameters?.details?.some(x => {
+  const param = unwrapDiff(x);
+  return param.name == name && param.default_value;
+});
+
 const renderParameter = (elm, hasDefaults) => item => {
   const param = unwrapDiff(item);
   const extra = elm.extra?.params[param.name];
@@ -829,7 +835,7 @@ const renderParameter = (elm, hasDefaults) => item => {
 <tr>
   <td class="V param-name">
     ${renderDiff(param.name)}
-    ${param.default_value || elm.optionalParams?.includes(param.name) ? '<span class="param-optional">optional</span>' : ''}
+    ${isOptionalParam(elm, param.name) ? '<span class="param-optional">optional</span>' : ''}
   </td>
   <td class="param-type">${renderExtra(renderType(param.type), extra?.type)}</td>
   ${hasDefaults ? `
@@ -905,7 +911,7 @@ const renderItemExamples = (elm, type) => {
 };
 
 const renderSignatureParam = elm => param => (
-  elm.optionalParams?.includes(param) ? `[${param}]` : renderDiff(param)
+  isOptionalParam(elm, unwrapDiff(param)) ? `[${renderDiff(param)}]` : renderDiff(param)
 );
 
 const restrictionChips = {
