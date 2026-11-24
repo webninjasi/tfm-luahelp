@@ -933,6 +933,7 @@ ${events.map(renderFunction('events')).join('')}
 
 const renderSections = sections => {
   lastRendered = sections;
+  loadSourceToggles();
 
   id('current_version').innerHTML = `<div class="V TI">${sections.version}</div>${
     sections.runtimeInfo ? renderRuntimeInfo(sections) : ''
@@ -1049,7 +1050,7 @@ const loadVersion = (version, initial, errorCallback) => {
   const isExtra = version == 'latest+';
   const versionPath = (isExtra || version == latestVersion) ? 'latest' : version;
 
-  const getExtras = () => isExtra ? Promise.all([loadRuntime(), loadLuaDocs()]) : Promise.resolve([null, null]);
+  const getExtras = () => versionPath == 'latest' ? Promise.all([loadRuntime(), loadLuaDocs()]) : Promise.resolve([null, null]);
 
   function render(sections, [runtime, luaDocs]) {
     if (versionPath == 'latest') {
@@ -1062,6 +1063,17 @@ const loadVersion = (version, initial, errorCallback) => {
         sections.events = applyTags(sections.events);
         sections.functions = applyTags(sections.functions);
         console.log("merged", sections);
+      } else {
+        // Plain latest keeps the /luahelp names, extras stay hidden until their chips are enabled
+        sections = mergeLuaDocs(mergeRuntime(sections, runtime), luaDocs);
+        sections = {
+          ...sections,
+          tree: applyTags(sections.tree),
+          events: applyTags(sections.events),
+          functions: applyTags(sections.functions),
+          isPlainLatest: true,
+          hasSources: true,
+        };
       }
     } else {
       sections = compareVersions(loadedVersions["latest"], sections);
@@ -1710,6 +1722,7 @@ function updateRuntimeToggles() {
   id('advanced_runtime').hidden = !info;
   id('module801_toggle').style.display = info?.module801 && showRuntime ? null : 'none';
   id('content').classList.toggle('hide-runtime', !showRuntime);
+  id('content').classList.toggle('hide-sources', !!lastRendered?.isPlainLatest && !showRuntime && !id('toggle_lua').checked);
   id('sections').classList.toggle('show-module801', id('toggle_module801').checked);
 }
 
@@ -1723,13 +1736,23 @@ const saveRuntimeToggle = (key, value) => {
   }
 };
 
+// Plain latest saves its own state and starts with runtime and Lua manual data off
+const getSourceToggleKey = key => lastRendered?.isPlainLatest ? `latest_${key}` : key;
+
+const loadSourceToggles = () => {
+  [['toggle_runtime', 'show_runtime'], ['toggle_lua', 'show_lua']].forEach(([elmId, key]) => {
+    const saved = window.localStorage?.getItem(getSourceToggleKey(key));
+    id(elmId).checked = saved == null ? !lastRendered?.isPlainLatest : saved != 'false';
+  });
+};
+
 // Runtime data is shown and module801 events are hidden unless changed
 id('toggle_runtime').checked = !window.localStorage || localStorage.getItem('show_runtime') != 'false';
 id('toggle_module801').checked = !!window.localStorage && localStorage.getItem('show_module801') == 'true';
 id('toggle_lua').checked = !window.localStorage || localStorage.getItem('show_lua') != 'false';
 
 id('toggle_runtime').addEventListener('change', function() {
-  saveRuntimeToggle('show_runtime', this.checked);
+  saveRuntimeToggle(getSourceToggleKey('show_runtime'), this.checked);
 });
 
 id('toggle_module801').addEventListener('change', function() {
@@ -1737,5 +1760,5 @@ id('toggle_module801').addEventListener('change', function() {
 });
 
 id('toggle_lua').addEventListener('change', function() {
-  saveRuntimeToggle('show_lua', this.checked);
+  saveRuntimeToggle(getSourceToggleKey('show_lua'), this.checked);
 });
